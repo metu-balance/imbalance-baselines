@@ -1,0 +1,9 @@
+test.py
+*/**/__pycache__
+
+# PyCharm files
+.idea
+
+# Excluding .github directory for now - May use workflows later for automatic GitHub issue
+#  creation from TODO comments
+.github
