@@ -3,7 +3,7 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import sampling
+from . import sampling
 import torch
 
 from numpy.random import RandomState, SeedSequence, MT19937

@@ -6,10 +6,10 @@ import sys
 import torch
 import torch.nn as nn
 
-from models import ResNet32
+from . import models
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
-from loss_functions import focal_loss
+from . import loss_functions
 
 
 # TODO: Find a better place shared by all submodules to define this (__init__.py?)
@@ -31,8 +31,9 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
                  train_cb_sigmoid:bool, train_cb_softmax:bool, test_focal:bool,
                  test_sigmoid:bool, test_softmax:bool, test_cb_focal:bool,
                  test_cb_sigmoid:bool, test_cb_softmax:bool):
+    
     if resnet_type == "32":
-        rn = ResNet32
+        rn = models.ResNet32
     elif resnet_type == "50":
         rn = torchmodels.resnet50
     elif resnet_type == "101":
@@ -245,7 +246,7 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
                     optimizer.zero_grad()
                     
                     if train_focal:
-                        loss_focal = focal_loss(
+                        loss_focal = loss_functions.focal_loss(
                             rn_focal(input),
                             target,
                             gamma=0.5
@@ -255,7 +256,7 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
                         total_loss_focal += loss_focal.item()
                     
                     if train_sigmoid:
-                        loss_sigmoid = focal_loss(
+                        loss_sigmoid = loss_functions.focal_loss(
                             rn_sigmoid(input),
                             target
                         )
@@ -273,7 +274,7 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
                         total_loss_softmax += loss_softmax.item()
                     
                     if train_cb_focal:
-                        loss_cb_focal = focal_loss(
+                        loss_cb_focal = loss_functions.focal_loss(
                             rn_cb_focal(input),
                             target,
                             alpha=weights,
@@ -284,7 +285,7 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
                         total_loss_cb_focal += loss_cb_focal.item()
                     
                     if train_cb_sigmoid:
-                        loss_cb_sigmoid = focal_loss(
+                        loss_cb_sigmoid = loss_functions.focal_loss(
                             rn_cb_sigmoid(input),
                             target,
                             alpha=weights
@@ -565,5 +566,3 @@ def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
     
     return (rn_focal, rn_sigmoid, rn_softmax, rn_cb_focal, rn_cb_sigmoid,
             rn_cb_softmax)
-
-

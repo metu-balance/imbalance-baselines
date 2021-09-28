@@ -1,8 +1,14 @@
-class CostSensitiveCrossEntropy():
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class CostSensitiveCrossEntropy:
     def __init__(self, dataset, num_classes: int, beta: float, device='cpu'):
         sizes = self.get_size_per_class(dataset, num_classes)
         weights = sizes.min() / sizes
-        self.CS_CE = torch.nn.CrossEntropyLoss(weight=weights.to(device), reduction='Sum')
+        self.CS_CE = nn.CrossEntropyLoss(weight=weights.to(device), reduction='Sum')
         self.weights = weights
         self.beta = beta
     
@@ -25,7 +31,7 @@ class ClassBalancedCrossEntropy:
     def __init__(self, dataset, num_classes: int, beta: float):
         sizes = self.get_size_per_class(dataset, num_classes)
         weights = self.get_weights(sizes, beta)
-        self.CB_CE = torch.nn.CrossEntropyLoss(weights=weights, reduction='Sum')
+        self.CB_CE = torch.nn.CrossEntropyLoss(weight=weights, reduction='Sum')
         self.weights = weights
         self.beta = beta
     
@@ -35,7 +41,7 @@ class ClassBalancedCrossEntropy:
         
         return loss
     
-    def get_weights(self, size, beta=0):
+    def get_weights(self, size, beta=0.):
         num_classes = size.shape[0]
         numerator = torch.tensor(1 - beta, dtype=torch.float32, requires_grad=False)
         denominator = 1 - beta ** size
@@ -129,4 +135,3 @@ def focal_loss(z, lbl, alpha=None, gamma=0, device: torch.device = torch.device(
     weighted_focal_loss /= torch.sum(lbl)
     
     return torch.sum(weighted_focal_loss)
-
