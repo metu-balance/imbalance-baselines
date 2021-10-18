@@ -85,8 +85,6 @@ class CIFAR10LT(datasets.CIFAR10):
         
         new_data.append(self.data[selected_i, ...])
         new_targets.extend([cls] * img_cnt)
-    
-        new_data = np.vstack(new_data)
     elif isinstance(self.sampler, sampling.OnlineSampler):
       raise ValueError(
           "Online sampling method supplied to CIFAR10LT, only offline methods are accepted. Use online "
@@ -100,7 +98,9 @@ class CIFAR10LT(datasets.CIFAR10):
         # Note that samplers are expected to take and return data as a list of (feature, label) tuples
         new_data.append(i[0])
         new_targets.append(i[1])
-
+        
+    new_data = np.vstack(new_data)
+    
     self.data = new_data
     self.targets = new_targets
 
@@ -179,13 +179,15 @@ class INaturalist(Dataset):
 
 
 # TODO: Parameters look cluttered, may simplify
-def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
-                  inat_32x32: bool, draw_plots: bool, use_gdrive: bool,
-                  sampler=None, device: torch.device = torch.device("cpu")):
-  if not isinstance(sampler, sampling.OnlineSampler):
+def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
+                  use_gdrive: bool = False, cifar_imb_factor: int = 100, sampler=None,
+                  device: torch.device = torch.device("cpu")):
+  if (sampler is not None) and (not isinstance(sampler, sampling.OnlineSampler)):
     raise ValueError(
         "Offline sampler supplied to generate_data, only online methods are accepted. Use offline methods when"
         " constructing the dataset objects instead.")
+  
+  if not datasets_path.endswith("/"): datasets_path += "/"
   
   # TODO: Find better jitter, mu and std. values for each dataset
   if dataset == "CIFAR10":
@@ -252,21 +254,21 @@ def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
 
   if dataset == "CIFAR10":
     train_ds = datasets.CIFAR10(
-        "datasets/cifar10",
+        datasets_path + "cifar10",
         train=True,
         download=True,
         transform=train_transforms
     )
 
     test_ds = datasets.CIFAR10(
-      "datasets/cifar10",
+      datasets_path + "cifar10",
       train=False,
       download=True,
       transform=test_transforms
     )
   elif dataset == "IMB_CIFAR10":  # Long-Tailed CIFAR10
     train_ds = CIFAR10LT(
-      "datasets/cifar10",
+      datasets_path + "cifar10",
       imb_factor=cifar_imb_factor,
       train=True,
       download=True,
@@ -274,21 +276,21 @@ def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
     )
 
     test_ds = datasets.CIFAR10(  # Test set is not imbalanced
-        "datasets/cifar10",
+        datasets_path + "cifar10",
         train=False,
         download=True,
         transform=test_transforms
     )
   elif dataset == "INATURALIST_2017":
     train_ds = INaturalist(
-        "datasets/inat2017",
+        datasets_path + "inat2017",
         "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017/train2017.json" if use_gdrive else "datasets/inat2017/train2017.json",
         version="2017",
         transform=train_transforms
     )
 
     test_ds = INaturalist(
-        "datasets/inat2017/test2017",
+        datasets_path + "inat2017/test2017",
         "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017/test2017.json" if use_gdrive else "datasets/inat2017/test2017.json",
         version="2017",
         transform=test_transforms
@@ -299,7 +301,7 @@ def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
     if use_gdrive:
       inat_path =  "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017_transf" + ("_32/" if inat_32x32 else "")
     else:
-      inat_path =  "datasets/inat2017_transf" + ("_32/" if inat_32x32 else "/")
+      inat_path =  datasets_path + "inat2017_transf" + ("_32/" if inat_32x32 else "/")
     
     train_ds = INaturalist(
         inat_path,
@@ -315,14 +317,14 @@ def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
     """
   elif dataset == "INATURALIST_2018":
     train_ds = INaturalist(
-        "datasets/inat2018",
+        datasets_path + "inat2018",
         "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018/train2018.json" if use_gdrive else "datasets/inat2018/train2018.json",
         version="2018",
         transform=train_transforms
     )
 
     test_ds = INaturalist(
-        "datasets/inat2018",
+        datasets_path + "inat2018",
         "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018/test2018.json" if use_gdrive else "datasets/inat2018/test2018.json",
         version="2018",
         transform=test_transforms
@@ -333,7 +335,7 @@ def generate_data(batch_size: int, dataset: str, cifar_imb_factor: int,
     if use_gdrive:
       inat_path =  "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018_transf" + ("_32/" if inat_32x32 else "")
     else:
-      inat_path =  "datasets/inat2018_transf" + ("_32/" if inat_32x32 else "/")
+      inat_path =  datasets_path + "inat2018_transf" + ("_32/" if inat_32x32 else "/")
     
     train_ds = INaturalist(
         inat_path,

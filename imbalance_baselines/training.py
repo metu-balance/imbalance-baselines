@@ -22,15 +22,17 @@ DSET_NAMES = {
 
 
 # TODO: Parameters look cluttered, may simplify
-def train_models(train_dl:DataLoader, class_cnt:int, weights:[float],
-                 device:torch.device, epoch_cnt:int, multi_gpu:bool, dataset:str,
-                 resnet_type:str, print_training:bool, print_freq:int,
-                 draw_plots:bool, use_gdrive:bool, models_path:str,
-                 save_models:bool, load_models:bool, train_focal:bool,
-                 train_sigmoid:bool, train_softmax:bool, train_cb_focal:bool,
-                 train_cb_sigmoid:bool, train_cb_softmax:bool, test_focal:bool,
-                 test_sigmoid:bool, test_softmax:bool, test_cb_focal:bool,
-                 test_cb_sigmoid:bool, test_cb_softmax:bool):
+# TODO: Get rid of "test_*" param.s, maybe connect to "train_*" param.s
+def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
+                 device: torch.device, epoch_cnt: int = 200, multi_gpu: bool = False,
+                 resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
+                 draw_plots: bool = False, use_gdrive: bool = False,
+                 models_path: str = "./trained_models/", save_models: bool = False,
+                 load_models: bool = False, train_focal: bool = False,
+                 train_sigmoid: bool = False, train_softmax: bool = False, train_cb_focal: bool = False,
+                 train_cb_sigmoid: bool = False, train_cb_softmax: bool = False, test_focal: bool = False,
+                 test_sigmoid: bool = False, test_softmax: bool = False, test_cb_focal: bool = False,
+                 test_cb_sigmoid: bool = False, test_cb_softmax: bool = False):
     
     if resnet_type == "32":
         rn = models.ResNet32
