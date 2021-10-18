@@ -1,4 +1,5 @@
 test.py
+test_files/
 */**/__pycache__
 
 # PyCharm files
