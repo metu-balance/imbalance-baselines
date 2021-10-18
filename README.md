@@ -1,8 +1,8 @@
 # imbalance-baselines
 
 This is a Python library providing:
-* Tools for creating imbalanced datasets from balanced ones, using different sampling methods
 * Tools for training ResNets on imbalanced datasets
+* Sampling methods to be used in imbalanced learning
 * Loss functions to be used during training and utilities for the calculation of the required hyperparameters
 
 The functions use 64-bit floating number (double) precision.
@@ -22,35 +22,44 @@ The functions use 64-bit floating number (double) precision.
 
 ### sampling.py
 
-This file contains sampling mehods to be used in creating imbalanced datasets from balanced ones.
+This file contains sampling mehods to be used in imbalanced training, in order to overcome the disadvantages of
+class imbalance. 
 
 The methods are divided into two as "offline" and "online" methods.
 
 #### Offline methods
 
-These methods... TODO
+These methods apply the re-balancing once when the dataset object is being created.
 
 ##### OverSampler
 
-TODO
+This method eliminates the imbalance by random over-sampling: Images from under-reprsented classes are randomly
+replicated until the classes are balanced. 
 
 ##### UnderSampler
 
+This method eliminates the imbalance by random under-sampling: Images from over-reprsented classes are randomly removed
+until the classes are balanced.
+
 #### Online methods
 
-These methods... TODO
+These methods eliminate the imbalance over time, as the images are being picked from the dataset.
 
 ##### ClassBalancedSampling
 
-TODO
+In this sampling method, images from each class are selected with equal probabilities. The sampling is done according to
+the method given in the paper [Decoupling Representation and Classifier for Long-Tailed Recognition](https://www.semanticscholar.org/paper/Decoupling-Representation-and-Classifier-for-Kang-Xie/c6ecdf34ab566efb06bd05c4f1bc9bda218f7dc9).
+First, a class is uniformly sampled, and then, an instance from the chosen class is uniformly sampled.
 
 ##### ProgressivelyBalancedSampling
 
-TODO
+In this sampling method, the sampling probabilities progressively change from imbalanced to balanced, according to the
+method given in the paper [Decoupling Representation and Classifier for Long-Tailed Recognition](https://www.semanticscholar.org/paper/Decoupling-Representation-and-Classifier-for-Kang-Xie/c6ecdf34ab566efb06bd05c4f1bc9bda218f7dc9).
 
 ### datasets.py
 
 This file contains the available imbalanced datasets to work on:
+
 #### CIFAR10_LT
 This class provides a customized version of the CIFAR-10 dataset to be long-tailed. The desired offline sampler can be passed as an
 argument.
