@@ -20,6 +20,8 @@ The functions use 64-bit floating number (double) precision.
 
 ## Library Contents 
 
+---
+
 ### sampling.py
 
 This file contains sampling mehods to be used in imbalanced training, in order to overcome the disadvantages of
@@ -56,6 +58,8 @@ First, a class is uniformly sampled, and then, an instance from the chosen class
 In this sampling method, the sampling probabilities progressively change from imbalanced to balanced, according to the
 method given in the paper [Decoupling Representation and Classifier for Long-Tailed Recognition](https://www.semanticscholar.org/paper/Decoupling-Representation-and-Classifier-for-Kang-Xie/c6ecdf34ab566efb06bd05c4f1bc9bda218f7dc9).
 
+---
+
 ### datasets.py
 
 This file contains the available imbalanced datasets to work on:
@@ -80,6 +84,8 @@ These datasets are imbalanced by their own, so the class does not support applyi
 This function prepares the desired dataset's objects along with variables holding related information to be used in training and
 testing.
 
+---
+
 ### models.py
 
 This file contains the custom ResNet definitions to be used in training. Currently, only a custom ResNet-32 model is
@@ -89,6 +95,8 @@ defined.
 
 This class derives from `torch.nn.Module` and implements a custom ResNet with 32 layers. 
 
+---
+
 ### training.py
 
 This file contains the tools and functions to be used during the training of the models.
@@ -97,9 +105,13 @@ This file contains the tools and functions to be used during the training of the
 
 This function defines and trains the desired ResNet models with the desired loss functions, using a dataset's `DataLoader` object. 
 
+---
+
 ### loss_functions.py
 
 This function contains loss function implementations to be used during training.
+
+---
 
 ### utils.py
 
