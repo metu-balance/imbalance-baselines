@@ -56,10 +56,10 @@ def get_accuracy(test_data:DataLoader, model, class_sizes:[int],
         per_class_acc = torch.zeros(num_labels, dtype=torch.float32, device=device)
         avg_acc = float(0)
         
-        for num_batch, (input, target) in enumerate(test_data):
-            input = input.double().to(device)
+        for num_batch, (inp, target) in enumerate(test_data):
+            inp = inp.double().to(device)
             target = target.to(device)
-            output = model(input).to(device)
+            output = model(inp).to(device)
             
             if top == 1:
                 result = (torch.argmax(output, dim = 1) == target)
@@ -91,5 +91,4 @@ def get_accuracy(test_data:DataLoader, model, class_sizes:[int],
                 # Average accuracy of every class separately
                 per_class_acc[i] /= class_sizes[i]
         
-        return (avg_acc.item(), per_class_acc.tolist())
-
+        return avg_acc, per_class_acc.tolist()
