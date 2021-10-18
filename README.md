@@ -8,19 +8,19 @@ This is a Python library providing:
 The functions use 64-bit floating number (double) precision.
 
 ## Table of Contents
-1. [Library Contents](#Library Contents)
-   1. sampling.py
-   2. datasets.py
-   3. models.py
-   4. loss_functions.py
-   5. training.py
-   6. utils.py
-2. [Example Usage](#Example Usage)
-3. [Our Results](#Our Results)
+1. [Library Contents](#library-contents)
+   1. [sampling.py](#samplingpy)
+   2. [datasets.py](#datasetspy)
+   3. [models.py](#modelspy)
+   4. [loss_functions.py](#loss_functionspy)
+   5. [training.py](#trainingpy)
+   6. [utils.py](#utilspy)
+2. [Example Usage](#example-usage)
+3. [Our Results](#our-results)
 
 ## Library Contents 
 
-### sampling.py <a name="sampling"></a>
+### sampling.py
 
 This file contains sampling mehods to be used in creating imbalanced datasets from balanced ones.
 
@@ -83,6 +83,10 @@ This class derives from `torch.nn.Module` and implements a custom ResNet with 32
 This file contains the tools and functions to be used during the training of the models.
 
 #### train_models
+
+TODO
+
+### loss_functions.py
 
 TODO
 
