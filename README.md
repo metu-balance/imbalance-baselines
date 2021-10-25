@@ -134,8 +134,6 @@ class-balanced and non-class-balanced focal losses, and the custom ResNet-32 imp
 set to be printed at every 10 batches. Later, the models' accuracies are tested.
 
 ```python
-import torch
-
 from imbalance_baselines import datasets
 from imbalance_baselines import training
 from imbalance_baselines import utils
