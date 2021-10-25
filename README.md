@@ -20,8 +20,6 @@ The functions use 64-bit floating number (double) precision.
 
 ## Library Contents 
 
----
-
 ### sampling.py
 
 This file contains sampling mehods to be used in imbalanced training, in order to overcome the disadvantages of
@@ -131,18 +129,18 @@ statistic can also be specified.
 
 ## Example Usage
 
-Below is an example that trains a model for a single epoch using the imbalanced version of the CIFAR-10 dataset, cross-entropy loss, and
-the custom ResNet-32 implementation. Later, the model's accuracy is tested.
-
-TODO: Replace with an example showing better results and utilizing the class-balancing
+Below is an example that trains two models for 200 epochs using the imbalanced version of the CIFAR-10 dataset,
+class-balanced and non-class-balanced focal losses, and the custom ResNet-32 implementation. The training progress is
+set to be printed at every 10 batches. Later, the models' accuracies are tested.
 
 ```python
+import torch
+
 from imbalance_baselines import datasets
 from imbalance_baselines import training
 from imbalance_baselines import utils
 
-beta = 0.999
-device = torch.device("cuda")
+beta = 0.9999
 
 train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.generate_data(
     batch_size=128,
@@ -151,18 +149,27 @@ train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.gen
     cifar_imb_factor=100
 )
 
-weights = utils.get_weights(train_class_sizes, beta, device)
+weights = utils.get_weights(train_class_sizes, beta)
 weights.requires_grad = False
 
 print("Got weights:", weights)
 
-model_softmax = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights, device,
-                                      epoch_cnt=1, print_freq=10, train_softmax=True)[2]
+models = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights,
+                               epoch_cnt=200, print_freq=10, train_focal=True, train_cb_focal=True)
 
-avg_acc, per_class_acc = utils.get_accuracy(test_dl, model_softmax, test_class_sizes, device)
+model_focal = models[0]
+model_cb_focal = models[3]
 
-print("Average accuracy:", avg_acc)
-print("Accuracy per class:", per_class_acc)
+focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes, device)
+cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes, device)
+
+print("Focal Loss:")
+print("Average accuracy:", focal_avg_acc)
+print("Accuracy per class:", focal_per_class_acc)
+
+print("Class-Balanced Focal Loss:")
+print("Average accuracy:", cb_focal_avg_acc)
+print("Accuracy per class:", cb_focal_per_class_acc)
 
 print("Done!")
 ```
@@ -170,35 +177,11 @@ print("Done!")
 Output:
 
 ```
-Files already downloaded and verified
-Files already downloaded and verified
-Number of training samples:
-[5000 2997 1796 1077  645  387  232  139   83   50]
-Got weights: tensor([0.1812, 0.1894, 0.2157, 0.2729, 0.3785, 0.5606, 0.8688, 1.3862, 2.2585,
-        3.6883], device='cuda:0', dtype=torch.float64)
-Starting training with Long-Tailed CIFAR10 dataset, ResNet-32 models.
-Epoch: 0 | Batch: 1
-   Softmax: 2.577550103524884
-
-Epoch: 0 | Batch: 10
-   Softmax: 1.861952022154194
-
-
-Epoch: 0 | Batch: 20
-   Softmax: 1.7207015184163796
-
-
-...
-
-Epoch: 0 | Batch: 97
-   Softmax: 1.429601181318175
-
-Average accuracy: tensor(0.1779, device='cuda:0')
-Accuracy per class: [0.9390000700950623, 0.3840000033378601, 0.39900001883506775, 0.05700000375509262, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Done!
-
+TODO
 ```
 ---
+
+TODO: Add a sampling method usage example
 
 ## Our Results
 
