@@ -30,9 +30,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                  models_path: str = "./trained_models/", save_models: bool = False,
                  load_models: bool = False, train_focal: bool = False,
                  train_sigmoid: bool = False, train_softmax: bool = False, train_cb_focal: bool = False,
-                 train_cb_sigmoid: bool = False, train_cb_softmax: bool = False, test_focal: bool = False,
-                 test_sigmoid: bool = False, test_softmax: bool = False, test_cb_focal: bool = False,
-                 test_cb_sigmoid: bool = False, test_cb_softmax: bool = False):
+                 train_cb_sigmoid: bool = False, train_cb_softmax: bool = False):
     
     if resnet_type == "32":
         rn = models.ResNet32
@@ -123,7 +121,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         # Assuming the file exists for each model that will be tested:
         # TODO: Catch loading errors in try-except blocks
         
-        if test_focal:
+        if train_focal:
             rn_focal.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_focal_{dataset}.pth",
                            map_location=device)
@@ -131,7 +129,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_focal_{dataset}.pth")
         
-        if test_sigmoid:
+        if train_sigmoid:
             rn_sigmoid.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_sigmoid_{dataset}.pth",
                            map_location=device)
@@ -139,7 +137,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} sigmoid, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_sigmoid_{dataset}.pth")
         
-        if test_softmax:
+        if train_softmax:
             rn_softmax.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_softmax_{dataset}.pth",
                            map_location=device)
@@ -147,7 +145,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} softmax, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_softmax_{dataset}.pth")
         
-        if test_cb_focal:
+        if train_cb_focal:
             rn_cb_focal.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_cb_focal_{dataset}.pth",
                            map_location=device)
@@ -155,7 +153,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_cb_focal_{dataset}.pth")
         
-        if test_cb_sigmoid:
+        if train_cb_sigmoid:
             rn_cb_sigmoid.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_cb_sigmoid_{dataset}.pth",
                            map_location=device)
@@ -163,7 +161,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} cb. sigmoid, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_cb_sigmoid_{dataset}.pth")
         
-        if test_cb_softmax:
+        if train_cb_softmax:
             rn_cb_softmax.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_cb_softmax_{dataset}.pth",
                            map_location=device)
