@@ -22,9 +22,8 @@ DSET_NAMES = {
 
 
 # TODO: Parameters look cluttered, may simplify
-# TODO: Get rid of "test_*" param.s, maybe connect to "train_*" param.s
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
-                 device: torch.device, epoch_cnt: int = 200, multi_gpu: bool = False,
+                 epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
                  draw_plots: bool = False, use_gdrive: bool = False,
                  models_path: str = "./trained_models/", save_models: bool = False,
@@ -117,6 +116,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         if state:
             rn_cb_softmax.load_state_dict(state)
     
+    # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
         # Assuming the file exists for each model that will be tested:
         # TODO: Catch loading errors in try-except blocks
