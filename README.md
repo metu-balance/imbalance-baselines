@@ -158,8 +158,8 @@ models = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights,
 model_focal = models[0]
 model_cb_focal = models[3]
 
-focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes, device)
-cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes, device)
+focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes)
+cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes)
 
 print("Focal Loss:")
 print("Average accuracy:", focal_avg_acc)
