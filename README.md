@@ -1,3 +1,12 @@
+---
+# Readme TODO
+This readme needs rework!
+* Explain setup & requirements
+* Explain directory structure & how to make additions to each file or method
+  * The directory structure itself may need some organization - should we use subfolders?
+* Implement config. class & explain usage
+---
+
 # imbalance-baselines
 
 This is a Python library providing:
