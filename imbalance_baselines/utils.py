@@ -60,7 +60,7 @@ def get_accuracy(test_data:DataLoader, model, class_sizes:[int],
             output = model(inp).to(device)
             
             if top == 1:
-                result = (torch.argmax(output, dim = 1) == target)
+                result = (torch.argmax(output, dim=1) == target)
             else:
                 result = []
                 top_preds = np.argpartition(output, -top)[:, -top:]
