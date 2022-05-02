@@ -143,7 +143,7 @@ beta = 0.9999
 train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.generate_data(
     batch_size=128,
     dataset="IMB_CIFAR10",
-    datasets_path="test_files/datasets/",
+    datasets_path="datasets/",
     cifar_imb_factor=100
 )
 
