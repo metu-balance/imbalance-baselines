@@ -44,6 +44,7 @@ class CIFAR10LT(datasets.CIFAR10):
     )
 
     self.cnt_per_cls_dict = dict()
+    # TODO: A more practical RNG? Does MT19937 degrade performance?
     self.rs = RandomState(MT19937(SeedSequence()))
     self.sampler = sampler
 
@@ -237,6 +238,7 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
   else:
     raise ValueError("The given dataset name is not recognized.")
   
+  # TODO: Transformation pipeline should be easily customized - config?
   train_transforms = transforms.Compose([
     transforms.Pad(padding=pad, fill=0, padding_mode="constant"),
     transforms.RandomResizedCrop(im_size),

@@ -21,7 +21,9 @@ DSET_NAMES = {
 }
 
 
-# TODO: Parameters look cluttered, may simplify
+# TODO: Parameters look cluttered, need to simplify. Use a config. class?
+#   Pass train & test preferences in a list instead of separate param.s.
+#   Iterate over the list later to avoid code repetition.
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
                  epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
@@ -171,6 +173,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
     else:
         # Initialize FC biases of models trained with sigmoid and focal losses
         #   to avoid instability at the beginning of the training
+        # TODO: Is this block required?
         pi = torch.tensor(0.1, dtype=torch.double)
         b = -torch.log((1 - pi) / pi)
         
@@ -185,13 +188,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             if train_cb_focal: rn_cb_focal.fc.bias.data.fill_(b)
             if train_cb_sigmoid: rn_cb_sigmoid.fc.bias.data.fill_(b)
         
-        # TODO: Disable optimizer's weight decay for the biases
+        # TODO: Disable optimizer's weight decay for the biases (is this required?)
         #rn_focal.fc.bias.requires_grad_(False)
         #rn_sigmoid.fc.bias.requires_grad_(False)
         #rn_cb_focal.fc.bias.requires_grad_(False)
         #rn_cb_sigmoid.fc.bias.requires_grad_(False)
         
         # Initialize ce. loss models' FC biases with 0
+        # TODO: How about FC biases of other models?
         if multi_gpu:
             if train_softmax: rn_softmax.module.fc.bias.data.fill_(0)
             if train_cb_softmax: rn_cb_softmax.module.fc.bias.data.fill_(0)
@@ -564,5 +568,6 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                 
                 plt.show()
     
+    # TODO: Return in a dict instead of a tuple for easier access to desired models
     return (rn_focal, rn_sigmoid, rn_softmax, rn_cb_focal, rn_cb_sigmoid,
             rn_cb_softmax)
