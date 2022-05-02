@@ -253,7 +253,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         loss_focal = loss_functions.focal_loss(
                             rn_focal(input),
                             target,
-                            gamma=0.5
+                            gamma=0.5,
+                            device=device
                         )
                         
                         loss_focal.backward()
@@ -262,7 +263,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     if train_sigmoid:
                         loss_sigmoid = loss_functions.focal_loss(
                             rn_sigmoid(input),
-                            target
+                            target,
+                            device=device
                         )
                         
                         loss_sigmoid.backward()
@@ -282,7 +284,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                             rn_cb_focal(input),
                             target,
                             alpha=weights,
-                            gamma=0.5
+                            gamma=0.5,
+                            device=device
                         )
                         
                         loss_cb_focal.backward()
@@ -292,7 +295,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         loss_cb_sigmoid = loss_functions.focal_loss(
                             rn_cb_sigmoid(input),
                             target,
-                            alpha=weights
+                            alpha=weights,
+                            device=device
                         )
                         
                         loss_cb_sigmoid.backward()

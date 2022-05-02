@@ -104,8 +104,9 @@ def focal_loss(z, lbl, alpha=None, gamma=0, device: torch.device = torch.device(
         alpha = torch.as_tensor([1] * batch_size, device=device)
     else:
         # Get weights for each image in batch
+        
         alpha = (alpha * lbl).sum(axis=1)
-    
+        
     # TODO: Check if the bool casting is required for torch.where() to work
     lbl_bool = lbl.type(torch.bool)
     
@@ -119,7 +120,7 @@ def focal_loss(z, lbl, alpha=None, gamma=0, device: torch.device = torch.device(
     
     if gamma:
         modulator = torch.exp(
-            -gamma * torch.mul(lbl, z).to(device) - gamma * torch.log1p(torch.exp(-1.0 * z))
+            -gamma * torch.mul(lbl, z).to(device) - gamma * torch.log1p(torch.exp(-1.0 * z)).to(device)
         )
     else:
         modulator = 1
