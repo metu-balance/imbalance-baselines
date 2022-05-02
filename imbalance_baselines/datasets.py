@@ -355,19 +355,18 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
   else:
     raise ValueError("The given dataset name is not recognized.")
 
-  if sampler and not sampler_is_online:
-    train_dl = DataLoader(
-        train_ds,
-        batch_size=batch_size,
-        num_workers=2,
-        sampler=sampler if not sampler_is_online else None
-    )
-    
-    test_dl = DataLoader(
-        test_ds,
-        batch_size=batch_size,
-        num_workers=2
-    )
+  train_dl = DataLoader(
+      train_ds,
+      batch_size=batch_size,
+      num_workers=2,
+      sampler=sampler if sampler_is_online else None
+  )
+  
+  test_dl = DataLoader(
+      test_ds,
+      batch_size=batch_size,
+      num_workers=2
+  )
 
   class_cnt = 0
 
@@ -377,15 +376,15 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
     test_class_sizes = [1000] * class_cnt
   elif dataset == "IMB_CIFAR10":
     class_cnt = 10
-    train_class_sizes = train_ds.get_cls_cnt_list()    
+    train_class_sizes = train_ds.get_cls_cnt_list()
     test_class_sizes = [1000] * class_cnt
   elif dataset == "INATURALIST_2017":
     class_cnt = 5089
-    train_class_sizes = train_ds.get_cls_cnt_list()    
+    train_class_sizes = train_ds.get_cls_cnt_list()
     test_class_sizes = test_ds.get_cls_cnt_list()
   elif dataset == "INATURALIST_2018":
     class_cnt = 8142
-    train_class_sizes = train_ds.get_cls_cnt_list()    
+    train_class_sizes = train_ds.get_cls_cnt_list()
     test_class_sizes = test_ds.get_cls_cnt_list()
   else:
     raise ValueError("The given dataset name is not recognized.")
