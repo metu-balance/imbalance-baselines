@@ -1,6 +1,7 @@
 test.py
 test_files/
 datasets/
+slurm/
 output/
 */**/__pycache__
 
