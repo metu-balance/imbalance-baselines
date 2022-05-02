@@ -114,6 +114,7 @@ class CIFAR10LT(datasets.CIFAR10):
     return cls_cnt_list
 
 
+# TODO: Add sampler support
 class INaturalist(Dataset):
   def __init__(
     self,
@@ -182,10 +183,9 @@ class INaturalist(Dataset):
 def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
                   use_gdrive: bool = False, cifar_imb_factor: int = 100, sampler=None,
                   device: torch.device = torch.device("cpu")):
-  if (sampler is not None) and (not isinstance(sampler, sampling.OnlineSampler)):
-    raise ValueError(
-        "Offline sampler supplied to generate_data, only online methods are accepted. Use offline methods when"
-        " constructing the dataset objects instead.")
+
+  # False if sampler is None or is offline
+  sampler_is_online = isinstance(sampler, sampling.OnlineSampler) and (sampler is not None)
   
   if not datasets_path.endswith("/"): datasets_path += "/"
   
@@ -272,7 +272,8 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
       imb_factor=cifar_imb_factor,
       train=True,
       download=True,
-      transform=train_transforms
+      transform=train_transforms,
+      sampler=None if sampler_is_online else sampler
     )
 
     test_ds = datasets.CIFAR10(  # Test set is not imbalanced
@@ -352,25 +353,12 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
   else:
     raise ValueError("The given dataset name is not recognized.")
 
-  if sampler:
+  if sampler and not sampler_is_online:
     train_dl = DataLoader(
         train_ds,
         batch_size=batch_size,
         num_workers=2,
-        sampler=sampler
-    )
-    
-    test_dl = DataLoader(
-        test_ds,
-        batch_size=batch_size,
-        num_workers=2
-    )
-  else:
-    train_dl = DataLoader(
-        train_ds,
-        batch_size=batch_size,
-        num_workers=2,
-        shuffle=True
+        sampler=sampler if not sampler_is_online else None
     )
     
     test_dl = DataLoader(

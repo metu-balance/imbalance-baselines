@@ -11,7 +11,9 @@ class OfflineSampler:
     def group_by_labels(self, dataset):
         # This function assumes the dataset to be in the form of
         # [(Feature_1, Label_1), (Feature_2, Label_2), .....]
-        
+        # (what if? ([FEATURES], [labels]))
+        # TODO: Does get_item return value in the standard way ((feat, label) pairs)?
+        #   If so, remove assumption.
         num_classes = self.num_classes
         groups = []
         
@@ -65,7 +67,7 @@ class UnderSampler(OfflineSampler):
         imbalanced_data = []
         size = [len(group) for group in groups]
         
-        upper_limit = int(min(size) / ratio)  # MIN_SZE / MAX_SIZE = RATIO -> MAX_SIZE = MIN_SIZE/RATIO
+        upper_limit = int(min(size) / ratio)  # MIN_SIZE / MAX_SIZE = RATIO -> MAX_SIZE = MIN_SIZE/RATIO
         
         for (num, group) in enumerate(groups):
             
