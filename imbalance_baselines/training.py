@@ -1,4 +1,3 @@
-# TODO: Fully incorporate or remove Google Drive functionality
 # TODO: Check out wandb
 
 import matplotlib.pyplot as plt
@@ -32,9 +31,8 @@ DSET_NAMES = {
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
                  epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
-                 draw_plots: bool = False, use_gdrive: bool = False,
-                 models_path: str = "./trained_models/", save_models: bool = False,
-                 load_models: bool = False, train_focal: bool = False,
+                 draw_plots: bool = False, models_path: str = "./trained_models/",
+                 save_models: bool = False, load_models: bool = False, train_focal: bool = False,
                  train_sigmoid: bool = False, train_softmax: bool = False, train_cb_focal: bool = False,
                  train_cb_sigmoid: bool = False, train_cb_softmax: bool = False):
     
@@ -576,11 +574,10 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     f"Loss vs. Epochs on {DSET_NAMES[dataset]} with ResNet-{resnet_type}"
                 )
                 
-                if not use_gdrive:
-                    plt.savefig(
-                        f"./plots/{dataset.lower()}_rn-{resnet_type}-losses.png"
-                    )
-                
+                plt.savefig(
+                    f"./plots/{dataset.lower()}_rn-{resnet_type}-losses.png"
+                )
+            
                 plt.show()
     
     # TODO: Return in a dict instead of a tuple for easier access to desired models

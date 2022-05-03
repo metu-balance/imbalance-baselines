@@ -1,5 +1,3 @@
-# TODO: Fully incorporate or remove Google Drive functionality
-
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -182,7 +180,7 @@ class INaturalist(Dataset):
 
 # TODO: Parameters look cluttered, may simplify
 def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
-                  use_gdrive: bool = False, cifar_imb_factor: int = 100, train_shuffle=True, sampler=None,
+                  cifar_imb_factor: int = 100, train_shuffle=True, sampler=None,
                   device: torch.device = torch.device("cpu")):
 
   # False if sampler is None or is offline
@@ -287,24 +285,21 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
   elif dataset == "INATURALIST_2017":
     train_ds = INaturalist(
         datasets_path + "inat2017",
-        "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017/train2017.json" if use_gdrive else "datasets/inat2017/train2017.json",
+        "datasets/inat2017/train2017.json",
         version="2017",
         transform=train_transforms
     )
 
     test_ds = INaturalist(
         datasets_path + "inat2017/test2017",
-        "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017/test2017.json" if use_gdrive else "datasets/inat2017/test2017.json",
+        "datasets/inat2017/test2017.json",
         version="2017",
         transform=test_transforms
     )
 
     """
     # To use pre-transformed datasets:
-    if use_gdrive:
-      inat_path =  "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2017_transf" + ("_32/" if inat_32x32 else "")
-    else:
-      inat_path =  datasets_path + "inat2017_transf" + ("_32/" if inat_32x32 else "/")
+    inat_path =  datasets_path + "inat2017_transf" + ("_32/" if inat_32x32 else "/")
     
     train_ds = INaturalist(
         inat_path,
@@ -321,24 +316,21 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
   elif dataset == "INATURALIST_2018":
     train_ds = INaturalist(
         datasets_path + "inat2018",
-        "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018/train2018.json" if use_gdrive else "datasets/inat2018/train2018.json",
+        "datasets/inat2018/train2018.json",
         version="2018",
         transform=train_transforms
     )
 
     test_ds = INaturalist(
         datasets_path + "inat2018",
-        "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018/test2018.json" if use_gdrive else "datasets/inat2018/test2018.json",
+        "datasets/inat2018/test2018.json",
         version="2018",
         transform=test_transforms
     )
 
     """
     # To use pre-transformed datasets:
-    if use_gdrive:
-      inat_path =  "/content/drive/MyDrive/Colab Notebooks/cb_loss_resnet/datasets/inat2018_transf" + ("_32/" if inat_32x32 else "")
-    else:
-      inat_path =  datasets_path + "inat2018_transf" + ("_32/" if inat_32x32 else "/")
+    inat_path =  datasets_path + "inat2018_transf" + ("_32/" if inat_32x32 else "/")
     
     train_ds = INaturalist(
         inat_path,
@@ -408,8 +400,7 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
     axs[1].set_title('Size Per Class (Sorted)')
     axs[1].plot(x, sorted(train_class_sizes, reverse=True))
     
-    if not use_gdrive:
-      plt.savefig(f"./plots/{dataset.lower()}_size_per_class.png")
+    plt.savefig(f"./plots/{dataset.lower()}_size_per_class.png")
     
     plt.show()
 

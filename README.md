@@ -181,7 +181,6 @@ print("Average accuracy:", cb_focal_avg_acc)
 print("Accuracy per class:", cb_focal_per_class_acc)
 
 print("Done!")
-
 ```
 
 Output:
