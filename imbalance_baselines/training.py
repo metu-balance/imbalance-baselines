@@ -34,6 +34,12 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                  train_sigmoid: bool = False, train_softmax: bool = False, train_cb_focal: bool = False,
                  train_cb_sigmoid: bool = False, train_cb_softmax: bool = False):
     
+    # Sanitize print_freq
+    if print_training and print_freq <= 0:
+        raise ValueError("Printing frequency must be a positive integer.")
+    else:
+        print_freq = int(print_freq)
+    
     if resnet_type == "32":
         rn = models.ResNet32
     elif resnet_type == "50":
