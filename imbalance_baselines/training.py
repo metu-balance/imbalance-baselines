@@ -1,4 +1,5 @@
 # TODO: Fully incorporate or remove Google Drive functionality
+# TODO: Check out wandb
 
 import matplotlib.pyplot as plt
 import os
