@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from . import sampling
 import torch
 
-from numpy.random import RandomState, SeedSequence, MT19937
+from numpy.random import Generator, PCG64
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
@@ -42,8 +42,7 @@ class CIFAR10LT(datasets.CIFAR10):
         )
         
         self.cnt_per_cls_dict = dict()
-        # TODO: A more practical RNG? Does MT19937 degrade performance?
-        self.rs = RandomState(MT19937(SeedSequence()))
+        self.rng = Generator(PCG64())
         self.sampler = sampler
         
         img_num_list = self.get_img_cnt_per_cls(self.cls_cnt, imb_factor)
@@ -79,7 +78,7 @@ class CIFAR10LT(datasets.CIFAR10):
                 self.cnt_per_cls_dict[cls] = img_cnt
                 i = np.where(targets_np == cls)[0]
                 
-                self.rs.shuffle(i)
+                self.rng.shuffle(i)
                 selected_i = i[:img_cnt]
                 
                 new_data.append(self.data[selected_i, ...])
