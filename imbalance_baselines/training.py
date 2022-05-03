@@ -24,6 +24,7 @@ DSET_NAMES = {
 # TODO: Parameters look cluttered, need to simplify. Use a config. class?
 #   Pass train & test preferences in a list instead of separate param.s.
 #   Iterate over the list later to avoid code repetition.
+# TODO: Rename "softmax models" to CE for correct terminology 
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
                  epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
