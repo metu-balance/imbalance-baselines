@@ -28,6 +28,7 @@ DSET_NAMES = {
 # TODO: Rename "softmax models" to CE for correct terminology
 # TODO: Instead of save_models param, assume false if models_path == ""
 #   TODO: At start of func., if save_models, create temporary dir. under model_path if it does not exist
+# TODO: Add timestamp to saved models
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
                  epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
