@@ -143,11 +143,13 @@ class-balanced and non-class-balanced focal losses, and the custom ResNet-32 imp
 set to be printed at every 10 batches. Later, the models' accuracies are tested.
 
 ```python
+import torch.cuda
 from imbalance_baselines import datasets
 from imbalance_baselines import training
 from imbalance_baselines import utils
 
 beta = 0.9999
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.generate_data(
     batch_size=128,
@@ -156,19 +158,19 @@ train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.gen
     cifar_imb_factor=100
 )
 
-weights = utils.get_weights(train_class_sizes, beta)
+weights = utils.get_weights(train_class_sizes, beta, device=device)
 weights.requires_grad = False
 
 print("Got weights:", weights)
 
-models = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights,
-                               epoch_cnt=200, print_freq=10, train_focal=True, train_cb_focal=True)
+models = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights, device=device, epoch_cnt=1,
+                               print_freq=10, train_focal=True, train_cb_focal=True)
 
 model_focal = models[0]
 model_cb_focal = models[3]
 
-focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes)
-cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes)
+focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes, device=device)
+cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes, device=device)
 
 print("Focal Loss:")
 print("Average accuracy:", focal_avg_acc)
@@ -179,6 +181,7 @@ print("Average accuracy:", cb_focal_avg_acc)
 print("Accuracy per class:", cb_focal_per_class_acc)
 
 print("Done!")
+
 ```
 
 Output:
