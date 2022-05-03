@@ -253,15 +253,15 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     for g in optimizer.param_groups:
                         g["lr"] *= 0.01
                 
-                for i, (input, target) in enumerate(train_dl):
-                    input = input.double().to(device)
+                for i, (inp, target) in enumerate(train_dl):
+                    inp = inp.double().to(device)
                     target = target.to(device)
                     
                     optimizer.zero_grad()
                     
                     if train_focal:
                         loss_focal = loss_functions.focal_loss(
-                            rn_focal(input),
+                            rn_focal(inp),
                             target,
                             gamma=0.5,
                             device=device
@@ -272,7 +272,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     
                     if train_sigmoid:
                         loss_sigmoid = loss_functions.focal_loss(
-                            rn_sigmoid(input),
+                            rn_sigmoid(inp),
                             target,
                             device=device
                         )
@@ -282,7 +282,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     
                     if train_softmax:
                         loss_softmax = cel(
-                            rn_softmax(input),
+                            rn_softmax(inp),
                             target
                         )
                         
@@ -291,7 +291,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     
                     if train_cb_focal:
                         loss_cb_focal = loss_functions.focal_loss(
-                            rn_cb_focal(input),
+                            rn_cb_focal(inp),
                             target,
                             alpha=weights,
                             gamma=0.5,
@@ -303,7 +303,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     
                     if train_cb_sigmoid:
                         loss_cb_sigmoid = loss_functions.focal_loss(
-                            rn_cb_sigmoid(input),
+                            rn_cb_sigmoid(inp),
                             target,
                             alpha=weights,
                             device=device
@@ -314,7 +314,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     
                     if train_cb_softmax:
                         loss_cb_softmax = cb_cel(
-                            rn_cb_softmax(input),
+                            rn_cb_softmax(inp),
                             target
                         ) / target.shape[0]
                         
