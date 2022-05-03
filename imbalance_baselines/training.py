@@ -24,7 +24,6 @@ DSET_NAMES = {
 # TODO: Parameters look cluttered, need to simplify. Use a config. class?
 #   Pass train & test preferences in a list instead of separate param.s.
 #   Iterate over the list later to avoid code repetition.
-# TODO: Rename "softmax models" to CE for correct terminology
 # TODO: Instead of save_models param, assume false if models_path == ""
 #   TODO: At start of func., if save_models, create temporary dir. under model_path if it does not exist
 # TODO: Add timestamp to saved models
@@ -33,8 +32,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
                  draw_plots: bool = False, models_path: str = "./trained_models/",
                  save_models: bool = False, load_models: bool = False, train_focal: bool = False,
-                 train_sigmoid: bool = False, train_softmax: bool = False, train_cb_focal: bool = False,
-                 train_cb_sigmoid: bool = False, train_cb_softmax: bool = False):
+                 train_sigmoid: bool = False, train_ce: bool = False, train_cb_focal: bool = False,
+                 train_cb_sigmoid: bool = False, train_cb_ce: bool = False):
     
     # Sanitize print_freq
     if print_training and print_freq <= 0:
@@ -57,10 +56,10 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
     
     rn_focal = None
     rn_sigmoid = None
-    rn_softmax = None
+    rn_ce = None
     rn_cb_focal = None
     rn_cb_sigmoid = None
-    rn_cb_softmax = None
+    rn_cb_ce = None
     
     # The "state" var. provides the same initial state for every model
     state = None
@@ -84,17 +83,17 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             rn_sigmoid.load_state_dict(state)
         else:
             state = rn_sigmoid.state_dict()
-    if train_softmax:
-        rn_softmax = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_softmax = nn.DataParallel(rn_softmax)
-        rn_softmax = rn_softmax.to(device)
+    if train_ce:
+        rn_ce = rn(num_classes=class_cnt).double()
+        if multi_gpu: rn_ce = nn.DataParallel(rn_ce)
+        rn_ce = rn_ce.to(device)
         
-        param_list.append({'params': rn_softmax.parameters()})
+        param_list.append({'params': rn_ce.parameters()})
         
         if state:
-            rn_softmax.load_state_dict(state)
+            rn_ce.load_state_dict(state)
         else:
-            state = rn_softmax.state_dict()
+            state = rn_ce.state_dict()
     if train_cb_focal:
         rn_cb_focal = rn(num_classes=class_cnt).double()
         if multi_gpu: rn_cb_focal = nn.DataParallel(rn_cb_focal)
@@ -117,15 +116,15 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             rn_cb_sigmoid.load_state_dict(state)
         else:
             state = rn_cb_sigmoid.state_dict()
-    if train_cb_softmax:
-        rn_cb_softmax = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_cb_softmax = nn.DataParallel(rn_cb_softmax)
-        rn_cb_softmax = rn_cb_softmax.to(device)
+    if train_cb_ce:
+        rn_cb_ce = rn(num_classes=class_cnt).double()
+        if multi_gpu: rn_cb_ce = nn.DataParallel(rn_cb_ce)
+        rn_cb_ce = rn_cb_ce.to(device)
         
-        param_list.append({'params': rn_cb_softmax.parameters()})
+        param_list.append({'params': rn_cb_ce.parameters()})
         
         if state:
-            rn_cb_softmax.load_state_dict(state)
+            rn_cb_ce.load_state_dict(state)
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
@@ -148,13 +147,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} sigmoid, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_sigmoid_{dataset}.pth")
         
-        if train_softmax:
-            rn_softmax.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_softmax_{dataset}.pth",
+        if train_ce:
+            rn_ce.load_state_dict(
+                torch.load(models_path + f"rn{resnet_type}_ce_{dataset}.pth",
                            map_location=device)
             )
-            print(f"Loaded model (ResNet-{resnet_type} softmax, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_softmax_{dataset}.pth")
+            print(f"Loaded model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_ce_{dataset}.pth")
         
         if train_cb_focal:
             rn_cb_focal.load_state_dict(
@@ -172,13 +171,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             print(f"Loaded model (ResNet-{resnet_type} cb. sigmoid, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_cb_sigmoid_{dataset}.pth")
         
-        if train_cb_softmax:
-            rn_cb_softmax.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_cb_softmax_{dataset}.pth",
+        if train_cb_ce:
+            rn_cb_ce.load_state_dict(
+                torch.load(models_path + f"rn{resnet_type}_cb_ce_{dataset}.pth",
                            map_location=device)
             )
-            print(f"Loaded model (ResNet-{resnet_type} cb. softmax, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_cb_softmax_{dataset}.pth")
+            print(f"Loaded model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_cb_ce_{dataset}.pth")
     else:
         # Initialize FC biases of models trained with sigmoid and focal losses
         #   to avoid instability at the beginning of the training
@@ -203,14 +202,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         #rn_cb_focal.fc.bias.requires_grad_(False)
         #rn_cb_sigmoid.fc.bias.requires_grad_(False)
         
-        # Initialize ce. loss models' FC biases with 0
+        # Initialize cross entropy loss models' FC biases with 0
         # TODO: How about FC biases of other models?
         if multi_gpu:
-            if train_softmax: rn_softmax.module.fc.bias.data.fill_(0)
-            if train_cb_softmax: rn_cb_softmax.module.fc.bias.data.fill_(0)
+            if train_ce: rn_ce.module.fc.bias.data.fill_(0)
+            if train_cb_ce: rn_cb_ce.module.fc.bias.data.fill_(0)
         else:
-            if train_softmax: rn_softmax.fc.bias.data.fill_(0)
-            if train_cb_softmax: rn_cb_softmax.fc.bias.data.fill_(0)
+            if train_ce: rn_ce.fc.bias.data.fill_(0)
+            if train_cb_ce: rn_cb_ce.fc.bias.data.fill_(0)
         
         optimizer = torch.optim.SGD(
             param_list,
@@ -219,18 +218,18 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             weight_decay=2e-4
         )
         
-        if train_softmax: cel = nn.CrossEntropyLoss()
-        if train_cb_softmax:
+        if train_ce: cel = nn.CrossEntropyLoss()
+        if train_cb_ce:
             #print("Passing weights:", weights)
             cb_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
         
         if draw_plots:
             if train_focal: history_loss_focal = []
             if train_sigmoid: history_loss_sigmoid = []
-            if train_softmax: history_loss_softmax = []
+            if train_ce: history_loss_ce = []
             if train_cb_focal: history_loss_cb_focal = []
             if train_cb_sigmoid: history_loss_cb_sigmoid = []
-            if train_cb_softmax: history_loss_cb_softmax = []
+            if train_cb_ce: history_loss_cb_ce = []
         
         print(f"Starting training with {DSET_NAMES[dataset]} dataset,",
               f"ResNet-{resnet_type} models.")
@@ -238,10 +237,10 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             for epoch in range(epoch_cnt):
                 if train_focal: total_loss_focal = 0
                 if train_sigmoid: total_loss_sigmoid = 0
-                if train_softmax: total_loss_softmax = 0
+                if train_ce: total_loss_ce = 0
                 if train_cb_focal: total_loss_cb_focal = 0
                 if train_cb_sigmoid: total_loss_cb_sigmoid = 0
-                if train_cb_softmax: total_loss_cb_softmax = 0
+                if train_cb_ce: total_loss_cb_ce = 0
                 
                 if epoch < 5:
                     # Linear warm-up of learning rate from 0 to 0.1 in the first 5 epochs
@@ -279,14 +278,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         loss_sigmoid.backward()
                         total_loss_sigmoid += loss_sigmoid.item()
                     
-                    if train_softmax:
-                        loss_softmax = cel(
-                            rn_softmax(inp),
+                    if train_ce:
+                        loss_ce = cel(
+                            rn_ce(inp),
                             target
                         )
                         
-                        loss_softmax.backward()
-                        total_loss_softmax += loss_softmax.item()
+                        loss_ce.backward()
+                        total_loss_ce += loss_ce.item()
                     
                     if train_cb_focal:
                         loss_cb_focal = loss_functions.focal_loss(
@@ -311,14 +310,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         loss_cb_sigmoid.backward()
                         total_loss_cb_sigmoid += loss_cb_sigmoid.item()
                     
-                    if train_cb_softmax:
-                        loss_cb_softmax = cb_cel(
-                            rn_cb_softmax(inp),
+                    if train_cb_ce:
+                        loss_cb_ce = cb_cel(
+                            rn_cb_ce(inp),
                             target
                         ) / target.shape[0]
                         
-                        loss_cb_softmax.backward()
-                        total_loss_cb_softmax += loss_cb_softmax.item()
+                        loss_cb_ce.backward()
+                        total_loss_cb_ce += loss_cb_ce.item()
                     
                     optimizer.step()
                     
@@ -330,14 +329,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                             print("Focal:".rjust(11), total_loss_focal/(i+1))
                         if train_sigmoid:
                             print("Sigmoid:".rjust(11), total_loss_sigmoid/(i+1))
-                        if train_softmax:
-                            print("Softmax:".rjust(11), total_loss_softmax/(i+1))
+                        if train_ce:
+                            print("Cross Entropy:".rjust(11), total_loss_ce/(i+1))
                         if train_cb_focal:
                             print("CB Focal:".rjust(11), total_loss_cb_focal/(i+1))
                         if train_cb_sigmoid:
                             print("CB Sigmoid:", total_loss_cb_sigmoid/(i+1))
-                        if train_cb_softmax:
-                            print("CB Softmax:", total_loss_cb_softmax/(i+1))
+                        if train_cb_ce:
+                            print("CB Cross Entropy:", total_loss_cb_ce/(i+1))
                         
                         print()  # Print empty line
                 else:  # The end of each epoch
@@ -364,13 +363,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                             #print(f"Saved model (ResNet-{resnet_type} sigmoid, {DSET_NAMES[dataset]}):",
                             #      models_path + f"temp/epoch_end/rn{resnet_type}_sigmoid_{dataset}_epoch{epoch}_batch{i+1}.pth")
                         
-                        if train_softmax:
+                        if train_ce:
                             torch.save(
-                                rn_softmax.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth"
+                                rn_ce.state_dict(),
+                                models_path + f"temp/epoch_end/rn{resnet_type}_ce_{dataset}_epoch{epoch}_batch{i+1}.pth"
                             )
-                            #print(f"Saved model (ResNet-{resnet_type} softmax, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth")
+                            #print(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                            #      models_path + f"temp/epoch_end/rn{resnet_type}_ce_{dataset}_epoch{epoch}_batch{i+1}.pth")
                         
                         if train_cb_focal:
                             torch.save(
@@ -388,27 +387,27 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                             #print(f"Saved model (ResNet-{resnet_type} cb. sigmoid, {DSET_NAMES[dataset]}):",
                             #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_sigmoid_{dataset}_epoch{epoch}_batch{i+1}.pth")
                         
-                        if train_cb_softmax:
+                        if train_cb_ce:
                             torch.save(
-                                rn_cb_softmax.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth"
+                                rn_cb_ce.state_dict(),
+                                models_path + f"temp/epoch_end/rn{resnet_type}_cb_ce_{dataset}_epoch{epoch}_batch{i+1}.pth"
                             )
-                            #print(f"Saved model (ResNet-{resnet_type} cb. softmax, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth")
+                            #print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                            #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_ce_{dataset}_epoch{epoch}_batch{i+1}.pth")
                     
                     if draw_plots:
                         if train_focal:
                             history_loss_focal.append(total_loss_focal/(i+1))
                         if train_sigmoid:
                             history_loss_sigmoid.append(total_loss_sigmoid/(i+1))
-                        if train_softmax:
-                            history_loss_softmax.append(total_loss_softmax/(i+1))
+                        if train_ce:
+                            history_loss_ce.append(total_loss_ce/(i+1))
                         if train_cb_focal:
                             history_loss_cb_focal.append(total_loss_cb_focal/(i+1))
                         if train_cb_sigmoid:
                             history_loss_cb_sigmoid.append(total_loss_cb_sigmoid/(i+1))
-                        if train_cb_softmax:
-                            history_loss_cb_softmax.append(total_loss_cb_softmax/(i+1))
+                        if train_cb_ce:
+                            history_loss_cb_ce.append(total_loss_cb_ce/(i+1))
                     
                     if print_training:
                         print("Epoch:", epoch, "| Batch:", str(i + 1))
@@ -417,14 +416,14 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                             print("Focal:".rjust(11), total_loss_focal/(i+1))
                         if train_sigmoid:
                             print("Sigmoid:".rjust(11), total_loss_sigmoid/(i+1))
-                        if train_softmax:
-                            print("Softmax:".rjust(11), total_loss_softmax/(i+1))
+                        if train_ce:
+                            print("Cross Entropy:".rjust(11), total_loss_ce/(i+1))
                         if train_cb_focal:
                             print("CB Focal:".rjust(11), total_loss_cb_focal/(i+1))
                         if train_cb_sigmoid:
                             print("CB Sigmoid:", total_loss_cb_sigmoid/(i+1))
-                        if train_cb_softmax:
-                            print("CB Softmax:", total_loss_cb_softmax/(i+1))
+                        if train_cb_ce:
+                            print("CB Cross Entropy:", total_loss_cb_ce/(i+1))
                         
                         print()  # Print empty line
         except KeyboardInterrupt:
@@ -456,13 +455,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     print(f"Saved model (ResNet-{resnet_type} sigmoid, {DSET_NAMES[dataset]}):",
                           models_path + f"temp/interrupted/rn{resnet_type}_sigmoid_{dataset}_epoch{epoch}_batch{i+1}.pth")
                 
-                if train_softmax:
+                if train_ce:
                     torch.save(
-                        rn_softmax.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth"
+                        rn_ce.state_dict(),
+                        models_path + f"temp/interrupted/rn{resnet_type}_ce_{dataset}_epoch{epoch}_batch{i+1}.pth"
                     )
-                    print(f"Saved model (ResNet-{resnet_type} softmax, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth")
+                    print(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                          models_path + f"temp/interrupted/rn{resnet_type}_ce_{dataset}_epoch{epoch}_batch{i+1}.pth")
                 
                 if train_cb_focal:
                     torch.save(
@@ -480,13 +479,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     print(f"Saved model (ResNet-{resnet_type} cb. sigmoid, {DSET_NAMES[dataset]}):",
                           models_path + f"temp/interrupted/rn{resnet_type}_cb_sigmoid_{dataset}_epoch{epoch}_batch{i+1}.pth")
                 
-                if train_cb_softmax:
+                if train_cb_ce:
                     torch.save(
-                        rn_cb_softmax.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth"
+                        rn_cb_ce.state_dict(),
+                        models_path + f"temp/interrupted/rn{resnet_type}_cb_ce_{dataset}_epoch{epoch}_batch{i+1}.pth"
                     )
-                    print(f"Saved model (ResNet-{resnet_type} cb. softmax, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_{dataset}_epoch{epoch}_batch{i+1}.pth")
+                    print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                          models_path + f"temp/interrupted/rn{resnet_type}_cb_ce_{dataset}_epoch{epoch}_batch{i+1}.pth")
             
             print("Terminating.")
             sys.exit(1)
@@ -511,13 +510,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                 print(f"Saved model (ResNet-{resnet_type} sigmoid, {DSET_NAMES[dataset]}):",
                       models_path + f"rn{resnet_type}_sigmoid_{dataset}.pth")
             
-            if train_softmax:
+            if train_ce:
                 torch.save(
-                    rn_softmax.state_dict(),
-                    models_path + f"rn{resnet_type}_softmax_{dataset}.pth"
+                    rn_ce.state_dict(),
+                    models_path + f"rn{resnet_type}_ce_{dataset}.pth"
                 )
-                print(f"Saved model (ResNet-{resnet_type} softmax, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_softmax_{dataset}.pth")
+                print(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                      models_path + f"rn{resnet_type}_ce_{dataset}.pth")
             
             if train_cb_focal:
                 torch.save(
@@ -535,13 +534,13 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                 print(f"Saved model (ResNet-{resnet_type} cb. sigmoid, {DSET_NAMES[dataset]}):",
                       models_path + f"rn{resnet_type}_cb_sigmoid_{dataset}.pth")
             
-            if train_cb_softmax:
+            if train_cb_ce:
                 torch.save(
-                    rn_cb_softmax.state_dict(),
-                    models_path + f"rn{resnet_type}_cb_softmax_{dataset}.pth"
+                    rn_cb_ce.state_dict(),
+                    models_path + f"rn{resnet_type}_cb_ce_{dataset}.pth"
                 )
-                print(f"Saved model (ResNet-{resnet_type} cb. softmax, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_cb_softmax_{dataset}.pth")
+                print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                      models_path + f"rn{resnet_type}_cb_ce_{dataset}.pth")
         
         if draw_plots:
             legend = []
@@ -553,8 +552,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             if train_sigmoid:
                 plt.plot(history_loss_sigmoid, "-r")
                 legend.append("Sigmoid CE Loss")
-            if train_softmax:
-                plt.plot(history_loss_softmax, "-g")
+            if train_ce:
+                plt.plot(history_loss_ce, "-g")
                 legend.append("CE Loss")
             if train_cb_focal:
                 plt.plot(history_loss_cb_focal, "-c")
@@ -562,8 +561,8 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             if train_cb_sigmoid:
                 plt.plot(history_loss_cb_sigmoid, "-m")
                 legend.append("Class-Balanced Sigmoid CE Loss")
-            if train_cb_softmax:
-                plt.plot(history_loss_cb_softmax, "-y")
+            if train_cb_ce:
+                plt.plot(history_loss_cb_ce, "-y")
                 legend.append("Class-Balanced CE Loss")
             
             if legend:
@@ -581,5 +580,5 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                 plt.show()
     
     # TODO: Return in a dict instead of a tuple for easier access to desired models
-    return (rn_focal, rn_sigmoid, rn_softmax, rn_cb_focal, rn_cb_sigmoid,
-            rn_cb_softmax)
+    return (rn_focal, rn_sigmoid, rn_ce, rn_cb_focal, rn_cb_sigmoid,
+            rn_cb_ce)
