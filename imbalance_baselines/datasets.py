@@ -182,7 +182,7 @@ class INaturalist(Dataset):
 
 # TODO: Parameters look cluttered, may simplify
 def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
-                  use_gdrive: bool = False, cifar_imb_factor: int = 100, sampler=None,
+                  use_gdrive: bool = False, cifar_imb_factor: int = 100, train_shuffle=True, sampler=None,
                   device: torch.device = torch.device("cpu")):
 
   # False if sampler is None or is offline
@@ -359,6 +359,7 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
       train_ds,
       batch_size=batch_size,
       num_workers=2,
+      shuffle=False if sampler_is_online or not train_shuffle else True,
       sampler=sampler if sampler_is_online else None
   )
   
