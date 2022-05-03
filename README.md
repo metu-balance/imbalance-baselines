@@ -3,7 +3,7 @@
 This readme needs rework!
 * Explain setup & requirements
 * Explain directory structure & how to make additions to each file or method
-  * The directory structure itself may need some organization - should we use subfolders?
+    * The directory structure itself may need some organization - should we use subfolders?
 * Implement config. class & explain usage
 ---
 
@@ -18,21 +18,21 @@ The functions use 64-bit floating number (double) precision.
 
 ## Table of Contents
 1. [Library Contents](#library-contents)
-   1. [sampling.py](#samplingpy)
-   2. [datasets.py](#datasetspy)
-   3. [models.py](#modelspy)
-   4. [loss_functions.py](#loss_functionspy)
-   5. [training.py](#trainingpy)
-   6. [utils.py](#utilspy)
+    1. [sampling.py](#samplingpy)
+    2. [datasets.py](#datasetspy)
+    3. [models.py](#modelspy)
+    4. [loss_functions.py](#loss_functionspy)
+    5. [training.py](#trainingpy)
+    6. [utils.py](#utilspy)
 2. [Example Usage](#example-usage)
 3. [Our Results](#our-results)
 
-## Library Contents 
+## Library Contents
 
 ### sampling.py
 
 This file contains sampling mehods to be used in imbalanced training, in order to overcome the disadvantages of
-class imbalance. 
+class imbalance.
 
 The methods are divided into two as "offline" and "online" methods.
 
@@ -43,7 +43,7 @@ These methods apply the re-balancing once when the dataset object is being creat
 ##### OverSampler
 
 This method eliminates the imbalance by random over-sampling: Images from under-reprsented classes are randomly
-replicated until the classes are balanced. 
+replicated until the classes are balanced.
 
 ##### UnderSampler
 
@@ -84,7 +84,7 @@ No modifications are done on the test set.
 
 This class provides the iNaturalist 2017 and 2018 datasets. The desired year's dataset can be chosen with an argument.
 
-These datasets are imbalanced by their own, so the class does not support applying additional offline sampling methods. 
+These datasets are imbalanced by their own, so the class does not support applying additional offline sampling methods.
 
 #### generate_data
 
@@ -100,7 +100,7 @@ defined.
 
 #### ResNet32
 
-This class derives from `torch.nn.Module` and implements a custom ResNet with 32 layers. 
+This class derives from `torch.nn.Module` and implements a custom ResNet with 32 layers.
 
 ---
 
@@ -110,7 +110,7 @@ This file contains the tools and functions to be used during the training of the
 
 #### train_models
 
-This function defines and trains the desired ResNet models with the desired loss functions, using a dataset's `DataLoader` object. 
+This function defines and trains the desired ResNet models with the desired loss functions, using a dataset's `DataLoader` object.
 
 ---
 
