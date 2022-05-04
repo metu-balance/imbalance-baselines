@@ -8,8 +8,8 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
+from loss_functions import FocalLoss
 from . import models
-from . import loss_functions
 from . import DSET_NAMES
 
 
@@ -214,6 +214,10 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         if train_cb_ce:
             #print("Passing weights:", weights)
             cb_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
+        if train_sigmoid or train_focal or train_cb_sigmoid or train_cb_focal:
+            focal_loss = FocalLoss(
+                ...
+            )
         
         if draw_plots:
             if train_focal: history_loss_focal = []
@@ -250,7 +254,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                     optimizer.zero_grad()
                     
                     if train_focal:
-                        loss_focal = loss_functions.focal_loss(
+                        loss_focal = focal_loss(
                             rn_focal(inp),
                             target,
                             gamma=0.5,
@@ -261,7 +265,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         total_loss_focal += loss_focal.item()
                     
                     if train_sigmoid:
-                        loss_sigmoid = loss_functions.focal_loss(
+                        loss_sigmoid = focal_loss(
                             rn_sigmoid(inp),
                             target,
                             device=device
@@ -280,7 +284,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         total_loss_ce += loss_ce.item()
                     
                     if train_cb_focal:
-                        loss_cb_focal = loss_functions.focal_loss(
+                        loss_cb_focal = focal_loss(
                             rn_cb_focal(inp),
                             target,
                             alpha=weights,
@@ -292,7 +296,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
                         total_loss_cb_focal += loss_cb_focal.item()
                     
                     if train_cb_sigmoid:
-                        loss_cb_sigmoid = loss_functions.focal_loss(
+                        loss_cb_sigmoid = focal_loss(
                             rn_cb_sigmoid(inp),
                             target,
                             alpha=weights,
