@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
-from loss_functions import FocalLoss
+from .loss_functions import FocalLoss
 from . import models
 from . import DSET_NAMES
 
