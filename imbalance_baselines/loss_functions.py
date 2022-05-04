@@ -18,7 +18,8 @@ class CostSensitiveCrossEntropy:
         
         return loss
     
-    def get_size_per_class(self, data, num_classes=10):
+    @staticmethod
+    def get_size_per_class(data, num_classes=10):
         size = torch.tensor([0] * num_classes, dtype=torch.float32)
         
         for feature, label in data:
@@ -41,7 +42,8 @@ class ClassBalancedCrossEntropy:
         
         return loss
     
-    def get_weights(self, size, beta=0.):
+    @staticmethod
+    def get_weights(size, beta=0.):
         num_classes = size.shape[0]
         numerator = torch.tensor(1 - beta, dtype=torch.float32, requires_grad=False)
         denominator = 1 - beta ** size
@@ -52,7 +54,8 @@ class ClassBalancedCrossEntropy:
         
         return weights
     
-    def get_size_per_class(self, data, num_classes=10):
+    @staticmethod
+    def get_size_per_class(data, num_classes=10):
         size = torch.tensor([0] * num_classes, dtype=torch.float32)
         
         for feature, label in data:
@@ -107,15 +110,12 @@ def focal_loss(z, lbl, alpha=None, gamma=0, device: torch.device = torch.device(
         
         alpha = (alpha * lbl).sum(axis=1)
         
-    # TODO: Check if the bool casting is required for torch.where() to work
-    lbl_bool = lbl.type(torch.bool)
-    
+    lbl_bool = lbl.type(torch.bool)  # Cast to bool for torch.where()
     z_t = torch.where(lbl_bool, z, -z).to(device)
     
     sig = nn.Sigmoid()
     logsig = nn.LogSigmoid()
     
-    p_t = sig(z_t).to(device)
     cross_entpy = logsig(z_t).to(device)
     
     if gamma:
