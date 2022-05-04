@@ -16,6 +16,11 @@ from . import DSET_NAMES
 # TODO: Parameters look cluttered, need to simplify. Use a config. class?
 #   Pass train & test preferences in a list instead of separate param.s.
 #   Iterate over the list later to avoid code repetition.
+#   TODO: This should also satisfy the main intention of the project, which is to provide a baseline for
+#     experiments described using preference combinations. Just choose model architecture, dataset,
+#     loss fn., sampling method... etc. and then program should take care of the rest. The current
+#     structure may need to be modified (e.g it might not be suitable for multiple data transformation
+#     methods, since it would require different iterations over the dataset for different experiments).
 # TODO: Instead of save_models param, assume false if models_path == ""
 #   TODO: At start of func., if save_models, create temporary dir. under model_path if it does not exist
 # TODO: Add timestamp to saved models
