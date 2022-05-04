@@ -4,12 +4,10 @@ import torch
 from torch.utils.data import DataLoader
 
 
-# TODO: Deprecate if unneeded (see: get_weights in ClassBalancedCrossEntropy)
-#   (Or, just remove that method version as it is already static)
 def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu")):
-    """Get normalized weight per class."""
+    """Get normalized weight (inverse of effective number of samples) per class."""
     
-    class_cnt = len(class_sizes)
+    class_cnt = class_sizes.shape[0]
     class_sizes = torch.as_tensor(
         class_sizes,
         dtype=torch.float32,
@@ -29,7 +27,19 @@ def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu"))
     # Normalize the weights
     weights = torch.mul(weights, class_cnt / torch.sum(weights)).to(device)
     
+    weights.requires_grad = False
+    
+    # TODO: Define as double from the start instead of casting
     return weights.double()
+
+
+def get_size_per_class(data, num_classes=10):
+    size = torch.tensor([0] * num_classes, dtype=torch.float32)
+
+    for feature, label in data:
+        size[label] += 1
+
+    return size
 
 
 def get_accuracy(test_data:DataLoader, model, class_sizes:[int],

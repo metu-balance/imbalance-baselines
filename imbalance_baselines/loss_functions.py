@@ -3,11 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from . import utils
+
 
 class CostSensitiveCrossEntropy:
-    def __init__(self, dataset, num_classes: int, beta: float, device='cpu'):
-        sizes = self.get_size_per_class(dataset, num_classes)
-        weights = sizes.min() / sizes
+    def __init__(self, dataset, num_classes: int, beta: float, device: torch.device = torch.device("cpu")):
+        class_sizes = utils.get_size_per_class(dataset, num_classes)
+        weights = class_sizes.min() / class_sizes
         self.CS_CE = nn.CrossEntropyLoss(weight=weights.to(device), reduction='Sum')
         self.weights = weights
         self.beta = beta
@@ -17,21 +19,12 @@ class CostSensitiveCrossEntropy:
         loss = self.CS_CE(logits, labels) / batch_size
         
         return loss
-    
-    @staticmethod
-    def get_size_per_class(data, num_classes=10):
-        size = torch.tensor([0] * num_classes, dtype=torch.float32)
-        
-        for feature, label in data:
-            size[label] += 1
-        
-        return size
 
 
 class ClassBalancedCrossEntropy:
     def __init__(self, dataset, num_classes: int, beta: float):
-        sizes = self.get_size_per_class(dataset, num_classes)
-        weights = self.get_weights(sizes, beta)
+        class_sizes = utils.get_size_per_class(dataset, num_classes)
+        weights = utils.get_weights(class_sizes, beta)
         self.CB_CE = torch.nn.CrossEntropyLoss(weight=weights, reduction='Sum')
         self.weights = weights
         self.beta = beta
@@ -41,27 +34,6 @@ class ClassBalancedCrossEntropy:
         loss = self.CB_CE(logits, labels) / batch_size
         
         return loss
-    
-    @staticmethod
-    def get_weights(size, beta=0.):
-        num_classes = size.shape[0]
-        numerator = torch.tensor(1 - beta, dtype=torch.float32, requires_grad=False)
-        denominator = 1 - beta ** size
-        
-        weights = numerator / denominator
-        weights *= num_classes / weights.sum()
-        weights.requires_grad = False
-        
-        return weights
-    
-    @staticmethod
-    def get_size_per_class(data, num_classes=10):
-        size = torch.tensor([0] * num_classes, dtype=torch.float32)
-        
-        for feature, label in data:
-            size[label] += 1
-        
-        return size
 
 
 class InputMixup:
