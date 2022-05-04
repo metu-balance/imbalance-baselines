@@ -6,19 +6,11 @@ import sys
 import torch
 import torch.nn as nn
 
-from . import models
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
+from . import models
 from . import loss_functions
-
-
-# TODO: Find a better place shared by all submodules to define this (__init__.py?)
-DSET_NAMES = {
-    "CIFAR10": "CIFAR10",
-    "IMB_CIFAR10": "Long-Tailed CIFAR10",
-    "INATURALIST_2017": "iNaturalist 2017",
-    "INATURALIST_2018": "iNaturalist 2018"
-}
+from . import DSET_NAMES
 
 
 # TODO: Parameters look cluttered, need to simplify. Use a config. class?

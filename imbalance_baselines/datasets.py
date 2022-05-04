@@ -1,7 +1,6 @@
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from . import sampling
 import torch
 
 from numpy.random import Generator, PCG64
@@ -9,14 +8,8 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
-
-# TODO: Find a better place shared by all submodules to define this (__init__.py?)
-DSET_NAMES = {
-    "CIFAR10": "CIFAR10",
-    "IMB_CIFAR10": "Long-Tailed CIFAR10",
-    "INATURALIST_2017": "iNaturalist 2017",
-    "INATURALIST_2018": "iNaturalist 2018"
-}
+from . import sampling
+from . import DSET_NAMES
 
 
 class CIFAR10LT(datasets.CIFAR10):
