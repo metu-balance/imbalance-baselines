@@ -210,14 +210,12 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             weight_decay=2e-4
         )
         
-        if train_softmax_ce: cel = nn.CrossEntropyLoss()
+        if train_softmax_ce:
+            cel = nn.CrossEntropyLoss()
         if train_cb_softmax_ce:
-            #print("Passing weights:", weights)
             cb_softmax_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
         if train_sigmoid_ce or train_focal or train_cb_sigmoid_ce or train_cb_focal:
-            focal_loss = FocalLoss(
-                ...
-            )
+            focal_loss = FocalLoss(device=device)
         
         if draw_plots:
             if train_focal: history_loss_focal = []
