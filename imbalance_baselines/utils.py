@@ -7,12 +7,13 @@ from torch.utils.data import DataLoader
 def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu")):
     """Get normalized weight (inverse of effective number of samples) per class."""
     
-    class_cnt = class_sizes.shape[0]
     class_sizes = torch.as_tensor(
         class_sizes,
         dtype=torch.float32,
         device=device
     )
+
+    class_cnt = class_sizes.shape[0]
     
     weights = torch.as_tensor(
         [1 - beta] * class_cnt,
