@@ -186,7 +186,52 @@ print("Done!")
 Output:
 
 ```
-TODO
+Files already downloaded and verified
+Files already downloaded and verified
+Number of training samples:
+[5000 2997 1796 1077  645  387  232  139   83   50]
+Got weights: tensor([0.0506, 0.0769, 0.1211, 0.1950, 0.3188, 0.5246, 0.8684, 1.4426, 2.4092,
+        3.9927], device='cuda:0', dtype=torch.float64)
+Starting training with Long-Tailed CIFAR10 dataset, ResNet-32 models.
+Epoch: 0 | Batch: 1
+     Focal: 2.581519189487201
+  CB Focal: 0.7345769421845707
+
+Epoch: 0 | Batch: 50
+     Focal: 1.6703934794157314
+  CB Focal: 0.3952958685285224
+
+Epoch: 0 | Batch: 97
+     Focal: 1.5652494204323226
+  CB Focal: 0.38759862578652887
+
+Epoch: 1 | Batch: 50
+     Focal: 1.4629814085467638
+  CB Focal: 0.3902064873347718
+```
+...
+```
+Epoch: 198 | Batch: 97
+     Focal: 0.3481788270618167
+  CB Focal: 0.13591878579199754
+
+Epoch: 199 | Batch: 50
+     Focal: 0.3476705417281534
+  CB Focal: 0.13620742757213233
+
+Epoch: 199 | Batch: 97
+     Focal: 0.34149305391253787
+  CB Focal: 0.13366841483947772
+
+Saved model (ResNet-32 focal, Long-Tailed CIFAR10): ./output/models/rn32_focal_IMB_CIFAR10.pth
+Saved model (ResNet-32 cb. focal, Long-Tailed CIFAR10): ./output/models/rn32_cb_focal_IMB_CIFAR10.pth
+Focal Loss:
+Average accuracy: tensor(0.5217, device='cuda:0')
+Accuracy per class: [0.9860000610351562, 0.9520000219345093, 0.76500004529953, 0.6260000467300415, 0.6110000014305115, 0.34800001978874207, 0.43700000643730164, 0.26600000262260437, 0.15600000321865082, 0.07000000029802322]
+Class-Balanced Focal Loss:
+Average accuracy: tensor(0.5882, device='cuda:0')
+Accuracy per class: [0.956000030040741, 0.9000000357627869, 0.6340000033378601, 0.5120000243186951, 0.609000027179718, 0.4540000259876251, 0.550000011920929, 0.45500001311302185, 0.4660000205039978, 0.3460000157356262]
+Done!
 ```
 ---
 
