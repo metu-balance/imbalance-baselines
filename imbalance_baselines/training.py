@@ -56,7 +56,9 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         if not models_path.endswith("/"):
             models_path += "/"
         
-        # TODO: Create temporary dir. under model_path if it does not exist
+        # Create temporary dir. under model_path if it does not exist
+        os.makedirs("temp/interrupted/", mode=611, exist_ok=True)
+        os.makedirs("temp/epoch_end/", mode=611, exist_ok=True)
     
     rn_focal = None
     rn_sigmoid_ce = None
