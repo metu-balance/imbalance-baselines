@@ -21,16 +21,13 @@ from . import DSET_NAMES
 #     loss fn., sampling method... etc. and then program should take care of the rest. The current
 #     structure may need to be modified (e.g it might not be suitable for multiple data transformation
 #     methods, since it would require different iterations over the dataset for different experiments).
-# TODO: Instead of save_models param, assume false if models_path == ""
-#   TODO: At start of func., if save_models, create temporary dir. under model_path if it does not exist
 # TODO: Add timestamp to saved models
 def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
                  epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
                  resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
-                 draw_plots: bool = False, models_path: str = "./trained_models/",
-                 save_models: bool = False, load_models: bool = False, train_focal: bool = False,
-                 train_sigmoid_ce: bool = False, train_softmax_ce: bool = False, train_cb_focal: bool = False,
-                 train_cb_sigmoid_ce: bool = False, train_cb_softmax_ce: bool = False):
+                 draw_plots: bool = False, models_path: str = "./trained_models/", load_models: bool = False,
+                 train_focal: bool = False, train_sigmoid_ce: bool = False, train_softmax_ce: bool = False,
+                 train_cb_focal: bool = False, train_cb_sigmoid_ce: bool = False, train_cb_softmax_ce: bool = False):
     
     # Sanitize print_freq
     if print_training and print_freq <= 0:
@@ -48,8 +45,18 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         rn = torchmodels.resnet152
     else:
         raise ValueError("Invalid resnet_type")
-    
+
     param_list = []
+    if models_path == "":
+        save_models = False
+    else:
+        save_models = True
+        
+        # Sanitize models_path:
+        if not models_path.endswith("/"):
+            models_path += "/"
+        
+        # TODO: Create temporary dir. under model_path if it does not exist
     
     rn_focal = None
     rn_sigmoid_ce = None

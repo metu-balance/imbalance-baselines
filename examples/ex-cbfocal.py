@@ -19,7 +19,7 @@ weights.requires_grad = False
 print("Got weights:", weights)
 
 models = training.train_models("IMB_CIFAR10", train_dl, class_cnt, weights, device=device, epoch_cnt=1,
-                               print_freq=10, train_focal=True, train_cb_focal=True)
+                               print_freq=10, models_path="", train_focal=True, train_cb_focal=True)
 
 model_focal = models[0]
 model_cb_focal = models[3]
