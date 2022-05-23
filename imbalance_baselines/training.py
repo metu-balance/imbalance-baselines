@@ -13,7 +13,7 @@ from . import models
 from . import DSET_NAMES
 
 
-# TODO: Parameters look cluttered, need to simplify. Use a config. class?
+# TODO: Use the config. class for preferences
 #   Pass train & test preferences in lists instead of separate param.s.
 #   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
 #   TODO: This should also satisfy the main intention of the project, which is to provide a baseline for

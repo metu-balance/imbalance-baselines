@@ -170,7 +170,7 @@ class INaturalist(Dataset):
         return cls_cnt_list
 
 
-# TODO: Parameters look cluttered, may simplify
+# TODO: Use the config. class for preferences
 def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
                   cifar_imb_factor: int = 100, train_shuffle=True, sampler=None,
                   device: torch.device = torch.device("cpu")):
@@ -228,7 +228,7 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
     else:
         raise ValueError("The given dataset name is not recognized.")
     
-    # TODO: Transformation pipeline should be easily customized - config?
+    # TODO: Transformation pipeline should be easily customized - manage through config?
     train_transforms = transforms.Compose([
         transforms.Pad(padding=pad, fill=0, padding_mode="constant"),
         transforms.RandomResizedCrop(im_size),

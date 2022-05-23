@@ -6,7 +6,7 @@ except ImportError:
 
 
 class Config:
-    def __init__(self, inp):
+    def __init__(self, yaml_path):
         # TODO: Parse YAML into dictionary
         ...
     
