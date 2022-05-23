@@ -4,12 +4,13 @@ import torch
 from torch.utils.data import DataLoader
 
 
-def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu")):
+def get_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
+                device: torch.device = torch.device("cpu")) -> torch.Tensor:
     """Get normalized weight (inverse of effective number of samples) per class."""
     
     class_sizes = torch.as_tensor(
         class_sizes,
-        dtype=torch.float32,
+        #dtype=torch.long,
         device=device
     )
 
@@ -17,7 +18,7 @@ def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu"))
     
     weights = torch.as_tensor(
         [1 - beta] * class_cnt,
-        dtype=torch.float32,
+        dtype=dtype,
         device=device
     )
     
@@ -30,7 +31,6 @@ def get_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu"))
     
     weights.requires_grad = False
     
-    # TODO: Define as double from the start instead of casting
     return weights.double()
 
 
