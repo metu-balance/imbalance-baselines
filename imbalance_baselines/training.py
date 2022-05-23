@@ -592,6 +592,7 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
             
                 plt.show()
     
-    # TODO: Return in a dict instead of a tuple for easier access to desired models
+    # TODO: Return in a dict instead of a tuple for easier access to desired models.
+    #   Each key should describe the model's properties (model type, loss, etc.)
     return (rn_focal, rn_sigmoid_ce, rn_softmax_ce, rn_cb_focal, rn_cb_sigmoid_ce,
             rn_cb_softmax_ce)
