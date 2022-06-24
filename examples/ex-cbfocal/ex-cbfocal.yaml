@@ -11,7 +11,8 @@ Training:
   epoch_count: 1
   multi_gpu: False
   backup:
-    models_path: ""
+    save_models: False
+    #models_path: ""
     #load_models: False
   losses: [
     "focal",
