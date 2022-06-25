@@ -1,22 +1,20 @@
 Dataset:
-  name: "IMB_CIFAR10"
   cifar_imb_factor: 100
 DataGeneration:
   batch_size: 128
-  datasets_path: "datasets/"
+  #datasets_path: "datasets/"   # Mandatory field. Ignore in this defaults config.
   train_shuffle: True
   draw_plots: False
   # Note that sampler is not passed through config file
 Training:
-  epoch_count: 1
+  epoch_count: 100
   multi_gpu: False
   backup:
-    save_models: False
     #models_path: ""
-    #load_models: False
+    save_models: False
+    load_models: False
   losses: [
-    "focal",
-    "cb_focal"
+    "ce_softmax"
   ]
   printing:
     print_training: True
