@@ -43,8 +43,10 @@ def get_size_per_class(data, num_classes=10):
     return size
 
 
-def get_accuracy(test_data:DataLoader, model, class_sizes:[int],
-                 device:torch.device = torch.device("cpu"), calc_avg=True, calc_perclass=True, top=1):
+# TODO: This should be renamed as a specific evaluation method. The overall get_accuracy function should
+#   iterate over trained model & eval. method preference pairs.
+def get_accuracy(test_data: DataLoader, model, class_sizes:[int],
+                 device: torch.device = torch.device("cpu"), calc_avg=True, calc_perclass=True, top=1):
     """Return a tuple containing the accuracy values of a given model.
   
     The first element of the returned tuple is the average accuracy of the model.
