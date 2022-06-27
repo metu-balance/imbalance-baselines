@@ -102,4 +102,6 @@ def get_accuracy(test_data: DataLoader, model, class_sizes:[int],
                 # Average accuracy of every class separately
                 per_class_acc[i] /= class_sizes[i]
         
+        # TODO: avg_acc is initialized as a float but is assigned a tensor throughout evaluation.
+        #   Change avg_acc type to tensor & return contained value, or process as a float from the beginning.
         return avg_acc, per_class_acc.tolist()

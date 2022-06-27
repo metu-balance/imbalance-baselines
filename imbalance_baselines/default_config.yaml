@@ -21,5 +21,6 @@ Training:
   model: "32"
   printing:
     print_training: True
+    # TODO: Separate batch and epoch print frequencies
     print_frequency: 10
   draw_plots: False
