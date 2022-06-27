@@ -1,6 +1,6 @@
 Dataset:
   name: "IMB_CIFAR10"
-  cifar_imb_factor: 100
+  cifar10_imb_factor: 100
 DataGeneration:
   batch_size: 128
   datasets_path: "datasets/"

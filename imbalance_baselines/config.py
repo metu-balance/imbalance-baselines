@@ -50,8 +50,8 @@ class Config:
         
         # Datasets field and a valid name is known to exist now
         if self.config["Dataset"]["name"] == "IMB_CIFAR10" \
-                and "cifar_imb_factor" not in self.config["Dataset"].keys():
-            self.config["Dataset"]["cifar_imb_factor"] = defaults["Dataset"]["cifar_imb_factor"]
+                and "cifar10_imb_factor" not in self.config["Dataset"].keys():
+            self.config["Dataset"]["cifar10_imb_factor"] = defaults["Dataset"]["cifar10_imb_factor"]
         
         # DataGeneration field and datasets_path are mandatory and known to exist.
         #   Get rest from defaults if they do not exist.

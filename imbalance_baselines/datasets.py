@@ -170,10 +170,16 @@ class INaturalist(Dataset):
         return cls_cnt_list
 
 
-# TODO: Use the config. class for preferences
-def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32: bool = False, draw_plots: bool = False,
-                  cifar_imb_factor: int = 100, train_shuffle=True, sampler=None,
-                  device: torch.device = torch.device("cpu")):
+# TODO: Remove device param. if unneeded
+def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu")):
+    # Parse configuration
+    dataset = cfg["Dataset"]["name"]
+    if dataset == "IMB_CIFAR10":
+        cifar10_imb_factor = cfg["Dataset"]["cifar10_imb_factor"]
+    batch_size = cfg["DataGeneration"]["batch_size"]
+    datasets_path = cfg["DataGeneration"]["datasets_path"]
+    train_shuffle = cfg["DataGeneration"]["train_shuffle"]
+    draw_plots = cfg["DataGeneration"]["draw_plots"]
     
     # False if sampler is None or is offline
     sampler_is_online = isinstance(sampler, sampling.OnlineSampler) and (sampler is not None)
@@ -261,7 +267,7 @@ def generate_data(batch_size: int, dataset: str, datasets_path: str, inat_32x32:
     elif dataset == "IMB_CIFAR10":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
-            imb_factor=cifar_imb_factor,
+            imb_factor=cifar10_imb_factor,
             train=True,
             download=True,
             transform=train_transforms,

@@ -4,7 +4,8 @@ This readme needs rework!
 * Explain setup & requirements
 * Explain directory structure & how to make additions to each file or method
     * The directory structure itself may need some organization - should we use subfolders?
-* Implement config. class & explain usage (list available loss, model... choices etc.)
+* Implement config. class & explain usage (list available loss, model... choices etc., explain config writing guide for
+new datasets & other components)
 ---
 
 # imbalance-baselines
