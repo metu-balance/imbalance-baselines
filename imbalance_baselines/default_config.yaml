@@ -16,7 +16,10 @@ Training:
   losses: [
     "ce_softmax"
   ]
+  # TODO: Use model, loss, ... config.s together instead. Also replace the placeholder name
+  #   for resnet32
+  model: "32"
   printing:
     print_training: True
     print_frequency: 10
-    draw_plots: False
+  draw_plots: False

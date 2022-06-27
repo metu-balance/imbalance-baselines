@@ -13,26 +13,61 @@ from . import models
 from . import DSET_NAMES
 
 
-# TODO: Use the config. class for preferences
-#   Pass train & test preferences in lists instead of separate param.s.
+# TODO: Pass train & test preferences toghether in lists instead of separate param.s (See: TODO in config.s).
 #   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
 #   TODO: This should also satisfy the main intention of the project, which is to provide a baseline for
 #     experiments described using preference combinations. Just choose model architecture, dataset,
 #     loss fn., sampling method... etc. and then program should take care of the rest. The current
 #     structure may need to be modified (e.g it might not be suitable for multiple data transformation
 #     methods, since it would require different iterations over the dataset for different experiments).
-def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [float],
-                 epoch_cnt: int = 200, multi_gpu: bool = False, device: torch.device = torch.device("cpu"),
-                 resnet_type: str = "32", print_training: bool = True, print_freq: int = 100,
-                 draw_plots: bool = False, models_path: str = "./trained_models/", load_models: bool = False,
-                 train_focal: bool = False, train_sigmoid_ce: bool = False, train_softmax_ce: bool = False,
-                 train_cb_focal: bool = False, train_cb_sigmoid_ce: bool = False, train_cb_softmax_ce: bool = False):
+def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
+                 device: torch.device = torch.device("cpu")):
+    
+    # Parse configuration
+    # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
+    dataset = cfg["Dataset"]["name"]
+    epoch_cnt = cfg["Training"]["epoch_count"]
+    multi_gpu = cfg["Training"]["multi_gpu"]
+    resnet_type = cfg["Training"]["model"]
+    print_training = cfg["Training"]["printing"]["print_training"]
+    print_freq = cfg["Training"]["printing"]["print_frequency"]
+    draw_plots = cfg["Training"]["draw_plots"]
+    save_models = cfg["Training"]["backup"]["save_models"]
+    load_models = cfg["Training"]["backup"]["load_models"]
+    if save_models or load_models:
+        models_path = cfg["Training"]["backup"]["models_path"]
+    
+    # TODO: Iterate over new composite config. (model, loss, eval. method, ...) instead
+    losses = cfg["Training"]["losses"]
+    if "focal" in losses:
+        train_focal = True
+    if "ce_sigmoid" in losses:
+        train_sigmoid_ce = True
+    if "ce_softmax" in losses:
+        train_softmax_ce = True
+    if "cb_focal" in losses:
+        train_cb_focal = True
+    if "cb_ce_sigmoid" in losses:
+        train_cb_sigmoid_ce = True
+    if "cb_ce_softmax" in losses:
+        train_cb_softmax_ce = True
     
     # Sanitize print_freq
+    # TODO: Do this in config.py
     if print_training and print_freq <= 0:
         raise ValueError("Printing frequency must be a positive integer.")
     else:
         print_freq = int(print_freq)
+
+    # Sanitize models_path
+    # TODO: Do this in config.py
+    if save_models:
+        if not models_path.endswith("/"):
+            models_path += "/"
+    
+        # Create temporary dir. under model_path if it does not exist
+        os.makedirs("temp/interrupted/", mode=611, exist_ok=True)
+        os.makedirs("temp/epoch_end/", mode=611, exist_ok=True)
     
     if resnet_type == "32":
         rn = models.ResNet32
@@ -46,18 +81,6 @@ def train_models(dataset: str, train_dl: DataLoader, class_cnt: int, weights: [f
         raise ValueError("Invalid resnet_type")
 
     param_list = []
-    if models_path == "":
-        save_models = False
-    else:
-        save_models = True
-        
-        # Sanitize models_path:
-        if not models_path.endswith("/"):
-            models_path += "/"
-        
-        # Create temporary dir. under model_path if it does not exist
-        os.makedirs("temp/interrupted/", mode=611, exist_ok=True)
-        os.makedirs("temp/epoch_end/", mode=611, exist_ok=True)
     
     rn_focal = None
     rn_sigmoid_ce = None

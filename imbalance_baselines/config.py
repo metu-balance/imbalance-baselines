@@ -69,6 +69,8 @@ class Config:
                     self.config["Training"][key] = defaults["Training"][key]
             if not self.config["Training"]["losses"]:  # Empty list
                 self.config["Training"]["losses"] = defaults["Training"]["losses"]
+            # TODO: Check model config. too. (Or better, modify this check for the new composite
+            #   config. type (loss, model, eval method...))
             
             # Repeat for sub-dictionaries
             for key in defaults["Training"]["backup"].keys():
