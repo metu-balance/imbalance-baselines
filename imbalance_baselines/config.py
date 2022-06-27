@@ -3,7 +3,7 @@ from yaml import safe_load
 
 
 class Config:
-    def __init__(self, yaml_path, defaults_path="./default_config.yaml"):
+    def __init__(self, yaml_path, defaults_path="default_config.yaml"):
         with open(yaml_path, "r") as f:
             self.config = safe_load(f)
 
