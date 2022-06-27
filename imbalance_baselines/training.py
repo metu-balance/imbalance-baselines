@@ -36,6 +36,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
     load_models = cfg["Training"]["backup"]["load_models"]
     if save_models or load_models:
         models_path = cfg["Training"]["backup"]["models_path"]
+    else:
+        models_path = ""
     
     # TODO: Iterate over new composite config. (model, loss, eval. method, ...) instead
     losses = cfg["Training"]["losses"]
