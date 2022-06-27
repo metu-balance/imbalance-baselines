@@ -1,10 +1,10 @@
-import os.path
+from pathlib import Path
 from pprint import pprint
 from yaml import safe_load
 
 
 class Config:
-    def __init__(self, yaml_path, defaults_path=os.path.realpath("default_config.yaml")):
+    def __init__(self, yaml_path, defaults_path=(Path(__file__) / "default_config.yaml").resolve()):
         with open(yaml_path, "r") as f:
             self.config = safe_load(f)
 
