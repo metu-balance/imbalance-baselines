@@ -1,8 +1,9 @@
 Dataset:
+  #name: "IMB_CIFAR10"  # Mandatory field. Ignore in this defaults config.
   cifar10_imb_factor: 100
 DataGeneration:
   batch_size: 128
-  #datasets_path: "datasets/"   # Mandatory field. Ignore in this defaults config.
+  #datasets_path: "datasets/"  # Mandatory field. Ignore in this defaults config.
   train_shuffle: True
   draw_plots: False
   # Note that sampler is not passed through config file
@@ -10,7 +11,7 @@ Training:
   epoch_count: 100
   multi_gpu: False
   backup:
-    #models_path: ""
+    #models_path: ""  # Mandatory field only if save_models or load_models is True.
     save_models: False
     load_models: False
   losses: [

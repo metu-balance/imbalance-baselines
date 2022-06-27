@@ -18,8 +18,6 @@ Training:
     "focal",
     "cb_focal"
   ]
-  # TODO: Use model, loss, eval. method... config.s together instead. Also replace the placeholder
-  #   name for resnet32
   model: "32"
   printing:
     print_training: True
