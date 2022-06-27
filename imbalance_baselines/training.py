@@ -39,18 +39,13 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
     
     # TODO: Iterate over new composite config. (model, loss, eval. method, ...) instead
     losses = cfg["Training"]["losses"]
-    if "focal" in losses:
-        train_focal = True
-    if "ce_sigmoid" in losses:
-        train_sigmoid_ce = True
-    if "ce_softmax" in losses:
-        train_softmax_ce = True
-    if "cb_focal" in losses:
-        train_cb_focal = True
-    if "cb_ce_sigmoid" in losses:
-        train_cb_sigmoid_ce = True
-    if "cb_ce_softmax" in losses:
-        train_cb_softmax_ce = True
+    
+    train_focal = "focal" in losses
+    train_sigmoid_ce = "ce_sigmoid" in losses
+    train_softmax_ce = "ce_softmax" in losses
+    train_cb_focal = "cb_focal" in losses
+    train_cb_sigmoid_ce = "cb_ce_sigmoid" in losses
+    train_cb_softmax_ce = "cb_ce_softmax" in losses
     
     # Sanitize print_freq
     # TODO: Do this in config.py
