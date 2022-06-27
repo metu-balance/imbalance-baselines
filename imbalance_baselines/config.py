@@ -25,8 +25,8 @@ class Config:
                 raise Exception('"datasets_path" is missing from the DataGeneration field. Please'
                                 ' provide a path to store the datasets in.')
 
-        train_keys = self.config["Training"].keys()
         if "Training" in conf_keys:
+            train_keys = self.config["Training"].keys()
             if "losses" in train_keys:
                 # TODO: Check if given loss names are valid. Empty list is handled in next section.
                 #for loss in self.config["Training"]["losses"]:
@@ -65,6 +65,7 @@ class Config:
         if "Training" not in conf_keys:
             self.config["Training"] = defaults["Training"]
         else:
+            train_keys = self.config["Training"].keys()
             for key in defaults["Training"].keys():
                 if key not in train_keys:
                     self.config["Training"][key] = defaults["Training"][key]
