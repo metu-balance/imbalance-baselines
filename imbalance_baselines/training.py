@@ -20,6 +20,7 @@ from . import DSET_NAMES
 #     loss fn., sampling method... etc. and then program should take care of the rest. The current
 #     structure may need to be modified (e.g it might not be suitable for multiple data transformation
 #     methods, since it would require different iterations over the dataset for different experiments).
+# TODO: Pass double precision preference through cfg
 def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
                  device: torch.device = torch.device("cpu")):
     
