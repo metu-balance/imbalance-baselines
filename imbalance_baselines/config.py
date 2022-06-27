@@ -84,3 +84,6 @@ class Config:
 
         print("Got configuration:")
         pprint(self.config)
+
+    def __getitem__(self, item):
+        return self.config[item]
