@@ -6,7 +6,6 @@ DataGeneration:
   datasets_path: "datasets/"
   train_shuffle: True
   draw_plots: False
-  # Note that sampler is not passed through config file
 Training:
   epoch_count: 1
   multi_gpu: False

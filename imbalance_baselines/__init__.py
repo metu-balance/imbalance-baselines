@@ -22,7 +22,11 @@ MODEL_NAMES = {
     "resnet152": "ResNet-152"
 }
 
-OPT_NAMES = {
+OPT_NAMES = {  # Names for optimizers
     "sgd": "Stochastic Gradient Descent with Momentum",
     "sgd_linwarmup": "Stochastic Gradient Descent with Momentum and Linear Warm-up"
+}
+
+EVAL_NAMES = {  # Names for evaluation methods
+    "get_accuracy": "Prediction Accuracy Calculation"
 }
