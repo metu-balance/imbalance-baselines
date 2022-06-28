@@ -14,12 +14,14 @@ Training:
     #models_path: ""  # Mandatory field only if save_models or load_models is True.
     save_models: False
     load_models: False
-  losses: [
-    "ce_softmax"
-  ]
-  # TODO: Use model, loss, ... config.s together instead. Also replace the placeholder name
-  #   for resnet32
-  model: "32"
+  tasks:
+    # TODO: Implement evaluation config. after separating the testing func.
+    # TODO: Access tasks through unique names? IDs?
+    -
+      model: "resnet32"
+      loss: "ce_softmax"
+      #evaluation: ...
+      task_options: None
   printing:
     print_training: True
     # TODO: Separate batch and epoch print frequencies

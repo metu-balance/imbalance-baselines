@@ -13,17 +13,63 @@ from . import models
 from . import DSET_NAMES
 
 
-# TODO: Pass train & test preferences toghether in lists instead of separate param.s (See: TODO in config.s).
-#   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
-#   TODO: This should also satisfy the main intention of the project, which is to provide a baseline for
-#     experiments described using preference combinations. Just choose model architecture, dataset,
-#     loss fn., sampling method... etc. and then program should take care of the rest. The current
-#     structure may need to be modified (e.g it might not be suitable for multiple data transformation
-#     methods, since it would require different iterations over the dataset for different experiments).
-# TODO: Pass double precision preference through cfg
-def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
-                 device: torch.device = torch.device("cpu")):
+class TrainTask:
+    def __init__(self, task_cfg, device: torch.device = torch.device("cpu")):
+        self.model_name = task_cfg["model"]
+        self.loss_name = task_cfg["loss"]
+        # TODO: Implement eval config
+        #self.eval_name = task_cfg["eval"]
+        
+        self.model_obj = None
+        self.loss_obj = None
+        
+        # Additional task-specific configurations: None if not specified; else, a dict of config.s.
+        self.options = task_cfg["task_options"]
+        
+        # TODO: Add support for more models
+        # TODO: Map model names & objects elsewhere in a dict, preferably in models.py
+        if self.model_name == "resnet32":
+            self.model = models.ResNet32
+        elif self.model_name == "resnet50":
+            self.model = torchmodels.resnet50
+        elif self.model_name == "resnet101":
+            self.model = torchmodels.resnet101
+        elif self.model_name == "resnet152":
+            self.model = torchmodels.resnet152
+        else:
+            # TODO [1]: Do this in config.py
+            raise ValueError("Invalid model name given:", self.model_name)
+
+        # TODO: Map model names & objects elsewhere in a dict, preferably in loss_functions.py
+        # TODO: Do not initialize the losses here, do not pass weights to class
+        if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
+            self.loss = FocalLoss(device=device)
+        elif self.loss_name in ["ce_softmax", "cb_ce_softmax"]:
+            self.loss = nn.CrossEntropyLoss
+        else:
+            # TODO [1]: Do this in config.py
+            raise ValueError("Invalid loss function name given:", self.loss_name)
     
+    def __getitem__(self, item):
+        """Get an option of the task. If it does not exist, simply return False."""
+        if item in self.options.keys():
+            return self.options[item]
+        else:
+            return False
+    
+
+# TODO [2]: Pass train & test preferences toghether in lists instead of separate param.s (See: TODO in config.s).
+#   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
+#   This should also satisfy the main intention of the project, which is to provide a baseline for
+#   experiments described using preference combinations. Just choose model architecture, dataset,
+#   loss fn., sampling method... etc. and then program should take care of the rest. The current
+#   structure may need to be modified (e.g it might not be suitable for multiple data transformation
+#   methods, since it would require different iterations over the dataset for different experiments).
+# TODO [4]: Pass double precision preference through cfg
+# TODO [3]: Should not pass weights, should call utils.get_weights when necessary
+# TODO: Throughout the function, check whether iterations over the tasks can be merged.
+def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = None,
+                 device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
     dataset = cfg["Dataset"]["name"]
@@ -40,25 +86,15 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
     else:
         models_path = ""
     
-    # TODO: Iterate over new composite config. (model, loss, eval. method, ...) instead
-    losses = cfg["Training"]["losses"]
-    
-    train_focal = "focal" in losses
-    train_sigmoid_ce = "ce_sigmoid" in losses
-    train_softmax_ce = "ce_softmax" in losses
-    train_cb_focal = "cb_focal" in losses
-    train_cb_sigmoid_ce = "cb_ce_sigmoid" in losses
-    train_cb_softmax_ce = "cb_ce_softmax" in losses
-    
     # Sanitize print_freq
-    # TODO: Do this in config.py
+    # TODO [1]: Do this in config.py
     if print_training and print_freq <= 0:
         raise ValueError("Printing frequency must be a positive integer.")
     else:
         print_freq = int(print_freq)
 
     # Sanitize models_path
-    # TODO: Do this in config.py
+    # TODO [1]: Do this in config.py
     if save_models:
         if not models_path.endswith("/"):
             models_path += "/"
@@ -67,96 +103,49 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
         os.makedirs("temp/interrupted/", mode=611, exist_ok=True)
         os.makedirs("temp/epoch_end/", mode=611, exist_ok=True)
     
-    if resnet_type == "32":
-        rn = models.ResNet32
-    elif resnet_type == "50":
-        rn = torchmodels.resnet50
-    elif resnet_type == "101":
-        rn = torchmodels.resnet101
-    elif resnet_type == "152":
-        rn = torchmodels.resnet152
-    else:
-        raise ValueError("Invalid resnet_type")
-
+    state = None  # Will provide the same initial state for every model
     param_list = []
     
-    rn_focal = None
-    rn_sigmoid_ce = None
-    rn_softmax_ce = None
-    rn_cb_focal = None
-    rn_cb_sigmoid_ce = None
-    rn_cb_softmax_ce = None
+    # Create training tasks
+    training_tasks = []
+    for task_cfg in cfg["Training"]["tasks"]:
+        training_tasks.append(TrainTask(task_cfg, device))
     
-    # The "state" var. provides the same initial state for every model
-    state = None
-    
-    if train_focal:
-        rn_focal = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_focal = nn.DataParallel(rn_focal)
-        rn_focal = rn_focal.to(device)
+    # Initialize models & losses of the tasks
+    # TODO: Create the model objects & initialize each one with the same initial state
+    for t in training_tasks:
+        # Initialize models
+        # TODO [4]: Cast to double according to the config
+        model = t.model(num_classes=class_cnt).double()
+        if multi_gpu:
+            model = nn.DataParallel(model)
         
-        param_list.append({'params': rn_focal.parameters()})
-        
-        state = rn_focal.state_dict()
-    if train_sigmoid_ce:
-        rn_sigmoid_ce = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_sigmoid_ce = nn.DataParallel(rn_sigmoid_ce)
-        rn_sigmoid_ce = rn_sigmoid_ce.to(device)
-        
-        param_list.append({'params': rn_sigmoid_ce.parameters()})
+        param_list.append({'params': model.parameters()})
         
         if state:
-            rn_sigmoid_ce.load_state_dict(state)
+            model.load_state_dict(state)
         else:
-            state = rn_sigmoid_ce.state_dict()
-    if train_softmax_ce:
-        rn_softmax_ce = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_softmax_ce = nn.DataParallel(rn_softmax_ce)
-        rn_softmax_ce = rn_softmax_ce.to(device)
+            state = model.state_dict()
         
-        param_list.append({'params': rn_softmax_ce.parameters()})
+        t.model_obj = model
         
-        if state:
-            rn_softmax_ce.load_state_dict(state)
-        else:
-            state = rn_softmax_ce.state_dict()
-    if train_cb_focal:
-        rn_cb_focal = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_cb_focal = nn.DataParallel(rn_cb_focal)
-        rn_cb_focal = rn_cb_focal.to(device)
-        
-        param_list.append({'params': rn_cb_focal.parameters()})
-        
-        if state:
-            rn_cb_focal.load_state_dict(state)
-        else:
-            state = rn_cb_focal.state_dict()
-    if train_cb_sigmoid_ce:
-        rn_cb_sigmoid_ce = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_cb_sigmoid_ce = nn.DataParallel(rn_cb_sigmoid_ce)
-        rn_cb_sigmoid_ce = rn_cb_sigmoid_ce.to(device)
-        
-        param_list.append({'params': rn_cb_sigmoid_ce.parameters()})
-        
-        if state:
-            rn_cb_sigmoid_ce.load_state_dict(state)
-        else:
-            state = rn_cb_sigmoid_ce.state_dict()
-    if train_cb_softmax_ce:
-        rn_cb_softmax_ce = rn(num_classes=class_cnt).double()
-        if multi_gpu: rn_cb_softmax_ce = nn.DataParallel(rn_cb_softmax_ce)
-        rn_cb_softmax_ce = rn_cb_softmax_ce.to(device)
-        
-        param_list.append({'params': rn_cb_softmax_ce.parameters()})
-        
-        if state:
-            rn_cb_softmax_ce.load_state_dict(state)
+        # Initialize losses
+        # TODO
+        """
+        if train_softmax_ce:
+            cel = nn.CrossEntropyLoss()
+        if train_cb_softmax_ce:
+            cb_softmax_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
+        if train_sigmoid_ce or train_focal or train_cb_sigmoid_ce or train_cb_focal:
+            focal_loss = FocalLoss(device=device)
+        """
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
         # Assuming the file exists for each model that will be tested:
         # TODO: Catch loading errors in try-except blocks
-        
+        # TODO: Reach saved models using task objects' loss_name, model_name, ... fields
+        """
         if train_focal:
             rn_focal.load_state_dict(
                 torch.load(models_path + f"rn{resnet_type}_focal_{dataset}.pth",
@@ -204,39 +193,36 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
             )
             print(f"Loaded model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
                   models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}.pth")
-    else:
-        # Initialize FC biases of models trained with sigmoid_ce and focal losses
-        #   to avoid instability at the beginning of the training
-        # TODO: Is this block required?
-        pi = torch.tensor(0.1, dtype=torch.double)
-        b = -torch.log((1 - pi) / pi)
-        
-        if multi_gpu:
-            if train_focal: rn_focal.module.fc.bias.data.fill_(b)
-            if train_sigmoid_ce: rn_sigmoid_ce.module.fc.bias.data.fill_(b)
-            if train_cb_focal: rn_cb_focal.module.fc.bias.data.fill_(b)
-            if train_cb_sigmoid_ce: rn_cb_sigmoid_ce.module.fc.bias.data.fill_(b)
-        else:
-            if train_focal: rn_focal.fc.bias.data.fill_(b)
-            if train_sigmoid_ce: rn_sigmoid_ce.fc.bias.data.fill_(b)
-            if train_cb_focal: rn_cb_focal.fc.bias.data.fill_(b)
-            if train_cb_sigmoid_ce: rn_cb_sigmoid_ce.fc.bias.data.fill_(b)
-        
-        # TODO: Disable optimizer's weight decay for the biases (is this required?)
+        """
+        pass
+    else:  # Train the models from scratch
+        # Initializde FC biases
+        b_pi = torch.tensor(0.1, dtype=torch.double)
+        b = -torch.log((1 - b_pi) / b_pi)
+        for t in training_tasks:
+            if t["init_fc_bias"]:
+                # Initialize FC biases of models using sigmoid_ce and focal losses
+                #   to avoid instability at the beginning of the training
+                if t.loss == FocalLoss:  # Used for focal loss and CE with sigmoid
+                    if multi_gpu:
+                        t.model_obj.module.fc.bias.data.fill_(b)
+                    else:
+                        t.model_obj.fc.bias.data.fill_(b)
+                # Initialize cross entropy loss models' FC biases with 0
+                elif t.loss == nn.CrossEntropyLoss:
+                    if multi_gpu:
+                        t.model_obj.module.fc.bias.data.fill_(0)
+                    else:
+                        t.model_obj.fc.bias.data.fill_(0)
+
+        # TODO: Add option to disable optimizer's weight decay for the biases.
+        #  (is simply turning grad. off correct?)
         #rn_focal.fc.bias.requires_grad_(False)
         #rn_sigmoid_ce.fc.bias.requires_grad_(False)
         #rn_cb_focal.fc.bias.requires_grad_(False)
         #rn_cb_sigmoid_ce.fc.bias.requires_grad_(False)
         
-        # Initialize cross entropy loss models' FC biases with 0
-        # TODO: How about FC biases of other models?
-        if multi_gpu:
-            if train_softmax_ce: rn_softmax_ce.module.fc.bias.data.fill_(0)
-            if train_cb_softmax_ce: rn_cb_softmax_ce.module.fc.bias.data.fill_(0)
-        else:
-            if train_softmax_ce: rn_softmax_ce.fc.bias.data.fill_(0)
-            if train_cb_softmax_ce: rn_cb_softmax_ce.fc.bias.data.fill_(0)
-        
+        # TODO: Pass optimizer choice & config. thru. cfg
         optimizer = torch.optim.SGD(
             param_list,
             lr=0,  # Will be graudally increased to 0.1 in 5 epochs
@@ -244,13 +230,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
             weight_decay=2e-4
         )
         
-        if train_softmax_ce:
-            cel = nn.CrossEntropyLoss()
-        if train_cb_softmax_ce:
-            cb_softmax_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
-        if train_sigmoid_ce or train_focal or train_cb_sigmoid_ce or train_cb_focal:
-            focal_loss = FocalLoss(device=device)
-        
+        # TODO: Continue conversion...
+        #   Add new field holding the loss history to each task object if draw_plots is true
         if draw_plots:
             if train_focal: history_loss_focal = []
             if train_sigmoid_ce: history_loss_sigmoid_ce = []
@@ -613,7 +594,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float],
             
                 plt.show()
     
-    # TODO: Return in a dict instead of a tuple for easier access to desired models.
-    #   Each key should describe the model's properties (model type, loss, etc.)
+    # TODO: Convert: Return the tasks? A separate model objects list, formed with list comprehension?
     return (rn_focal, rn_sigmoid_ce, rn_softmax_ce, rn_cb_focal, rn_cb_sigmoid_ce,
             rn_cb_softmax_ce)

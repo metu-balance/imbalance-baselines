@@ -14,11 +14,17 @@ Training:
     save_models: False
     #models_path: ""
     #load_models: False
-  losses: [
-    "focal",
-    "cb_focal"
-  ]
-  model: "32"
+  tasks:
+    -
+      model: "resnet32"
+      loss: "focal"
+      #evaluation: ...
+      task_options:
+        init_fc_bias: True
+    -
+      model: "resnet32"
+      loss: "cb_focal"
+      #evaluation: ...
   printing:
     print_training: True
     print_frequency: 10
