@@ -30,8 +30,6 @@ class TrainTask:
         self.loss_history = []
         self.epoch_total_loss = 0
         
-        # TODO: Add support for more models
-        # TODO: Map model names & objects elsewhere in a dict, preferably in models.py
         if self.model_name == "resnet32":
             self.model = models.ResNet32
         elif self.model_name == "resnet50":
@@ -41,18 +39,14 @@ class TrainTask:
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
         else:
-            # TODO [1]: Do this in config.py
-            raise ValueError("Invalid model name given: " + self.model_name)
+            raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
-        # TODO: Map model names & objects elsewhere in a dict, preferably in loss_functions.py
-        # TODO: Do not initialize the losses here, do not pass weights to class
         if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
             self.loss = FocalLoss
         elif self.loss_name in ["ce_softmax", "cb_ce_softmax"]:
             self.loss = nn.CrossEntropyLoss
         else:
-            # TODO [1]: Do this in config.py
-            raise ValueError("Invalid loss function name given: " + self.loss_name)
+            raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -74,16 +68,8 @@ def print_progress(task_list, epoch, batch, print_padding=64):
     print()  # Print empty line
 
 
-# TODO [2]: Pass train & test preferences toghether in lists instead of separate param.s (See: TODO in config.s).
-#   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
-#   This should also satisfy the main intention of the project, which is to provide a baseline for
-#   experiments described using preference combinations. Just choose model architecture, dataset,
-#   loss fn., sampling method... etc. and then program should take care of the rest. The current
-#   structure may need to be modified (e.g it might not be suitable for multiple data transformation
-#   methods, since it would require different iterations over the dataset for different experiments).
-# TODO [4]: Pass precision preference through cfg
+# TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
 # TODO [3]: Should not pass weights, should call utils.get_weights when necessary
-# TODO: Throughout the function, check whether iterations over the tasks can be merged.
 def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = None,
                  device: torch.device = torch.device("cpu")):
     # Parse configuration
@@ -104,14 +90,12 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         models_path = ""
     
     # Sanitize print_freq
-    # TODO [1]: Do this in config.py
     if print_training and print_freq <= 0:
         raise ValueError("Printing frequency must be a positive integer.")
     else:
         print_freq = int(print_freq)
 
     # Sanitize models_path
-    # TODO [1]: Do this in config.py
     if save_models:
         if not models_path.endswith("/"):
             models_path += "/"
@@ -131,7 +115,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     # Initialize models & losses of the tasks
     for t in training_tasks:
         # Initialize models
-        # TODO [4]: Cast to double according to the config
         model = t.model(num_classes=class_cnt).double().to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
@@ -292,7 +275,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                         g["lr"] *= lr_decay_rate
                 
                 for i, (inp, target) in enumerate(train_dl):
-                    # TODO [4]: Pass double precision preference through cfg
                     inp = inp.double().to(device)
                     target = target.to(device)
                     
@@ -325,7 +307,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                     
                     if print_training and \
                             ((epoch == 0 and i == 0) or (i % print_freq == (print_freq - 1))):
-                        print_progress(task_list=training_tasks, epoch=epoch, batch=i+1)  # TODO: epoch + 1 instead?
+                        print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
                 else:  # The end of each epoch
                     if save_models:  # Temporary backup for each epoch
                         # Delete all temporary files under temp/epoch_end/
@@ -391,7 +373,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                             t.loss_history.append(t.epoch_total_loss / (i + 1))
                     
                     if print_training:
-                        print_progress(task_list=training_tasks, epoch=epoch, batch=i+1)  # TODO: epoch + 1 instead?
+                        print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
                     
         except KeyboardInterrupt:
             print("Got KeyboardInterrupt.")

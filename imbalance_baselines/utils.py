@@ -10,7 +10,6 @@ def sanitize_str(inp, casttype):
 
 # TODO [3]: This weight function should be renamed/refactored to better represent the
 #   specific method it uses (effective no. of samples?)
-# TODO [4]: Pass precision preference through cfg
 def get_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
                 device: torch.device = torch.device("cpu")) -> torch.Tensor:
     """Get normalized weight (inverse of effective number of samples) per class."""
