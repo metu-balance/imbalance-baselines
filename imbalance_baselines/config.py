@@ -27,13 +27,7 @@ class Config:
 
         if "Training" in conf_keys:
             train_keys = self.config["Training"].keys()
-            if "losses" in train_keys:
-                # TODO: Check if given loss names are valid. Empty list is handled in next section.
-                #for loss in self.config["Training"]["losses"]:
-                #   if loss not in ...:  # Valid loss names list/set
-                #     raise Exception("...")
-                pass
-            elif "backup" in train_keys:
+            if "backup" in train_keys:
                 # If need to save/load models but no model path is specified, raise exception
                 backup_keys = self.config["Training"]["backup"].keys()
                 if (("save_models" in backup_keys
@@ -43,6 +37,19 @@ class Config:
                         and "models_path" not in backup_keys:
                     raise Exception('Need model path to save/load models but "models_path" is not'
                                     ' specified in "backup" field under "Training".')
+            if "optimizer" in train_keys:
+                # TODO: Check if the given optimizer name is valid in try-except, assign name "sgd" if no name is given.
+                pass
+            if "tasks" in train_keys:
+                # TODO: Check if given loss & model names are valid. Empty list is handled in next section.
+                #for t in self.config["Training"]["tasks"]:
+                #   TODO: Check in try-except, catch if the mandatory loss & model fields are empty
+                #   if t["loss"] not in ...:  # Valid loss names list/set
+                #     raise Exception("...")
+                #   if t["model"] not in ...:  # Valid model names list/set
+                #     raise Exception("...")
+                pass
+            
                     
         # Load default values if they do not exist in given YAML file. Warn user if default values are
         #   being used.
@@ -69,15 +76,26 @@ class Config:
             for key in defaults["Training"].keys():
                 if key not in train_keys:
                     self.config["Training"][key] = defaults["Training"][key]
-            if not self.config["Training"]["losses"]:  # Empty list
-                self.config["Training"]["losses"] = defaults["Training"]["losses"]
-            # TODO: Check model config. too. (Or better, modify this check for the new composite
-            #   config. type (loss, model, eval method...))
+                    
+            if not self.config["Training"]["tasks"]:  # Check for empty tasks list
+                self.config["Training"]["tasks"] = defaults["Training"]["tasks"]
             
-            # Repeat for sub-dictionaries
+            # Repeat key checks for sub-dictionaries
             for key in defaults["Training"]["backup"].keys():
                 if key not in self.config["Training"]["backup"].keys():
                     self.config["Training"]["backup"][key] = defaults["Training"]["backup"][key]
+            
+            for key in defaults["Training"]["optimizer"].keys():
+                if key not in self.config["Training"]["optimizer"].keys():
+                    self.config["Training"]["optimizer"][key] = defaults["Training"]["optimizer"][key]
+            
+            # If SGD is used, and the parameters are not given, load defaults
+            if self.config["Training"]["optmizer"]["name"] == "sgd":
+                for key in defaults["Training"]["optimizer"]["params"].keys():
+                    if key not in self.config["Training"]["optimizer"].keys():
+                        self.config["Training"]["backup"]["optimizer"][key] = \
+                            defaults["Training"]["optimizer"]["params"][key]
+            # TODO: Also set defaults for other optimizer types
                     
             for key in defaults["Training"]["printing"].keys():
                 if key not in self.config["Training"]["printing"].keys():

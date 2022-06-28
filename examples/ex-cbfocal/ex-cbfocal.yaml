@@ -25,6 +25,15 @@ Training:
       model: "resnet32"
       loss: "cb_focal"
       #evaluation: ...
+      task_options:
+        init_fc_bias: True
+  optimizer:
+    name: "sgd_linwarmup"
+    params:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 2e-4
+      warmup_epochs: 5
   printing:
     print_training: True
     print_frequency: 10
