@@ -132,7 +132,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     for t in training_tasks:
         # Initialize models
         # TODO [4]: Cast to double according to the config
-        model = t.model(num_classes=class_cnt).double()
+        model = t.model(num_classes=class_cnt).double().to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
         
