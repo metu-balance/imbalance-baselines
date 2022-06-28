@@ -91,7 +91,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     train_cfg = cfg["Training"]
     epoch_cnt = train_cfg["epoch_count"]
     multi_gpu = train_cfg["multi_gpu"]
-    resnet_type = train_cfg["model"]
     print_training = train_cfg["printing"]["print_training"]
     print_freq = train_cfg["printing"]["print_frequency"]
     draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
