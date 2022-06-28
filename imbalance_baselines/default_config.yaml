@@ -35,4 +35,6 @@ Training:
     print_training: True
     # TODO: Separate batch and epoch print frequencies
     print_frequency: 10
-  draw_plots: False
+  plotting:
+    draw_loss_plots: False
+    plot_size: (16, 12)

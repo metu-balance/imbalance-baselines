@@ -41,4 +41,6 @@ Training:
   printing:
     print_training: True
     print_frequency: 10
-  draw_plots: False
+  plotting:
+    draw_loss_plots: False
+    plot_size: (16, 12)

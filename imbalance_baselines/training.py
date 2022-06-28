@@ -6,11 +6,12 @@ import sys
 import torch
 import torch.nn as nn
 
+from numpy import linspace
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss
 from . import models
-from . import DSET_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES
 
 
 class TrainTask:
@@ -58,7 +59,19 @@ class TrainTask:
             return self.options[item]
         else:
             return False
+
+
+def print_progress(task_list, epoch, batch, print_padding=16):
+    print("Epoch:", epoch, "| Batch:", batch)
     
+    for t in task_list:
+        print(
+            LOSS_NAMES[t.loss_name].rjust(print_padding),
+            t.epoch_total_loss / batch
+        )
+    
+    print()  # Print empty line
+
 
 # TODO [2]: Pass train & test preferences toghether in lists instead of separate param.s (See: TODO in config.s).
 #   Iterate over the lists (for eg. loss, model choices) later to avoid code repetition.
@@ -81,7 +94,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     resnet_type = train_cfg["model"]
     print_training = train_cfg["printing"]["print_training"]
     print_freq = train_cfg["printing"]["print_frequency"]
-    draw_plots = train_cfg["draw_plots"]
+    draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
+    plot_size = train_cfg["plotting"]["plot_size"]
     save_models = train_cfg["backup"]["save_models"]
     load_models = train_cfg["backup"]["load_models"]
     if save_models or load_models:
@@ -256,7 +270,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             raise Exception("Optimizer name is not recognized: " + opt_name)
         
         """
-        if draw_plots:
+        if draw_loss_plots:
             if train_focal: history_loss_focal = []
             if train_sigmoid_ce: history_loss_sigmoid_ce = []
             if train_softmax_ce: history_loss_softmax_ce = []
@@ -312,90 +326,12 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                         
                         loss.backward()
                         t.epoch_total_loss += loss.item()
-                    """
-                    if train_focal:
-                        loss_focal = focal_loss(
-                            rn_focal(inp),
-                            target,
-                            gamma=0.5,
-                            device=device
-                        )
-                        
-                        loss_focal.backward()
-                        total_loss_focal += loss_focal.item()
-                    
-                    if train_sigmoid_ce:
-                        loss_sigmoid_ce = focal_loss(
-                            rn_sigmoid_ce(inp),
-                            target,
-                            device=device
-                        )
-                        
-                        loss_sigmoid_ce.backward()
-                        total_loss_sigmoid_ce += loss_sigmoid_ce.item()
-                    
-                    if train_softmax_ce:
-                        loss_softmax_ce = cel(
-                            rn_softmax_ce(inp),
-                            target
-                        )
-                        
-                        loss_softmax_ce.backward()
-                        total_loss_softmax_ce += loss_softmax_ce.item()
-                    
-                    if train_cb_focal:
-                        loss_cb_focal = focal_loss(
-                            rn_cb_focal(inp),
-                            target,
-                            alpha=weights,
-                            gamma=0.5,
-                            device=device
-                        )
-                        
-                        loss_cb_focal.backward()
-                        total_loss_cb_focal += loss_cb_focal.item()
-                    
-                    if train_cb_sigmoid_ce:
-                        loss_cb_sigmoid_ce = focal_loss(
-                            rn_cb_sigmoid_ce(inp),
-                            target,
-                            alpha=weights,
-                            device=device
-                        )
-                        
-                        loss_cb_sigmoid_ce.backward()
-                        total_loss_cb_sigmoid_ce += loss_cb_sigmoid_ce.item()
-                    
-                    if train_cb_softmax_ce:
-                        loss_cb_softmax_ce = cb_softmax_cel(
-                            rn_cb_softmax_ce(inp),
-                            target
-                        ) / target.shape[0]
-                        
-                        loss_cb_softmax_ce.backward()
-                        total_loss_cb_softmax_ce += loss_cb_softmax_ce.item()
-                    """
                     
                     optimizer.step()
                     
                     if print_training and \
                             ((epoch == 0 and i == 0) or (i % print_freq == (print_freq - 1))):
-                        print("Epoch:", epoch, "| Batch:", str(i + 1))
-                        
-                        if train_focal:
-                            print("Focal:".rjust(11), total_loss_focal/(i+1))
-                        if train_sigmoid_ce:
-                            print("sigmoid_ce:".rjust(11), total_loss_sigmoid_ce/(i+1))
-                        if train_softmax_ce:
-                            print("Cross Entropy:".rjust(11), total_loss_softmax_ce/(i+1))
-                        if train_cb_focal:
-                            print("CB Focal:".rjust(11), total_loss_cb_focal/(i+1))
-                        if train_cb_sigmoid_ce:
-                            print("CB sigmoid_ce:", total_loss_cb_sigmoid_ce/(i+1))
-                        if train_cb_softmax_ce:
-                            print("CB Cross Entropy:", total_loss_cb_softmax_ce/(i+1))
-                        
-                        print()  # Print empty line
+                        print_progress(task_list=training_tasks, epoch=epoch, batch=i+1)  # TODO: epoch + 1 instead?
                 else:  # The end of each epoch
                     if save_models:  # Temporary backup for each epoch
                         # Delete all temporary files under temp/epoch_end/
@@ -406,6 +342,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                             os.remove(fpath)
                             #print("Removed:", fpath)
                         
+                        """
                         if train_focal:
                             torch.save(
                                 rn_focal.state_dict(),
@@ -453,38 +390,15 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                             )
                             #print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
                             #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                    
-                    if draw_plots:
-                        if train_focal:
-                            history_loss_focal.append(total_loss_focal/(i+1))
-                        if train_sigmoid_ce:
-                            history_loss_sigmoid_ce.append(total_loss_sigmoid_ce/(i+1))
-                        if train_softmax_ce:
-                            history_loss_softmax_ce.append(total_loss_softmax_ce/(i+1))
-                        if train_cb_focal:
-                            history_loss_cb_focal.append(total_loss_cb_focal/(i+1))
-                        if train_cb_sigmoid_ce:
-                            history_loss_cb_sigmoid_ce.append(total_loss_cb_sigmoid_ce/(i+1))
-                        if train_cb_softmax_ce:
-                            history_loss_cb_softmax_ce.append(total_loss_cb_softmax_ce/(i+1))
+                        """
+                        
+                    if draw_loss_plots:
+                        for t in training_tasks:
+                            t.loss_history.append(t.epoch_total_loss / (i + 1))
                     
                     if print_training:
-                        print("Epoch:", epoch, "| Batch:", str(i + 1))
-                        
-                        if train_focal:
-                            print("Focal:".rjust(11), total_loss_focal/(i+1))
-                        if train_sigmoid_ce:
-                            print("sigmoid_ce:".rjust(11), total_loss_sigmoid_ce/(i+1))
-                        if train_softmax_ce:
-                            print("Cross Entropy:".rjust(11), total_loss_softmax_ce/(i+1))
-                        if train_cb_focal:
-                            print("CB Focal:".rjust(11), total_loss_cb_focal/(i+1))
-                        if train_cb_sigmoid_ce:
-                            print("CB sigmoid_ce:", total_loss_cb_sigmoid_ce/(i+1))
-                        if train_cb_softmax_ce:
-                            print("CB Cross Entropy:", total_loss_cb_softmax_ce/(i+1))
-                        
-                        print()  # Print empty line
+                        print_progress(task_list=training_tasks, epoch=epoch, batch=i+1)  # TODO: epoch + 1 instead?
+                    
         except KeyboardInterrupt:
             print("Got KeyboardInterrupt.")
             
@@ -500,6 +414,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
 
                 tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
                 
+                """
                 if train_focal:
                     torch.save(
                         rn_focal.state_dict(),
@@ -547,6 +462,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                     )
                     print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
                           models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                """
             
             print("Terminating.")
             sys.exit(1)
@@ -557,6 +473,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         if save_models:
             tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
             
+            """
             if train_focal:
                 torch.save(
                     rn_focal.state_dict(),
@@ -604,44 +521,32 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                 )
                 print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
                       models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}_{tstamp}.pth")
+            """
         
-        if draw_plots:
+        if draw_loss_plots:
             legend = []
-            plt.figure(figsize=(16, 12))
+            plt.figure(figsize=plot_size)
+
+            task_count = len(training_tasks)
+            colormap = plt.cm.get_cmap("gist_ncar", task_count)
             
-            if train_focal:
-                plt.plot(history_loss_focal, "-b")
-                legend.append("Focal Loss")
-            if train_sigmoid_ce:
-                plt.plot(history_loss_sigmoid_ce, "-r")
-                legend.append("sigmoid_ce CE Loss")
-            if train_softmax_ce:
-                plt.plot(history_loss_softmax_ce, "-g")
-                legend.append("Softmax CE Loss")
-            if train_cb_focal:
-                plt.plot(history_loss_cb_focal, "-c")
-                legend.append("Class-Balanced Focal Loss")
-            if train_cb_sigmoid_ce:
-                plt.plot(history_loss_cb_sigmoid_ce, "-m")
-                legend.append("Class-Balanced sigmoid_ce CE Loss")
-            if train_cb_softmax_ce:
-                plt.plot(history_loss_cb_softmax_ce, "-y")
-                legend.append("Class-Balanced Softmax CE Loss")
+            for t in training_tasks:
+                plt.plot(t.loss_history, ...)  # TODO: Plot with a sampled color
+                legend.append(LOSS_NAMES[t.loss_name])
+ 
+            plt.xlabel("Epoch")
+            plt.ylabel("Loss")
+            plt.legend(legend)
+            plt.title(
+                f"Loss vs. Epochs on {DSET_NAMES[dataset]} with ResNet-{resnet_type}"
+            )
             
-            if legend:
-                plt.xlabel("Epoch")
-                plt.ylabel("Loss")
-                plt.legend(legend)
-                plt.title(
-                    f"Loss vs. Epochs on {DSET_NAMES[dataset]} with ResNet-{resnet_type}"
-                )
-                
-                plt.savefig(
-                    f"./plots/{dataset.lower()}_rn-{resnet_type}-losses.png"
-                )
-            
-                plt.show()
-    
+            plt.savefig(
+                f"./plots/{dataset.lower()}_rn-{resnet_type}-losses.png"
+            )
+        
+            plt.show()
+   
     # TODO: Convert: Return the tasks? A separate model objects list, formed with list comprehension?
     return (rn_focal, rn_sigmoid_ce, rn_softmax_ce, rn_cb_focal, rn_cb_sigmoid_ce,
             rn_cb_softmax_ce)

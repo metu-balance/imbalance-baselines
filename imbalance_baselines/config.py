@@ -100,6 +100,10 @@ class Config:
             for key in defaults["Training"]["printing"].keys():
                 if key not in self.config["Training"]["printing"].keys():
                     self.config["Training"]["printing"][key] = defaults["Training"]["printing"][key]
+            
+            for key in defaults["Training"]["plotting"].keys():
+                if key not in self.config["Training"]["plotting"].keys():
+                    self.config["Training"]["plotting"][key] = defaults["Training"]["plotting"][key]
 
         print("Got configuration:")
         pprint(self.config)
