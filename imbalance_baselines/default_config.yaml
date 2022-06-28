@@ -25,7 +25,6 @@ Training:
       weight_decay: 2e-4
   tasks:
     # TODO [5]: Implement evaluation config. after separating the testing func.
-    # TODO: Access tasks through unique names? IDs?
     -
       model: "resnet32"
       loss: "ce_softmax"
@@ -33,8 +32,8 @@ Training:
       task_options: None
   printing:
     print_training: True
-    # TODO: Separate batch and epoch print frequencies
-    print_frequency: 10
+    print_epoch_frequency: 1
+    print_batch_frequency: 50
   plotting:
     draw_loss_plots: False
     plot_size: (16, 12)

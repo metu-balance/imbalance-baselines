@@ -40,7 +40,8 @@ Training:
       warmup_epochs: 5
   printing:
     print_training: True
-    print_frequency: 10
+    print_epoch_frequency: 1
+    print_batch_frequency: 200
   plotting:
     draw_loss_plots: False
     plot_size: (16, 12)

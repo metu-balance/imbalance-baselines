@@ -79,7 +79,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     epoch_cnt = train_cfg["epoch_count"]
     multi_gpu = train_cfg["multi_gpu"]
     print_training = train_cfg["printing"]["print_training"]
-    print_freq = train_cfg["printing"]["print_frequency"]
+    print_batch_freq = train_cfg["printing"]["print_batch_frequency"]
+    print_epoch_freq = train_cfg["printing"]["print_epoch_frequency"]
     draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
     plot_size = train_cfg["plotting"]["plot_size"]
     save_models = train_cfg["backup"]["save_models"]
@@ -89,11 +90,12 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     else:
         models_path = ""
     
-    # Sanitize print_freq
-    if print_training and print_freq <= 0:
-        raise ValueError("Printing frequency must be a positive integer.")
+    # Sanitize print frequencies
+    if print_training and (print_epoch_freq <= 0 or print_batch_freq <= 0):
+        raise ValueError("Printing frequencies must be positive integers.")
     else:
-        print_freq = int(print_freq)
+        print_epoch_freq = int(print_epoch_freq)
+        print_batch_freq = int(print_batch_freq)
 
     # Sanitize models_path
     if save_models:
@@ -305,9 +307,14 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                     
                     optimizer.step()
                     
-                    if print_training and \
-                            ((epoch == 0 and i == 0) or (i % print_freq == (print_freq - 1))):
-                        print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
+                    if print_training:
+                        first_batch = (epoch == 0 and i == 0)
+                        print_freq = (
+                                (i % print_batch_freq == (print_batch_freq - 1))
+                                and (epoch % print_epoch_freq == (print_epoch_freq - 1))
+                        )
+                        if first_batch or print_freq:
+                            print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
                 else:  # The end of each epoch
                     if save_models:  # Temporary backup for each epoch
                         # Delete all temporary files under temp/epoch_end/
