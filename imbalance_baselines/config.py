@@ -1,6 +1,7 @@
 from pathlib import Path
 from pprint import pprint
 from yaml import safe_load
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
 
 
 class Config:
@@ -14,10 +15,9 @@ class Config:
         if "Dataset" not in conf_keys:
             raise Exception('"Dataset" field is missing from the configuration file.')
         else:
-            # TODO: Check if a dataset name is given. If given, check whether the given dataset name
-            #   is valid.
-            pass
-        
+            if self.config["Dataset"]["name"] not in DSET_NAMES.keys():
+                raise Exception("Unrecognized dataset name: " + self.config["Dataset"]["name"])
+            
         if "DataGeneration" not in conf_keys:
             raise Exception('"DataGeneration" field is missing from the configuration file.')
         else:
@@ -38,19 +38,20 @@ class Config:
                     raise Exception('Need model path to save/load models but "models_path" is not'
                                     ' specified in "backup" field under "Training".')
             if "optimizer" in train_keys:
-                # TODO: Check if the given optimizer name is valid in try-except, assign name "sgd" if no name is given.
-                pass
+                if not ("name" in self.config["Training"]["optimizer"].keys()
+                        and self.config["Training"]["optimizer"]["name"] in OPT_NAMES.keys()):
+                    # Assign SGD as default name
+                    self.config["Training"]["optimizer"]["name"] = "sgd"
             if "tasks" in train_keys:
-                # TODO: Check if given loss & model names are valid. Empty list is handled in next section.
-                #for t in self.config["Training"]["tasks"]:
-                #   TODO: Check in try-except, catch if the mandatory loss & model fields are empty
-                #   if t["loss"] not in ...:  # Valid loss names list/set
-                #     raise Exception("...")
-                #   if t["model"] not in ...:  # Valid model names list/set
-                #     raise Exception("...")
-                pass
-            
-                    
+                loss_names = LOSS_NAMES.keys()
+                model_names = MODEL_NAMES.keys()
+                for t in self.config["Training"]["tasks"]:
+                   if t["loss"] not in loss_names:  # Valid loss names list/set
+                     raise Exception("Unrecognized loss function name: " + t["loss"])
+                   if t["model"] not in model_names:  # Valid model names list/set
+                     raise Exception("Unrecognized model name: " + t["model"])
+        
+        
         # Load default values if they do not exist in given YAML file. Warn user if default values are
         #   being used.
         with open(defaults_path, "r") as f:

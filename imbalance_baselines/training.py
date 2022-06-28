@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss
 from . import models
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
 
 
 class TrainTask:
@@ -61,7 +61,7 @@ class TrainTask:
             return False
 
 
-def print_progress(task_list, epoch, batch, print_padding=16):
+def print_progress(task_list, epoch, batch, print_padding=64):
     print("Epoch:", epoch, "| Batch:", batch)
     
     for t in task_list:
@@ -279,7 +279,9 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             if train_cb_softmax_ce: history_loss_cb_softmax_ce = []
         """
         
-        print(f"Starting training with {DSET_NAMES[dataset]} dataset.")
+        print("Starting training.")
+        print(f"Dataset: {DSET_NAMES[dataset]}")
+        print(f"Optimizer: {OPT_NAMES[opt_name]}")
         
         try:
             for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
