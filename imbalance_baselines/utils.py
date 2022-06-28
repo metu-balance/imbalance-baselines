@@ -31,13 +31,14 @@ def get_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
     weights = torch.div(
         weights, 1 - torch.pow(beta, class_sizes)
     ).to(device)
-    
+
     # Normalize the weights
-    weights = torch.mul(weights, class_cnt / torch.sum(weights)).to(device)
+    # TODO [4]: Pass precision preference through cfg
+    weights = torch.mul(weights, class_cnt / torch.sum(weights)).double()
     
     weights.requires_grad = False
     
-    return weights.double()
+    return weights.to(device)
 
 
 def get_size_per_class(data, num_classes=10):
