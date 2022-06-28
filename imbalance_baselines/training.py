@@ -147,12 +147,14 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         
         # Initialize losses
         if t.loss == FocalLoss:
-            t.loss_obj = t.loss(device)
+            t.loss_obj = t.loss(device=device)
         elif t.loss == nn.CrossEntropyLoss:
             if t.loss_name == "ce_softmax":
                 t.loss_obj = t.loss()
             elif t.loss_name == "cb_ce_softmax":
                 t.loss_obj = t.loss(weight=weights, reduction="sum")
+        else:
+            raise Exception("Unhandled loss type in task: " + str(t.loss))
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
