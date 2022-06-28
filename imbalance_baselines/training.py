@@ -269,16 +269,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         else:
             raise Exception("Optimizer name is not recognized: " + opt_name)
         
-        """
-        if draw_loss_plots:
-            if train_focal: history_loss_focal = []
-            if train_sigmoid_ce: history_loss_sigmoid_ce = []
-            if train_softmax_ce: history_loss_softmax_ce = []
-            if train_cb_focal: history_loss_cb_focal = []
-            if train_cb_sigmoid_ce: history_loss_cb_sigmoid_ce = []
-            if train_cb_softmax_ce: history_loss_cb_softmax_ce = []
-        """
-        
         print("Starting training.")
         print(f"Dataset: {DSET_NAMES[dataset]}")
         print(f"Optimizer: {OPT_NAMES[opt_name]}")
@@ -549,6 +539,5 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             
             plt.show()
    
-    # TODO: Convert: Return the tasks? A separate model objects list, formed with list comprehension?
-    return (rn_focal, rn_sigmoid_ce, rn_softmax_ce, rn_cb_focal, rn_cb_sigmoid_ce,
-            rn_cb_softmax_ce)
+    # Return trained models
+    return (t.model_obj for t in training_tasks)
