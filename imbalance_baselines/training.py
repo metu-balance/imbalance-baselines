@@ -10,6 +10,7 @@ from numpy import linspace
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss
+from .utils import sanitize_str
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
 
@@ -241,13 +242,13 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         if opt_name == "sgd":
             optimizer = torch.optim.SGD(
                 param_list,
-                lr=opt_params["lr"],
-                momentum=opt_params["momentum"],
-                weight_decay=opt_params["weight_decay"]
+                lr=sanitize_str(opt_params["lr"], casttype=float),
+                momentum=sanitize_str(opt_params["momentum"], casttype=float),
+                weight_decay=sanitize_str(opt_params["weight_decay"], casttype=float)
             )
             
             lr_decay_epochs = opt_params["lr_decay_epochs"]
-            lr_decay_rate = opt_params["lr_decay_rate"]
+            lr_decay_rate = sanitize_str(opt_params["lr_decay_rate"], casttype=float)
             
             # Unused param.s. Initialize nonetheless
             warmup_epochs = 0
@@ -256,12 +257,12 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             optimizer = torch.optim.SGD(
                 param_list,
                 lr=0,  # Will be graudally increased during training
-                momentum=opt_params["momentum"],
-                weight_decay=opt_params["weight_decay"]
+                momentum=sanitize_str(opt_params["momentum"], casttype=float),
+                weight_decay=sanitize_str(opt_params["weight_decay"], casttype=float)
             )
             
             warmup_epochs = opt_params["warmup_epochs"]
-            lr_warmup_step = ...
+            lr_warmup_step = sanitize_str(opt_params["lr"], casttype=float) / warmup_epochs
 
             lr_decay_epochs = opt_params["lr_decay_epochs"]
             lr_decay_rate = opt_params["lr_decay_rate"]

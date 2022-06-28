@@ -4,6 +4,10 @@ import torch
 from torch.utils.data import DataLoader
 
 
+def sanitize_str(inp, casttype):
+    return casttype(inp) if isinstance(inp, str) else inp
+
+
 # TODO [3]: This weight function should be renamed/refactored to better represent the
 #   specific method it uses (effective no. of samples?)
 def get_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
