@@ -1,0 +1,76 @@
+Dataset:
+  name: "IMB_CIFAR10"
+  cifar10_imb_factor: 100
+DataGeneration:
+  batch_size: 256
+  datasets_path: "datasets/"
+  train_shuffle: True
+  draw_plots: False
+Training:
+  epoch_count: 50
+  multi_gpu: True
+  backup:
+    save_models: False
+    #models_path: ""
+    #load_models: False
+  tasks:
+    -
+      model: "resnet32"
+      loss: "focal"
+      task_options:
+        init_fc_bias: True
+        focal_loss_gamma: 0.5
+    -
+      model: "resnet32"
+      loss: "cb_focal"
+      task_options:
+        init_fc_bias: True
+        focal_loss_gamma: 0.5
+    -
+      model: "resnet32"
+      loss: "ce_sigmoid"
+      task_options:
+        init_fc_bias: True
+    -
+      model: "resnet32"
+      loss: "cb_ce_sigmoid"
+      task_options:
+        init_fc_bias: True
+    -
+      model: "resnet32"
+      loss: "ce_softmax"
+      task_options:
+        init_fc_bias: True
+    - model: "resnet50"
+      loss: "ce_softmax"
+      task_options:
+        init_fc_bias: True
+    -
+      model: "resnet32"
+      loss: "cb_ce_softmax"
+      task_options:
+        init_fc_bias: True
+  optimizer:
+    name: "sgd_linwarmup"
+    params:
+      lr: 0.1
+      lr_decay_epochs: [40, 45]
+      lr_decay_rate: 0.1
+      momentum: 0.9
+      weight_decay: 2e-4
+      warmup_epochs: 5
+  printing:
+    print_training: True
+    print_epoch_frequency: 1
+    print_batch_frequency: 300
+  plotting:
+    draw_loss_plots: True
+    plot_size: (16, 12)
+Evaluation:
+  -
+    method_name: "get_accuracy"
+    method_params:
+      calc_avg: True
+      calc_perclass: True
+      top: 1
+      print_task_options: True
