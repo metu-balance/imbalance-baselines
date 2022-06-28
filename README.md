@@ -1,6 +1,6 @@
 ---
 # Readme TODO
-This readme needs rework!
+This readme needs to be rewritten!
 * Explain setup & requirements
 * Explain directory structure & how to make additions to each file or method
     * The directory structure itself may need some organization - should we use subfolders?
@@ -13,6 +13,10 @@ This readme needs rework!
 new datasets & other components)
 * Examples should only contain configs. The example script should be a runner instead, capable of running any
 configuraiton.
+
+# Feature TODO
+* May integrate wandb support
+* Should log print messages with dates and additionally in a log file
 ---
 
 # imbalance-baselines
