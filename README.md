@@ -4,6 +4,10 @@ This readme needs rework!
 * Explain setup & requirements
 * Explain directory structure & how to make additions to each file or method
     * The directory structure itself may need some organization - should we use subfolders?
+    * Each added dataset/loss/model/... must have ... fields...
+      * e.g. Each model needs num_classes field to determine output size
+    * For each added dataset/loss/model/..., ... must be added in config.py, dataset.py/loss.py/(...).py,
+  \_\_init__.py... 
 * Implement config. class & explain usage (list available loss, model... choices etc., explain config writing guide for
 new datasets & other components)
 ---
