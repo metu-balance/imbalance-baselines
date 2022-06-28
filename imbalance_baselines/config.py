@@ -128,9 +128,9 @@ class Config:
                         if "method_params" not in e.keys():
                             e["method_params"] = defaults["Evaluation"]
                         else:
-                            for key in defaults["Evaluation"]["method_params"]:
+                            for key in defaults["Evaluation"][0]["method_params"]:
                                 if key not in e["method_params"].keys():
-                                    e["method_params"][key] = defaults["Evaluation"]["method_params"][key]
+                                    e["method_params"][key] = defaults["Evaluation"][0]["method_params"][key]
 
         print("Got configuration:")
         pprint(self.config)
