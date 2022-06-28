@@ -24,11 +24,9 @@ Training:
       momentum: 0.9
       weight_decay: 2e-4
   tasks:
-    # TODO [5]: Implement evaluation config. after separating the testing func.
     -
       model: "resnet32"
       loss: "ce_softmax"
-      #evaluation: ...  # TODO [5]
       task_options: None
   printing:
     print_training: True
@@ -37,3 +35,11 @@ Training:
   plotting:
     draw_loss_plots: False
     plot_size: (16, 12)
+Evaluation:
+  -
+    method_name: "get_accuracy"
+    method_params:
+      calc_avg: True
+      calc_perclass: False
+      top: 1
+      print_task_options: False

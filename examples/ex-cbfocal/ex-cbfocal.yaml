@@ -18,14 +18,12 @@ Training:
     -
       model: "resnet32"
       loss: "focal"
-      #evaluation: ...
       task_options:
         init_fc_bias: True
         focal_loss_gamma: 0.5
     -
       model: "resnet32"
       loss: "cb_focal"
-      #evaluation: ...
       task_options:
         init_fc_bias: True
         focal_loss_gamma: 0.5
@@ -45,3 +43,11 @@ Training:
   plotting:
     draw_loss_plots: False
     plot_size: (16, 12)
+Evaluation:
+  -
+    method_name: "get_accuracy"
+    method_params:
+      calc_avg: True
+      calc_perclass: True
+      top: 1
+      print_task_options: False

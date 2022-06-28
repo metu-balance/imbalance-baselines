@@ -1,7 +1,7 @@
 from pathlib import Path
 from pprint import pprint
 from yaml import safe_load
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES, EVAL_NAMES
 
 
 class Config:
@@ -11,7 +11,10 @@ class Config:
 
         # Check if obligatory fields are present in config.
         conf_keys = self.config.keys()
-
+        
+        # TODO: Name correctness checks and default assignments are disorganized, need a more
+        #   functionized overhaul.
+        
         if "Dataset" not in conf_keys:
             raise Exception('"Dataset" field is missing from the configuration file.')
         else:
@@ -51,7 +54,15 @@ class Config:
                    if t["model"] not in model_names:  # Valid model names list/set
                      raise Exception("Unrecognized model name: " + t["model"])
         
-        
+        if "Evaluation" in conf_keys:
+            eval_names = EVAL_NAMES.keys()
+            for e in self.config["Evaluation"]:
+                method_name = e["method_name"]
+                if method_name not in eval_names:
+                    raise Exception("Unrecognized evaluation method name: " + e["method_name"])
+                if method_name != "get_accuracy" and "method_params" not in e.keys():
+                    raise Exception("Missing method parameters for method: " + e["method_name"])
+                
         # Load default values if they do not exist in given YAML file. Warn user if default values are
         #   being used.
         with open(defaults_path, "r") as f:
@@ -105,6 +116,21 @@ class Config:
             for key in defaults["Training"]["plotting"].keys():
                 if key not in self.config["Training"]["plotting"].keys():
                     self.config["Training"]["plotting"][key] = defaults["Training"]["plotting"][key]
+
+        if "Evaluation" not in conf_keys:
+            self.config["Evaluation"] = defaults["Evaluation"]
+        else:
+            if not self.config["Evaluation"]:  # Check for empty evaluation methods list
+                self.config["Evaluation"] = defaults["Evaluation"]
+            else:
+                for e in self.config["Evaluation"]:
+                    if e["method_name"] == "get_accuracy":
+                        if "method_params" not in e.keys():
+                            e["method_params"] = defaults["Evaluation"]
+                        else:
+                            for key in defaults["Evaluation"]["method_params"]:
+                                if key not in e["method_params"].keys():
+                                    e["method_params"][key] = defaults["Evaluation"]["method_params"][key]
 
         print("Got configuration:")
         pprint(self.config)

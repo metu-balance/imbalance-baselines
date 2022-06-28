@@ -1,6 +1,7 @@
 import sys
 import torch.cuda
 
+from imbalance_baselines import evaluation
 from imbalance_baselines import datasets
 from imbalance_baselines import training
 from imbalance_baselines import utils
@@ -19,20 +20,11 @@ weights.requires_grad = False
 
 print("Got weights:", weights)
 
-models = training.train_models(cfg, train_dl, class_cnt, weights, device=device)
+training_results = training.train_models(cfg, train_dl, class_cnt, weights, device=device)
 
-model_focal = models[0]["model"]
-model_cb_focal = models[1]["model"]
+model_focal = training_results[0]["model"]
+model_cb_focal = training_results[1]["model"]
 
-focal_avg_acc, focal_per_class_acc = utils.get_accuracy(test_dl, model_focal, test_class_sizes, device=device)
-cb_focal_avg_acc, cb_focal_per_class_acc = utils.get_accuracy(test_dl, model_cb_focal, test_class_sizes, device=device)
-
-print("Focal Loss:")
-print("Average accuracy:", focal_avg_acc)
-print("Accuracy per class:", focal_per_class_acc)
-
-print("Class-Balanced Focal Loss:")
-print("Average accuracy:", cb_focal_avg_acc)
-print("Accuracy per class:", cb_focal_per_class_acc)
+evaluation.evaluate(cfg, test_dl, training_results, test_class_sizes, device=device)
 
 print("Done!")

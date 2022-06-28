@@ -22,7 +22,6 @@ class TrainTask:
         
         self.model_name = task_cfg["model"]
         self.loss_name = task_cfg["loss"]
-        #self.eval_name = task_cfg["eval"]  # TODO [5]: Implement eval config
         
         self.model_obj = None
         self.loss_obj = None
@@ -531,4 +530,5 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             plt.show()
    
     # Return trained models along with loss and model names
-    return [{"model": t.model_obj, "loss_name": t.loss_name, "model_name": t.model_name} for t in training_tasks]
+    return [{"model": t.model_obj, "loss_name": t.loss_name, "model_name": t.model_name, "options": t.options}
+            for t in training_tasks]
