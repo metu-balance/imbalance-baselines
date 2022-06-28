@@ -469,7 +469,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         
         
         # Save the trained models
-        
         if save_models:
             tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
             
@@ -541,11 +540,11 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                 f"Loss vs. Epochs on {DSET_NAMES[dataset]}"
             )
             
-            # TODO: Add timestamp to file name
+            tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
             plt.savefig(
-                f"./plots/{dataset.lower()}-losses.png"
+                f"./plots/{dataset.lower()}-losses" + tstamp + ".png"
             )
-        
+            
             plt.show()
    
     # TODO: Convert: Return the tasks? A separate model objects list, formed with list comprehension?
