@@ -15,16 +15,17 @@ from . import DSET_NAMES
 
 class TrainTask:
     def __init__(self, task_cfg):
+        # Additional task-specific configurations: None if not specified; else, a dict of config.s.
+        self.options = task_cfg["task_options"]
+        
         self.model_name = task_cfg["model"]
         self.loss_name = task_cfg["loss"]
-        # TODO: Implement eval config
-        #self.eval_name = task_cfg["eval"]
+        #self.eval_name = task_cfg["eval"]  # TODO [5]: Implement eval config
         
         self.model_obj = None
         self.loss_obj = None
         
-        # Additional task-specific configurations: None if not specified; else, a dict of config.s.
-        self.options = task_cfg["task_options"]
+        self.loss_history = []
         
         # TODO: Add support for more models
         # TODO: Map model names & objects elsewhere in a dict, preferably in models.py
@@ -242,7 +243,9 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             
         # TODO: Continue conversion...
         #   Add new field holding the loss history to each task object if draw_plots is true
+        #   Restrain maximum task count if draw_plots is enabled.
         if draw_plots:
+            
             if train_focal: history_loss_focal = []
             if train_sigmoid_ce: history_loss_sigmoid_ce = []
             if train_softmax_ce: history_loss_softmax_ce = []

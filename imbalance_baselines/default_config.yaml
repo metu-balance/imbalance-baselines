@@ -21,12 +21,12 @@ Training:
       momentum: 0.9
       weight_decay: 2e-4
   tasks:
-    # TODO: Implement evaluation config. after separating the testing func.
+    # TODO [5]: Implement evaluation config. after separating the testing func.
     # TODO: Access tasks through unique names? IDs?
     -
       model: "resnet32"
       loss: "ce_softmax"
-      #evaluation: ...
+      #evaluation: ...  # TODO [5]
       task_options: None
   printing:
     print_training: True
