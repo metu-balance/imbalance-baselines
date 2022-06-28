@@ -6,6 +6,7 @@ DataGeneration:
   #datasets_path: "datasets/"  # Mandatory field. Ignore in this defaults config.
   train_shuffle: True
   draw_plots: False
+  # TODO: Pass data augmentation list through config
   # Note that sampler is not passed through config file
 Training:
   epoch_count: 100
@@ -18,6 +19,8 @@ Training:
     name: "sgd"
     params:
       lr: 0.1
+      lr_decay_epochs: [ ]
+      lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
   tasks:

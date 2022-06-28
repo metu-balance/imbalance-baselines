@@ -21,16 +21,20 @@ Training:
       #evaluation: ...
       task_options:
         init_fc_bias: True
+        focal_loss_gamma: 0.5
     -
       model: "resnet32"
       loss: "cb_focal"
       #evaluation: ...
       task_options:
         init_fc_bias: True
+        focal_loss_gamma: 0.5
   optimizer:
     name: "sgd_linwarmup"
     params:
       lr: 0.1
+      lr_decay_epochs: [160, 180]
+      lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
       warmup_epochs: 5

@@ -59,7 +59,7 @@ class FocalLoss:
     def __init__(self, device: torch.device = torch.device("cpu")):
         self.device = device
     
-    def __call__(self, z, lbl, alpha=None, gamma=0, device: torch.device = torch.device("cpu")):
+    def __call__(self, z, lbl, alpha=None, gamma=0):
         """Return the focal loss tensor of shape [BATCH_SIZE] for given model & lbl.s.
 
             Args:
@@ -68,7 +68,6 @@ class FocalLoss:
               alpha: Class balance weights tensor of shape [lable_count]. Taken 1 for all classes
                 if None is given.
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
-              device: A torch.device object denoting the device to operate on
             """
     
         z = z.double()
@@ -80,20 +79,20 @@ class FocalLoss:
         lbl = F.one_hot(lbl, num_classes=lbl_cnt)
     
         if alpha is None:
-            alpha = torch.as_tensor([1] * batch_size, device=device)
+            alpha = torch.as_tensor([1] * batch_size, device=self.device)
         else:  # Get weights for each image in batch
             alpha = (alpha * lbl).sum(axis=1)
     
         lbl_bool = lbl.type(torch.bool)  # Cast to bool for torch.where()
-        z_t = torch.where(lbl_bool, z, -z).to(device)
+        z_t = torch.where(lbl_bool, z, -z).to(self.device)
     
         logsig = nn.LogSigmoid()
     
-        cross_entpy = logsig(z_t).to(device)
+        cross_entpy = logsig(z_t).to(self.device)
     
         if gamma:
             modulator = torch.exp(
-                -gamma * torch.mul(lbl, z).to(device) - gamma * torch.log1p(torch.exp(-1.0 * z)).to(device)
+                -gamma * torch.mul(lbl, z).to(self.device) - gamma * torch.log1p(torch.exp(-1.0 * z)).to(self.device)
             )
         else:
             modulator = 1
@@ -101,9 +100,9 @@ class FocalLoss:
         # Sum the value of each class in each batch. The shape is reduced from
         #  [BATCH_SIZE, label_count] to [BATCH_SIZE].
         unweighted_focal_loss = -torch.sum(torch.mul(modulator, cross_entpy), 1).to(
-            device
+            self.device
         )
-        weighted_focal_loss = torch.mul(alpha, unweighted_focal_loss).to(device)
+        weighted_focal_loss = torch.mul(alpha, unweighted_focal_loss).to(self.device)
     
         # Normalize by the positive sample count:
         weighted_focal_loss /= torch.sum(lbl)

@@ -26,6 +26,7 @@ class TrainTask:
         self.loss_obj = None
         
         self.loss_history = []
+        self.epoch_total_loss = 0
         
         # TODO: Add support for more models
         # TODO: Map model names & objects elsewhere in a dict, preferably in models.py
@@ -66,7 +67,7 @@ class TrainTask:
 #   loss fn., sampling method... etc. and then program should take care of the rest. The current
 #   structure may need to be modified (e.g it might not be suitable for multiple data transformation
 #   methods, since it would require different iterations over the dataset for different experiments).
-# TODO [4]: Pass double precision preference through cfg
+# TODO [4]: Pass precision preference through cfg
 # TODO [3]: Should not pass weights, should call utils.get_weights when necessary
 # TODO: Throughout the function, check whether iterations over the tasks can be merged.
 def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = None,
@@ -231,6 +232,13 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                 momentum=opt_params["momentum"],
                 weight_decay=opt_params["weight_decay"]
             )
+            
+            lr_decay_epochs = opt_params["lr_decay_epochs"]
+            lr_decay_rate = opt_params["lr_decay_rate"]
+            
+            # Unused param.s. Initialize nonetheless
+            warmup_epochs = 0
+            lr_warmup_step = 0
         elif opt_name == "sgd_linwarmup":
             optimizer = torch.optim.SGD(
                 param_list,
@@ -238,47 +246,73 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                 momentum=opt_params["momentum"],
                 weight_decay=opt_params["weight_decay"]
             )
+            
+            warmup_epochs = opt_params["warmup_epochs"]
+            lr_warmup_step = ...
+
+            lr_decay_epochs = opt_params["lr_decay_epochs"]
+            lr_decay_rate = opt_params["lr_decay_rate"]
         else:
             raise Exception("Optimizer name is not recognized: " + opt_name)
-            
-        # TODO: Continue conversion...
-        #   Add new field holding the loss history to each task object if draw_plots is true
-        #   Restrain maximum task count if draw_plots is enabled.
+        
+        """
         if draw_plots:
-            
             if train_focal: history_loss_focal = []
             if train_sigmoid_ce: history_loss_sigmoid_ce = []
             if train_softmax_ce: history_loss_softmax_ce = []
             if train_cb_focal: history_loss_cb_focal = []
             if train_cb_sigmoid_ce: history_loss_cb_sigmoid_ce = []
             if train_cb_softmax_ce: history_loss_cb_softmax_ce = []
+        """
         
-        print(f"Starting training with {DSET_NAMES[dataset]} dataset,",
-              f"ResNet-{resnet_type} models.")
+        print(f"Starting training with {DSET_NAMES[dataset]} dataset.")
+        
         try:
-            for epoch in range(epoch_cnt):
-                if train_focal: total_loss_focal = 0
-                if train_sigmoid_ce: total_loss_sigmoid_ce = 0
-                if train_softmax_ce: total_loss_softmax_ce = 0
-                if train_cb_focal: total_loss_cb_focal = 0
-                if train_cb_sigmoid_ce: total_loss_cb_sigmoid_ce = 0
-                if train_cb_softmax_ce: total_loss_cb_softmax_ce = 0
+            for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
+                for t in training_tasks:
+                    t.epoch_total_loss = 0
                 
-                if epoch < 5:
-                    # Linear warm-up of learning rate from 0 to 0.1 in the first 5 epochs
+                if opt_name == "sgd_linwarmup":
+                    # Linear warm-up of learning rate from 0 to given LR in first warmup_epochs epochs
+                    if epoch < warmup_epochs:
+                        for g in optimizer.param_groups:
+                            g["lr"] += lr_warmup_step
+
+                # Decay learning rate at certain epochs
+                if epoch + 1 in lr_decay_epochs:
                     for g in optimizer.param_groups:
-                        g["lr"] += 0.02
-                elif epoch in [159, 179]:
-                    # Decay learning rate by 0.01 at 160th and 180th epochs
-                    for g in optimizer.param_groups:
-                        g["lr"] *= 0.01
+                        g["lr"] *= lr_decay_rate
                 
                 for i, (inp, target) in enumerate(train_dl):
+                    # TODO [4]: Pass double precision preference through cfg
                     inp = inp.double().to(device)
                     target = target.to(device)
                     
                     optimizer.zero_grad()
                     
+                    for t in training_tasks:
+                        # NOTE: Using startswith & endswith only once the loss name is detected. Should never assume
+                        #   the name of a loss, model, etc. otherwise.
+                        if t.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
+                            loss = t.loss_obj(
+                                t.model_obj(inp),
+                                target,
+                                alpha=weights if t.loss_name.startswith("cb") else None,
+                                gamma=t["focal_loss_gamma"] if t.loss_name.endswith("focal") else 0
+                            )
+                        elif t.loss_name in ["ce_softmax", "cb_ce_softmax"]:
+                            loss = t.loss_obj(
+                                t.model_obj(inp),
+                                target
+                            ) / (target.shape[0] if t.loss_name.startswith("cb") else 1)
+                            # If class-balancing, only normalization is needed since weights are passed in loss
+                            #   initialization.
+                        else:
+                            raise Exception("Invalid loss name encountered during training: " + t.loss_name)
+                        
+                        loss.backward()
+                        t.epoch_total_loss += loss.item()
+                    """
                     if train_focal:
                         loss_focal = focal_loss(
                             rn_focal(inp),
@@ -340,6 +374,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                         
                         loss_cb_softmax_ce.backward()
                         total_loss_cb_softmax_ce += loss_cb_softmax_ce.item()
+                    """
                     
                     optimizer.step()
                     
