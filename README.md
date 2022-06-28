@@ -7,9 +7,12 @@ This readme needs rework!
     * Each added dataset/loss/model/... must have ... fields...
       * e.g. Each model needs num_classes field to determine output size
     * For each added dataset/loss/model/..., ... must be added in config.py, dataset.py/loss.py/(...).py,
-  \_\_init__.py... 
+  \_\_init__.py...
+      * Task field initializations are done in training.py -- may need to add string checks for field names
 * Implement config. class & explain usage (list available loss, model... choices etc., explain config writing guide for
 new datasets & other components)
+* Examples should only contain configs. The example script should be a runner instead, capable of running any
+configuraiton.
 ---
 
 # imbalance-baselines
