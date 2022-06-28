@@ -91,7 +91,7 @@ class Config:
                     self.config["Training"]["optimizer"][key] = defaults["Training"]["optimizer"][key]
             
             # If SGD is used, and the parameters are not given, load defaults
-            if self.config["Training"]["optmizer"]["name"] == "sgd":
+            if self.config["Training"]["optimizer"]["name"] == "sgd":
                 for key in defaults["Training"]["optimizer"]["params"].keys():
                     if key not in self.config["Training"]["optimizer"].keys():
                         self.config["Training"]["backup"]["optimizer"][key] = \
