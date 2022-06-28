@@ -531,18 +531,19 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             colormap = plt.cm.get_cmap("gist_ncar", task_count)
             
             for t in training_tasks:
-                plt.plot(t.loss_history, ...)  # TODO: Plot with a sampled color
-                legend.append(LOSS_NAMES[t.loss_name])
+                plt.plot(t.loss_history, "-")  # TODO: Plot with a sampled color
+                legend.append(LOSS_NAMES[t.loss_name] + " with " + MODEL_NAMES[t.model_name])
  
             plt.xlabel("Epoch")
             plt.ylabel("Loss")
             plt.legend(legend)
             plt.title(
-                f"Loss vs. Epochs on {DSET_NAMES[dataset]} with ResNet-{resnet_type}"
+                f"Loss vs. Epochs on {DSET_NAMES[dataset]}"
             )
             
+            # TODO: Add timestamp to file name
             plt.savefig(
-                f"./plots/{dataset.lower()}_rn-{resnet_type}-losses.png"
+                f"./plots/{dataset.lower()}-losses.png"
             )
         
             plt.show()
