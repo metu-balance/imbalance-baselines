@@ -14,7 +14,7 @@ from . import DSET_NAMES
 
 
 class TrainTask:
-    def __init__(self, task_cfg, device: torch.device = torch.device("cpu")):
+    def __init__(self, task_cfg):
         self.model_name = task_cfg["model"]
         self.loss_name = task_cfg["loss"]
         # TODO: Implement eval config
@@ -38,17 +38,17 @@ class TrainTask:
             self.model = torchmodels.resnet152
         else:
             # TODO [1]: Do this in config.py
-            raise ValueError("Invalid model name given:", self.model_name)
+            raise ValueError("Invalid model name given: " + self.model_name)
 
         # TODO: Map model names & objects elsewhere in a dict, preferably in loss_functions.py
         # TODO: Do not initialize the losses here, do not pass weights to class
         if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
-            self.loss = FocalLoss(device=device)
+            self.loss = FocalLoss
         elif self.loss_name in ["ce_softmax", "cb_ce_softmax"]:
             self.loss = nn.CrossEntropyLoss
         else:
             # TODO [1]: Do this in config.py
-            raise ValueError("Invalid loss function name given:", self.loss_name)
+            raise ValueError("Invalid loss function name given: " + self.loss_name)
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -73,16 +73,17 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
     dataset = cfg["Dataset"]["name"]
-    epoch_cnt = cfg["Training"]["epoch_count"]
-    multi_gpu = cfg["Training"]["multi_gpu"]
-    resnet_type = cfg["Training"]["model"]
-    print_training = cfg["Training"]["printing"]["print_training"]
-    print_freq = cfg["Training"]["printing"]["print_frequency"]
-    draw_plots = cfg["Training"]["draw_plots"]
-    save_models = cfg["Training"]["backup"]["save_models"]
-    load_models = cfg["Training"]["backup"]["load_models"]
+    train_cfg = cfg["Training"]
+    epoch_cnt = train_cfg["epoch_count"]
+    multi_gpu = train_cfg["multi_gpu"]
+    resnet_type = train_cfg["model"]
+    print_training = train_cfg["printing"]["print_training"]
+    print_freq = train_cfg["printing"]["print_frequency"]
+    draw_plots = train_cfg["draw_plots"]
+    save_models = train_cfg["backup"]["save_models"]
+    load_models = train_cfg["backup"]["load_models"]
     if save_models or load_models:
-        models_path = cfg["Training"]["backup"]["models_path"]
+        models_path = train_cfg["backup"]["models_path"]
     else:
         models_path = ""
     
@@ -108,11 +109,10 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     
     # Create training tasks
     training_tasks = []
-    for task_cfg in cfg["Training"]["tasks"]:
-        training_tasks.append(TrainTask(task_cfg, device))
+    for task_cfg in train_cfg["tasks"]:
+        training_tasks.append(TrainTask(task_cfg))
     
     # Initialize models & losses of the tasks
-    # TODO: Create the model objects & initialize each one with the same initial state
     for t in training_tasks:
         # Initialize models
         # TODO [4]: Cast to double according to the config
@@ -130,15 +130,13 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         t.model_obj = model
         
         # Initialize losses
-        # TODO
-        """
-        if train_softmax_ce:
-            cel = nn.CrossEntropyLoss()
-        if train_cb_softmax_ce:
-            cb_softmax_cel = nn.CrossEntropyLoss(weight=weights, reduction="sum")
-        if train_sigmoid_ce or train_focal or train_cb_sigmoid_ce or train_cb_focal:
-            focal_loss = FocalLoss(device=device)
-        """
+        if t.loss == FocalLoss:
+            t.loss_obj = t.loss(device)
+        elif t.loss == nn.CrossEntropyLoss:
+            if t.loss_name == "ce_softmax":
+                t.loss_obj = t.loss()
+            elif t.loss_name == "cb_ce_softmax":
+                t.loss_obj = t.loss(weight=weights, reduction="sum")
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
@@ -196,7 +194,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         """
         pass
     else:  # Train the models from scratch
-        # Initializde FC biases
+        # Initialize FC biases
         b_pi = torch.tensor(0.1, dtype=torch.double)
         b = -torch.log((1 - b_pi) / b_pi)
         for t in training_tasks:
@@ -222,14 +220,26 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         #rn_cb_focal.fc.bias.requires_grad_(False)
         #rn_cb_sigmoid_ce.fc.bias.requires_grad_(False)
         
-        # TODO: Pass optimizer choice & config. thru. cfg
-        optimizer = torch.optim.SGD(
-            param_list,
-            lr=0,  # Will be graudally increased to 0.1 in 5 epochs
-            momentum=0.9,
-            weight_decay=2e-4
-        )
-        
+        # Initialize optimizer
+        opt_name = train_cfg["optimizer"]["name"]
+        opt_params = train_cfg["optimizer"]["params"]
+        if opt_name == "sgd":
+            optimizer = torch.optim.SGD(
+                param_list,
+                lr=opt_params["lr"],
+                momentum=opt_params["momentum"],
+                weight_decay=opt_params["weight_decay"]
+            )
+        elif opt_name == "sgd_linwarmup":
+            optimizer = torch.optim.SGD(
+                param_list,
+                lr=0,  # Will be graudally increased during training
+                momentum=opt_params["momentum"],
+                weight_decay=opt_params["weight_decay"]
+            )
+        else:
+            raise Exception("Optimizer name is not recognized: " + opt_name)
+            
         # TODO: Continue conversion...
         #   Add new field holding the loss history to each task object if draw_plots is true
         if draw_plots:
