@@ -3,6 +3,7 @@ import numpy as np
 
 from torch.utils.data import DataLoader
 from . import LOSS_NAMES, MODEL_NAMES, EVAL_NAMES
+from .utils import parse_cfg_str
 
 
 def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
@@ -77,7 +78,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
 
         calc_avg = method_params["calc_avg"]
         calc_perclass = method_params["calc_perclass"]
-        top = method_params["top"]
+        top = parse_cfg_str(method_params["top"], int)
         
         if not (calc_avg or calc_perclass):
             print("Both average and per-class accuracy calculation options were disabled, returning.")

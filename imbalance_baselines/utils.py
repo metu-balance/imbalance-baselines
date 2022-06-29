@@ -1,7 +1,7 @@
 import torch
 
 
-def sanitize_str(inp, casttype):
+def parse_cfg_str(inp, casttype):
     return casttype(inp) if isinstance(inp, str) else inp
 
 

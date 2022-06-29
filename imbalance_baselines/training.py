@@ -10,7 +10,7 @@ from numpy import linspace
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss
-from .utils import sanitize_str
+from .utils import parse_cfg_str
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
 
@@ -75,13 +75,16 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
     dataset = cfg["Dataset"]["name"]
     train_cfg = cfg["Training"]
-    epoch_cnt = train_cfg["epoch_count"]
+    epoch_cnt = parse_cfg_str(train_cfg["epoch_count"], int)
     multi_gpu = train_cfg["multi_gpu"]
     print_training = train_cfg["printing"]["print_training"]
-    print_batch_freq = train_cfg["printing"]["print_batch_frequency"]
-    print_epoch_freq = train_cfg["printing"]["print_epoch_frequency"]
+    print_batch_freq = parse_cfg_str(train_cfg["printing"]["print_batch_frequency"], int)
+    print_epoch_freq = parse_cfg_str(train_cfg["printing"]["print_epoch_frequency"], int)
     draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
-    plot_size = (train_cfg["plot_size"]["width"], train_cfg["plot_size"]["height"])
+    plot_size = (
+        parse_cfg_str(train_cfg["plot_size"]["width"], int),
+        parse_cfg_str(train_cfg["plot_size"]["height"], int)
+    )
     plot_path = train_cfg["plotting"]["plot_path"]
     save_models = train_cfg["backup"]["save_models"]
     load_models = train_cfg["backup"]["load_models"]
@@ -231,13 +234,13 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         if opt_name == "sgd":
             optimizer = torch.optim.SGD(
                 param_list,
-                lr=sanitize_str(opt_params["lr"], casttype=float),
-                momentum=sanitize_str(opt_params["momentum"], casttype=float),
-                weight_decay=sanitize_str(opt_params["weight_decay"], casttype=float)
+                lr=parse_cfg_str(opt_params["lr"], casttype=float),
+                momentum=parse_cfg_str(opt_params["momentum"], casttype=float),
+                weight_decay=parse_cfg_str(opt_params["weight_decay"], casttype=float)
             )
             
             lr_decay_epochs = opt_params["lr_decay_epochs"]
-            lr_decay_rate = sanitize_str(opt_params["lr_decay_rate"], casttype=float)
+            lr_decay_rate = parse_cfg_str(opt_params["lr_decay_rate"], casttype=float)
             
             # Unused param.s. Initialize nonetheless
             warmup_epochs = 0
@@ -246,12 +249,12 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             optimizer = torch.optim.SGD(
                 param_list,
                 lr=0,  # Will be graudally increased during training
-                momentum=sanitize_str(opt_params["momentum"], casttype=float),
-                weight_decay=sanitize_str(opt_params["weight_decay"], casttype=float)
+                momentum=parse_cfg_str(opt_params["momentum"], casttype=float),
+                weight_decay=parse_cfg_str(opt_params["weight_decay"], casttype=float)
             )
             
-            warmup_epochs = opt_params["warmup_epochs"]
-            lr_warmup_step = sanitize_str(opt_params["lr"], casttype=float) / warmup_epochs
+            warmup_epochs = parse_cfg_str(opt_params["warmup_epochs"], int)
+            lr_warmup_step = parse_cfg_str(opt_params["lr"], casttype=float) / warmup_epochs
 
             lr_decay_epochs = opt_params["lr_decay_epochs"]
             lr_decay_rate = opt_params["lr_decay_rate"]
@@ -288,11 +291,16 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                         # NOTE: Using startswith & endswith only once the loss name is detected. Should never assume
                         #   the name of a loss, model, etc. otherwise.
                         if t.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
+                            if t.loss_name.endswith("focal"):
+                                g = parse_cfg_str(t["focal_loss_gamma"], float)
+                            else:
+                                g = 0
+                                
                             loss = t.loss_obj(
                                 t.model_obj(inp),
                                 target,
                                 alpha=weights if t.loss_name.startswith("cb") else None,
-                                gamma=t["focal_loss_gamma"] if t.loss_name.endswith("focal") else 0
+                                gamma=g
                             )
                         elif t.loss_name in ["ce_softmax", "cb_ce_softmax"]:
                             loss = t.loss_obj(

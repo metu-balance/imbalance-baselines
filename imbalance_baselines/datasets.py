@@ -10,6 +10,7 @@ from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
 from . import DSET_NAMES, DSET_CLASS_CNTS
+from .utils import parse_cfg_str
 
 
 class CIFAR10LT(datasets.CIFAR10):
@@ -181,26 +182,32 @@ def generate_data(cfg):
     dataset_params = dataset_cfg["dataset_params"]
 
     normalize_mu = (
-        dataset_params["normalize_mu"]["val1"],
-        dataset_params["normalize_mu"]["val2"],
-        dataset_params["normalize_mu"]["val3"],
+        parse_cfg_str(dataset_params["normalize_mu"]["val1"], float),
+        parse_cfg_str(dataset_params["normalize_mu"]["val2"], float),
+        parse_cfg_str(dataset_params["normalize_mu"]["val3"], float),
     )
     normalize_std = (
-        dataset_params["normalize_std"]["val1"],
-        dataset_params["normalize_std"]["val2"],
-        dataset_params["normalize_std"]["val3"],
+        parse_cfg_str(dataset_params["normalize_std"]["val1"], float),
+        parse_cfg_str(dataset_params["normalize_std"]["val2"], float),
+        parse_cfg_str(dataset_params["normalize_std"]["val3"], float),
     )
     
     datagen_cfg = cfg["DataGeneration"]
-    batch_size = datagen_cfg["batch_size"]
-    worker_count = datagen_cfg["num_workers"]
-    pad = datagen_cfg["pad"]
-    img_size = (datagen_cfg["image_size"]["width"], datagen_cfg["image_size"]["height"])
+    batch_size = parse_cfg_str(datagen_cfg["batch_size"], int)
+    worker_count = parse_cfg_str(datagen_cfg["num_workers"], int)
+    pad = parse_cfg_str(datagen_cfg["pad"], int)
+    img_size = (
+        parse_cfg_str(datagen_cfg["image_size"]["width"], int),
+        parse_cfg_str(datagen_cfg["image_size"]["height"], int)
+    )
     train_shuffle = datagen_cfg["train_shuffle"]
     
     plot_cfg = datagen_cfg["plotting"]
     draw_dataset_plots = plot_cfg["draw_dataset_plots"]
-    plot_size = (plot_cfg["plot_size"]["width"], plot_cfg["plot_size"]["height"])
+    plot_size = (
+        parse_cfg_str(plot_cfg["plot_size"]["width"], int),
+        parse_cfg_str(plot_cfg["plot_size"]["height"], int)
+    )
     plot_path = plot_cfg["plot_path"]
     
     class_count = DSET_CLASS_CNTS[dataset_name]
@@ -234,12 +241,15 @@ def generate_data(cfg):
     
             if tr_name == "pad":
                 transf_list.append(
-                    transforms.Pad(padding=pad, fill=tr_params["fill"], padding_mode=tr_params["mode"]))
+                    transforms.Pad(
+                        padding=pad,
+                        fill=parse_cfg_str(tr_params["fill"], int),
+                        padding_mode=tr_params["mode"]))
             elif tr_name == "color_jitter":
-                jtr_brightness = dataset_params["jitter_brightness"]
-                jtr_contrast = dataset_params["jitter_contrast"]
-                jtr_saturation = dataset_params["jitter_saturation"]
-                jtr_hue = dataset_params["jitter_hue"]
+                jtr_brightness = parse_cfg_str(dataset_params["jitter_brightness"], float)
+                jtr_contrast = parse_cfg_str(dataset_params["jitter_contrast"], float)
+                jtr_saturation = parse_cfg_str(dataset_params["jitter_saturation"], float)
+                jtr_hue = parse_cfg_str(dataset_params["jitter_hue"], float)
         
                 transf_list.append(transforms.ColorJitter(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
             elif tr_name == "random_resized_crop":
@@ -279,7 +289,7 @@ def generate_data(cfg):
     elif dataset_name == "IMB_CIFAR10":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
-            imb_factor=dataset_params["cifar10_imb_factor"],
+            imb_factor=parse_cfg_str(dataset_params["cifar10_imb_factor"], int),
             train=True,
             download=True,
             transform=train_transforms,
