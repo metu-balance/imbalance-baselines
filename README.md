@@ -1,19 +1,3 @@
----
-# Readme TODO
-This readme needs to be rewritten!
-
-* Implement config. class & explain usage (list available loss, model... choices etc., explain config writing guide for
-new datasets & other components)
-* Examples should only contain configs. The example script should be a runner instead, capable of running any
-configuraiton.
-
-# Feature TODO
-* May integrate wandb support
-* Should log print messages with dates and additionally in a log file
-* Should measure epoch times
-* Should be able to run a test on a test/valid set every few epochs
----
-
 # imbalance-baselines
 
 **imbalance-baselines** is a modular Python deep learning library that provides a common measure for the performance of
@@ -117,7 +101,10 @@ Output:
 ...
 
 # Features Considered for Addition
-...
+* wandb support may be implemented.
+* Print messages should be timestamped and logged in a file.
+* Epoch times should be measured.
+* Evaluation on test or validation sets should be able to be run every few epochs.
 
 # License
-...
+This program is licensed under Apache License 2.0. See `LICENSE` file for details.
