@@ -108,3 +108,30 @@ class FocalLoss:
         weighted_focal_loss /= torch.sum(lbl)
     
         return torch.sum(weighted_focal_loss)
+
+
+class MixupLoss:
+    def __init__(self, criterion, seed=12649, alpha=1):
+        self.seed = seed
+        self.alpha = alpha
+        self.criterion = criterion
+        self.randomState = np.random.RandomState(seed)
+        self.gen = torch.Generator().manual_seed(seed)
+        self.mixup = True
+    
+    def __call__(self, logits, labels):
+        
+        if self.mixup:
+            lamb = self.randomState.beta(self.alpha, self.alpha)
+            idx = torch.randperm(labels.size(0), generator=self.gen)
+            
+            label_a, label_b = labels, labels[idx]
+            loss = lamb * self.criterion(logits, label_a) + (1 - lamb) * self.criterion(logits, label_b)
+        
+        else:
+            loss = self.criterion(logits, labels)
+        
+        return loss
+    
+    def close_mixup(self):
+        self.mixup = False

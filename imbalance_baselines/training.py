@@ -6,10 +6,9 @@ import sys
 import torch
 import torch.nn as nn
 
-from numpy import linspace
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
-from .loss_functions import FocalLoss
+from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
@@ -37,6 +36,8 @@ class TrainTask:
             self.model = torchmodels.resnet101
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
+        elif self.model_name == "resnet32-manif-mu":
+            self.model = models.ResNet32ManifoldMixup
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
@@ -65,6 +66,25 @@ def print_progress(task_list, epoch, batch, print_padding=64):
         )
     
     print()  # Print empty line
+
+
+def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_fn: MixupLoss, epoch_cnt=10,
+                   device: torch.device = torch.device("cpu")):
+    model.close_mixup()
+    loss_fn.close_mixup()
+
+    for epoch in range(epoch_cnt):
+        for i, (inp, label) in enumerate(dataloader):
+            inp = inp.to(device)
+            label = label.to(device)
+
+            optim.zero_grad()
+
+            loss = loss_fn(model(inp), label)
+            loss.backward()
+            optim.step()
+
+    return model
 
 
 # TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
@@ -519,9 +539,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             legend = []
             plt.figure(figsize=plot_size)
 
-            task_count = len(training_tasks)
-            colormap = plt.cm.get_cmap("gist_ncar", task_count)
-            
             for t in training_tasks:
                 plt.plot(t.loss_history, "-")  # TODO: Plot with a sampled color
                 legend.append(LOSS_NAMES[t.loss_name] + " with " + MODEL_NAMES[t.model_name])

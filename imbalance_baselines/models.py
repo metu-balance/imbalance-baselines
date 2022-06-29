@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -51,6 +52,70 @@ class ResNet32(nn.Module):
         x = self.fc(x)
         
         return x
+
+
+class ResNet32ManifoldMixup(nn.Module):
+    def __init__(self, num_layers=32, num_classes=10, seed=12649, alpha=1):
+        super(ResNet32ManifoldMixup, self).__init__()
+        
+        self.alpha = alpha
+        self.mixup = True
+        self.seed = seed
+        self.randomState = np.random.RandomState(seed)
+        self.gen = torch.Generator().manual_seed(seed)
+        
+        self.n = (num_layers - 2) // 6
+        self.num_classes = num_classes
+        self.filters = [16, 16, 32, 64]
+        self.strides = [1, 2, 2]
+        
+        self.conv = nn.Conv2d(3, 16, 3, 1, padding='same', bias=False)
+        self.norm = nn.BatchNorm2d(16)
+        self.relu = nn.ReLU()
+        
+        layers = []
+        
+        for i in range(3):
+            for j in range(self.n):
+                if j == 0:
+                    in_filter = self.filters[i]
+                    stride = self.strides[i]
+                
+                else:
+                    in_filter = self.filters[i + 1]
+                    stride = 1
+                
+                out_filter = self.filters[i + 1]
+                
+                layers.append(ResBlock(in_filter, out_filter, stride))
+        
+        self.sequential = nn.Sequential(*layers)
+        
+        def global_avg_pool(x):
+            return x.mean(axis=[2, 3])
+        
+        self.global_pool = global_avg_pool
+        self.fc = nn.Linear(64, num_classes)
+    
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.norm(x)
+        x = self.relu(x)
+        
+        if self.mixup:
+            lamb = self.randomState.beta(self.alpha, self.alpha)
+            idx = torch.randperm(x.size(0), generator=self.gen)
+            x_a, x_b = x, x[idx]
+            x = lamb * x_a + (1 - lamb) * x_b
+        
+        x = self.sequential(x)
+        x = self.global_pool(x)
+        x = self.fc(x)
+        
+        return x
+    
+    def close_mixup(self):
+        self.mixup = False
 
 
 class ResBlock(nn.Module):
