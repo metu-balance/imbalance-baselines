@@ -6,6 +6,7 @@ This readme needs to be rewritten!
     * The directory structure itself may need some organization - should we use subfolders?
     * Each added dataset/loss/model/... must have ... fields...
       * e.g. Each model needs num_classes field to determine output size
+      * each added dataset should consider offline sampling support
     * For each added dataset/loss/model/..., ... must be added in config.py, dataset.py/loss.py/(...).py,
   \_\_init__.py...
       * Task field initializations are done in training.py -- may need to add string checks for field names

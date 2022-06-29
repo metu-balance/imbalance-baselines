@@ -120,7 +120,6 @@ class MixupLoss:
         self.mixup = True
     
     def __call__(self, logits, labels):
-        
         if self.mixup:
             lamb = self.randomState.beta(self.alpha, self.alpha)
             idx = torch.randperm(labels.size(0), generator=self.gen)
