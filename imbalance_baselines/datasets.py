@@ -10,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES, TRANSFORMATIONS
+from . import DSET_NAMES, TRANSFORMATIONS, DSET_CLASS_CNTS
 
 
 class CIFAR10LT(datasets.CIFAR10):
@@ -83,7 +83,6 @@ class CIFAR10LT(datasets.CIFAR10):
                 "methods with DataLoader using the sampler parameter."
             )
         else:
-            # TODO: Ensure that sampler's argument is of form [(feature, label), (feature, label), ...]
             imb_data = self.sampler([(img, self.targets[i]) for i, img in enumerate(self.data)])
             
             for i in imb_data:
@@ -172,7 +171,7 @@ class INaturalist(Dataset):
         return cls_cnt_list
 
 
-def generate_data(cfg, sampler=None):
+def generate_data(cfg):
     # Parse configuration
     dataset_cfg = cfg["Dataset"]
     datasets_path = dataset_cfg["datasets_path"]
@@ -184,6 +183,7 @@ def generate_data(cfg, sampler=None):
     
     datagen_cfg = cfg["DataGeneration"]
     batch_size = datagen_cfg["batch_size"]
+    worker_count = datagen_cfg["num_workers"]
     pad = datagen_cfg["pad"]
     img_size = datagen_cfg["image_size"]
     train_shuffle = datagen_cfg["train_shuffle"]
@@ -191,8 +191,24 @@ def generate_data(cfg, sampler=None):
     plot_size = datagen_cfg["plotting"]["plot_size"]
     plot_path = datagen_cfg["plotting"]["plot_path"]
     
-    # False if sampler is None or is offline
-    sampler_is_online = isinstance(sampler, sampling.OnlineSampler) and (sampler is not None)
+    class_count = DSET_CLASS_CNTS[dataset_name]
+    sampler = datagen_cfg["sampler"]
+    
+    if sampler is not None:
+        # Initialize sampler if offline
+        sampler_name = datagen_cfg["sampler"]["sampler_name"]
+        sampler_params = datagen_cfg["sampler"]["sampler_params"]
+        
+        if sampler_name == "oversampler":
+            sampler = sampling.OverSampler(class_count, sampler_params["ratio"])
+            sampler_is_online = False
+        elif sampler_name == "undersampler":
+            sampler = sampling.UnderSampler(class_count, sampler_params["ratio"])
+            sampler_is_online = False
+        else:  # It is known that a valid online sampler name is provided by the config.
+            sampler_is_online = True
+    else:
+        sampler_is_online = False
     
     if not datasets_path.endswith("/"):
         datasets_path += "/"
@@ -251,6 +267,7 @@ def generate_data(cfg, sampler=None):
     test_transforms = transforms.Compose(test_transforms)
     
     if dataset_name == "CIFAR10":
+        # TODO: Use CIFAR10LT with imb=0 instead to enable offline sampler support
         train_ds = datasets.CIFAR10(
             datasets_path + "cifar10",
             train=True,
@@ -271,7 +288,7 @@ def generate_data(cfg, sampler=None):
             train=True,
             download=True,
             transform=train_transforms,
-            sampler=None if sampler_is_online else sampler
+            sampler=None if sampler_is_online else sampler  # Offline samp. or None
         )
         
         test_ds = datasets.CIFAR10(  # Test set is not imbalanced
@@ -311,10 +328,22 @@ def generate_data(cfg, sampler=None):
     else:
         raise ValueError("The given dataset name is not recognized.")
     
+    if sampler_is_online:  # It is known that sampler is not None and is online
+        # Initialize online sampler
+        sampler_name = datagen_cfg["sampler"]["sampler_name"]
+        sampler_params = datagen_cfg["sampler"]["sampler_params"]
+        
+        if sampler_name == "cb_sampler":
+            sampler = sampling.ClassBalancedSampling(train_ds, class_count, sampler_params["q_value"])
+        elif sampler_name == "progb_sampler":
+            sampler = sampling.ProgressivelyBalancedSampling(train_ds, class_count, sampler_params["total_epochs"])
+        else:
+            raise ValueError("Invalid sampler name encountered: " + sampler_name)
+    
     train_dl = DataLoader(
         train_ds,
         batch_size=batch_size,
-        num_workers=2,
+        num_workers=worker_count,
         shuffle=False if sampler_is_online or not train_shuffle else True,
         sampler=sampler if sampler_is_online else None
     )
@@ -322,23 +351,19 @@ def generate_data(cfg, sampler=None):
     test_dl = DataLoader(
         test_ds,
         batch_size=batch_size,
-        num_workers=2
+        num_workers=worker_count
     )
     
     if dataset_name == "CIFAR10":
-        class_cnt = 10
-        train_class_sizes = [5000] * class_cnt
-        test_class_sizes = [1000] * class_cnt
+        train_class_sizes = [5000] * class_count
+        test_class_sizes = [1000] * class_count
     elif dataset_name == "IMB_CIFAR10":
-        class_cnt = 10
         train_class_sizes = train_ds.get_cls_cnt_list()
-        test_class_sizes = [1000] * class_cnt
+        test_class_sizes = [1000] * class_count
     elif dataset_name == "INATURALIST_2017":
-        class_cnt = 5089
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = test_ds.get_cls_cnt_list()
     elif dataset_name == "INATURALIST_2018":
-        class_cnt = 8142
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = test_ds.get_cls_cnt_list()
     else:
@@ -348,7 +373,7 @@ def generate_data(cfg, sampler=None):
     print(np.array(train_class_sizes))  # Numpy array for cleaner output
     
     if draw_dataset_plots:
-        x = np.arange(class_cnt)
+        x = np.arange(class_count)
         fig, axs = plt.subplots(2, constrained_layout=True)
 
         fig.set_figwidth(plot_size[0])
@@ -367,6 +392,6 @@ def generate_data(cfg, sampler=None):
         
         plt.show()
     
-    return train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes
+    return train_dl, test_dl, class_count, train_class_sizes, test_class_sizes
 
 

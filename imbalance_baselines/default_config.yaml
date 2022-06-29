@@ -10,6 +10,7 @@ Dataset:
     jitter_hue: 0.25
 DataGeneration:
   batch_size: 128
+  num_workers: 2
   pad: 4
   image_size: (32, 32)
   train_shuffle: True

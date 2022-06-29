@@ -11,6 +11,7 @@ Dataset:
     jitter_hue: 0.25
 DataGeneration:
   batch_size: 128
+  num_workers: 2
   pad: 4
   image_size: (32, 32)
   train_shuffle: True
@@ -20,11 +21,21 @@ DataGeneration:
     plot_size: (16, 12)
     plot_path: "output/dataset_plots/"
   train_transform:
-    - ...
-    - ...
+    -
+      transform_name: "pad"
+      transform_params:
+        fill: 0
+        mode: "constant"
+    -
+      transform_name: "random_resized_crop"
+      transform_params: None
+    -
+      transform_name: "random_horizontal_flip"
+      transform_params: None
   test_transform:
-    - ...
-    - ...
+    -
+      transform_name: "center_crop"
+      transform_params: None
 Training:
   epoch_count: 1
   multi_gpu: False

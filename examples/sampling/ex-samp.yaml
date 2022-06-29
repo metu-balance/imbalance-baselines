@@ -10,12 +10,15 @@ Dataset:
     jitter_saturation: 0.4
     jitter_hue: 0.25
 DataGeneration:
-  batch_size: 256
+  batch_size: 128
   num_workers: 2
   pad: 4
   image_size: (32, 32)
   train_shuffle: True
-  sampler: None
+  sampler:
+    sampler_name: "oversampler"
+    sampler_params:
+      ratio: 1.0
   plotting:
     draw_dataset_plots: True
     plot_size: (16, 12)
@@ -37,8 +40,8 @@ DataGeneration:
       transform_name: "center_crop"
       transform_params: None
 Training:
-  epoch_count: 50
-  multi_gpu: True
+  epoch_count: 1
+  multi_gpu: False
   backup:
     save_models: False
     #models_path: ""
@@ -56,35 +59,11 @@ Training:
       task_options:
         init_fc_bias: True
         focal_loss_gamma: 0.5
-    -
-      model: "resnet32"
-      loss: "ce_sigmoid"
-      task_options:
-        init_fc_bias: True
-    -
-      model: "resnet32"
-      loss: "cb_ce_sigmoid"
-      task_options:
-        init_fc_bias: True
-    -
-      model: "resnet32"
-      loss: "ce_softmax"
-      task_options:
-        init_fc_bias: True
-    - model: "resnet50"
-      loss: "ce_softmax"
-      task_options:
-        init_fc_bias: True
-    -
-      model: "resnet32"
-      loss: "cb_ce_softmax"
-      task_options:
-        init_fc_bias: True
   optimizer:
     name: "sgd_linwarmup"
     params:
       lr: 0.1
-      lr_decay_epochs: [40, 45]
+      lr_decay_epochs: [160, 180]
       lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
@@ -92,9 +71,9 @@ Training:
   printing:
     print_training: True
     print_epoch_frequency: 1
-    print_batch_frequency: 300
+    print_batch_frequency: 200
   plotting:
-    draw_loss_plots: True
+    draw_loss_plots: False
     plot_size: (16, 12)
     plot_path: "output/loss_plots/"
 Evaluation:
@@ -104,4 +83,4 @@ Evaluation:
       calc_avg: True
       calc_perclass: True
       top: 1
-      print_task_options: True
+      print_task_options: False
