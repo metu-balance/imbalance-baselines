@@ -105,7 +105,9 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         os.makedirs("temp/interrupted/", mode=611, exist_ok=True)
         os.makedirs("temp/epoch_end/", mode=611, exist_ok=True)
     
-    state = None  # Will provide the same initial state for every model
+    states = dict()  # Will provide the same initial state for every model of same type
+    for model_name in MODEL_NAMES.keys():
+        states[model_name] = None
     param_list = []
     
     # Create training tasks
@@ -122,10 +124,10 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         
         param_list.append({'params': model.parameters()})
         
-        if state:
-            model.load_state_dict(state)
+        if states[t.model_name]:
+            model.load_state_dict(states[t.model_name])
         else:
-            state = model.state_dict()
+            states[t.model_name] = model.state_dict()
         
         t.model_obj = model
         
