@@ -14,13 +14,15 @@ different imbalance mitigation methods.
 5. [Adding New Components](#adding-new-components)
    1. [Adding a new dataset](#adding-a-new-dataset)
    2. [Adding a new model (backbone)](#adding-a-new-model-backbone)
-   3. [Adding a new loss function](#adding-a-new-loss-function)
-   4. [Adding a new sampling method](#adding-a-new-sampling-method)
+   3. [Adding a new optimizer](#adding-a-new-optimizer)
+   4. [Adding a new evaluation method](#adding-a-new-evaluation-method)
+   5. [Adding a new loss function](#adding-a-new-loss-function)
+   6. [Adding a new sampling method](#adding-a-new-sampling-method)
 6. [Features Considered for Addition](#features-considered-for-addition)
 7. [License](#license)
 
 ## Installation
-TODO
+...
 
 ### Requirements
 
@@ -77,7 +79,43 @@ Output:
 ...
 
 # Implemented Components & Imbalance Mitigation Methods
+## Focal Loss
+Implemented under: `imbalance_baselines/loss_functions.py`, in `FocalLoss` class.
 ...
+
+## Class-balancing Weights Based on Effective Number of Samples
+Implemented under: `imbalance_baselines/loss_functions.py` in `FocalLoss` class and
+`imbalance_baselines/utils.py` in `get_weights` function.
+...
+
+## Input Mix-up
+Implemented under: `imbalance_baselines/loss_functions.py`, in `InputMixup` class.
+...
+
+## Manifold Mix-up with ResNet-32 
+Implemented under: `imbalance_baselines/models.py`, in `ResNet32ManifoldMixup` class.
+...
+
+## Fine-tuning with Mix-up
+Implemented under: `imbalance_baselines/training.py`, in `finetune_mixup` function.
+...
+
+## Under-sampling
+Implemented under: `imbalance_baselines/sampling.py`, in `UnderSampler` class.
+...
+
+## Over-sampling
+Implemented under: `imbalance_baselines/sampling.py`, in `OverSampler` class.
+...
+
+## Class-balanced sampling
+Implemented under: `imbalance_baselines/sampling.py`, in `ClassBalancedSampling` class.
+...
+
+## Progressively-balanced sampling
+Implemented under: `imbalance_baselines/sampling.py`, in `ProgressivelyBalancedSampling` class.
+...
+
 
 # Adding New Components
 ...
@@ -89,13 +127,28 @@ Output:
   * Task field initializations are done in training.py -- may need to add string checks for field names
 
 ## Adding a new dataset
-...
+* Any dataset class deriving `torch.utils.data.Datasets` is supported. If offline sampler support is desired,
+the class should also receive the sampler object as a parameter and use it to modify the set.
+* The string chosen to be used in configuration and a more descriptive name pair must be added to
+`DSET_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+* The number of classes in the dataset should be provided to `DSET_CLASS_CNTS` dictionary in
+`imbalance_baselines/__init__.py` along with the chosen internal string representation of the dataset.
 
 ## Adding a new model (backbone)
-...
+* The string chosen to be used in configuration and a more descriptive name pair must be added to
+`MODEL_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+
+## Adding a new optimizer
+* The string chosen to be used in configuration and a more descriptive name pair must be added to
+`OPT_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+
+## Adding a new evaluation method
+* The string chosen to be used in configuration and a more descriptive name pair must be added to
+`EVAL_NAMES` dictionary in `imbalance_baselines/__init__.py`.
 
 ## Adding a new loss function
-...
+* The string chosen to be used in configuration and a more descriptive name pair must be added to
+`LOSS_NAMES` dictionary in `imbalance_baselines/__init__.py`.
 
 ## Adding a new sampling method
 ...
@@ -107,4 +160,4 @@ Output:
 * Evaluation on test or validation sets should be able to be run every few epochs.
 
 # License
-This program is licensed under Apache License 2.0. See `LICENSE` file for details.
+This program is licensed under Apache License 2.0. See the `LICENSE` file for details.
