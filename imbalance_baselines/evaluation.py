@@ -97,7 +97,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
                     + ":"
                 )
                 if calc_avg:
-                    print(f"  Average top-{top} accuracy:", avg_acc)
+                    print(f"  Average top-{top} accuracy:", str(avg_acc) + "%")
                 if calc_perclass:
                     print(f"Top-{top} accuracy per class:", perclass_acc)
                 
