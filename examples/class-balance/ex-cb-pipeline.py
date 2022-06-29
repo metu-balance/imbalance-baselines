@@ -21,10 +21,6 @@ weights.requires_grad = False
 print("Got weights:", weights)
 
 training_results = training.train_models(cfg, train_dl, class_cnt, weights, device=device)
-
-model_focal = training_results[0]["model"]
-model_cb_focal = training_results[1]["model"]
-
-evaluation.evaluate(cfg, test_dl, training_results, test_class_sizes, device=device)
+evaluation.evaluate(cfg, training_results, test_dl, test_class_sizes, device=device)
 
 print("Done!")
