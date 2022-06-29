@@ -2,7 +2,6 @@ import datetime as dt
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
 
 from numpy.random import Generator, PCG64
 from PIL import Image
@@ -51,6 +50,9 @@ class CIFAR10LT(datasets.CIFAR10):
         """
         
         img_max = len(self.data) / cls_cnt
+        if imb_factor == 0:
+            return img_max
+        
         img_cnt_per_cls = []
         
         for cls_index in range(cls_cnt):
@@ -267,12 +269,13 @@ def generate_data(cfg):
     test_transforms = transforms.Compose(test_transforms)
     
     if dataset_name == "CIFAR10":
-        # TODO: Use CIFAR10LT with imb=0 instead to enable offline sampler support
-        train_ds = datasets.CIFAR10(
+        train_ds = CIFAR10LT(
             datasets_path + "cifar10",
+            imb_factor=0,
             train=True,
             download=True,
-            transform=train_transforms
+            transform=train_transforms,
+            sampler=None if sampler_is_online else sampler  # Offline samp. or None
         )
         
         test_ds = datasets.CIFAR10(
