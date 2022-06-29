@@ -82,8 +82,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     print_epoch_freq = parse_cfg_str(train_cfg["printing"]["print_epoch_frequency"], int)
     draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
     plot_size = (
-        parse_cfg_str(train_cfg["plot_size"]["width"], int),
-        parse_cfg_str(train_cfg["plot_size"]["height"], int)
+        parse_cfg_str(train_cfg["plotting"]["plot_size"]["width"], int),
+        parse_cfg_str(train_cfg["plotting"]["plot_size"]["height"], int)
     )
     plot_path = train_cfg["plotting"]["plot_path"]
     save_models = train_cfg["backup"]["save_models"]
