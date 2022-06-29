@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES, TRANSFORMATIONS, DSET_CLASS_CNTS
+from . import DSET_NAMES, DSET_CLASS_CNTS
 
 
 class CIFAR10LT(datasets.CIFAR10):
@@ -196,7 +196,7 @@ def generate_data(cfg):
     class_count = DSET_CLASS_CNTS[dataset_name]
     sampler = datagen_cfg["sampler"]
     
-    if sampler is not None:
+    if sampler != "None" and sampler is not None:
         # Initialize sampler if offline
         sampler_name = datagen_cfg["sampler"]["sampler_name"]
         sampler_params = datagen_cfg["sampler"]["sampler_params"]
@@ -215,58 +215,40 @@ def generate_data(cfg):
     if not datasets_path.endswith("/"):
         datasets_path += "/"
     
-    train_transforms = []
-    test_transforms = []
-    
-    # TODO: Avoid code repetition below
-    for tr in datagen_cfg["train_transform"]:
-        tr_name = tr["transform_name"]
-        tr_params = tr["transform_params"]
+    def form_transf(dg_cfg, is_train):
+        transf_list = []
         
-        tr_class = TRANSFORMATIONS[tr_name]
-        if tr_class == transforms.Pad:
-            train_transforms.append(tr_class(padding=pad, fill=tr_params["fill"], mode=tr_params["mode"]))
-        elif tr_class == transforms.ColorJitter:
-            jtr_brightness = dataset_params["jitter_brightness"]
-            jtr_contrast = dataset_params["jitter_contrast"]
-            jtr_saturation = dataset_params["jitter_saturation"]
-            jtr_hue = dataset_params["jitter_hue"]
-            
-            train_transforms.append(tr_class(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
-        elif tr_class in [transforms.RandomResizedCrop, transforms.CenterCrop]:
-            train_transforms.append(tr_class(img_size))
-        else:
-            train_transforms.append(tr_class())
-
-    train_transforms.append(transforms.ToTensor())
-    # TODO: Should test normalization be in place for train set?
-    train_transforms.append(transforms.Normalize(mean=normalize_mu, std=normalize_std, inplace=True))
+        for transf in dg_cfg["train_transform" if is_train else "test_transform"]:
+            tr_name = transf["transform_name"]
+            tr_params = transf["transform_params"]
     
-    for tr in datagen_cfg["test_transform"]:
-        tr_name = tr["transform_name"]
-        tr_params = tr["transform_params"]
-    
-        tr_class = TRANSFORMATIONS[tr_name]
-        if tr_class == transforms.Pad:
-            test_transforms.append(tr_class(padding=pad, fill=tr_params["fill"], mode=tr_params["mode"]))
-        elif tr_class == transforms.ColorJitter:
-            jtr_brightness = dataset_params["jitter_brightness"]
-            jtr_contrast = dataset_params["jitter_contrast"]
-            jtr_saturation = dataset_params["jitter_saturation"]
-            jtr_hue = dataset_params["jitter_hue"]
+            if tr_name == "pad":
+                transf_list.append(
+                    transforms.Pad(padding=pad, fill=tr_params["fill"], padding_mode=tr_params["mode"]))
+            elif tr_name == "color_jitter":
+                jtr_brightness = dataset_params["jitter_brightness"]
+                jtr_contrast = dataset_params["jitter_contrast"]
+                jtr_saturation = dataset_params["jitter_saturation"]
+                jtr_hue = dataset_params["jitter_hue"]
         
-            test_transforms.append(tr_class(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
-        elif tr_class in [transforms.RandomResizedCrop, transforms.CenterCrop]:
-            test_transforms.append(tr_class(img_size))
-        else:
-            test_transforms.append(tr_class())
-
-    test_transforms.append(transforms.ToTensor())
-    # TODO: Should test normalization be done for test set? Should it be in place?
-    test_transforms.append(transforms.Normalize(mean=normalize_mu, std=normalize_std))
+                transf_list.append(transforms.ColorJitter(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
+            elif tr_name == "random_resized_crop":
+                transf_list.append(transforms.RandomResizedCrop(img_size))
+            elif tr_name == "center_crop":
+                transf_list.append(transforms.CenterCrop(img_size))
+            elif tr_name == "random_horizontal_flip":
+                transf_list.append(transforms.RandomHorizontalFlip())
+            else:
+                raise ValueError("Unrecognized transformation name: " + tr_name)
     
-    train_transforms = transforms.Compose(train_transforms)
-    test_transforms = transforms.Compose(test_transforms)
+        transf_list.append(transforms.ToTensor())
+        # TODO: Should test normalization be in place for train set?
+        transf_list.append(transforms.Normalize(mean=normalize_mu, std=normalize_std, inplace=is_train))
+
+        return transforms.Compose(transf_list)
+    
+    train_transforms = form_transf(datagen_cfg, is_train=True)
+    test_transforms = form_transf(datagen_cfg, is_train=False)
     
     if dataset_name == "CIFAR10":
         train_ds = CIFAR10LT(
