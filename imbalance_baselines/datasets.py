@@ -211,9 +211,9 @@ def generate_data(cfg):
     plot_path = plot_cfg["plot_path"]
     
     class_count = DSET_CLASS_CNTS[dataset_name]
-    sampler = datagen_cfg["sampler"]
+    sampler = parse_cfg_str(datagen_cfg["sampler"], None)
     
-    if sampler != "None" and sampler is not None:
+    if sampler is not None:
         # Initialize sampler if offline
         sampler_name = datagen_cfg["sampler"]["sampler_name"]
         sampler_params = datagen_cfg["sampler"]["sampler_params"]

@@ -2,7 +2,10 @@ import torch
 
 
 def parse_cfg_str(inp, casttype):
-    return casttype(inp) if isinstance(inp, str) else inp
+    if casttype is None:
+        return None if inp == "None" else inp
+    else:
+        return casttype(inp) if isinstance(inp, str) else inp
 
 
 # TODO [3]: This weight function should be renamed/refactored to better represent the
