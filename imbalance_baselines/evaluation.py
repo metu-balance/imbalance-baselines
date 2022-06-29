@@ -47,7 +47,7 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
             batch_len = result.shape[0]
             
             if calc_avg:
-                avg_acc += result.sum()
+                avg_acc += result.sum().item()
             
             if calc_perclass:
                 for i in range(batch_len):
@@ -64,8 +64,6 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
                 # Average accuracy of every class separately
                 per_class_acc[i] /= class_sizes[i]
         
-        # TODO: avg_acc is initialized as a float but is assigned a tensor throughout evaluation.
-        #   Change avg_acc type to tensor & return contained value, or process as a float from the beginning.
         return avg_acc, per_class_acc.tolist()
 
 
@@ -95,7 +93,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
                     MODEL_NAMES(r["model_name"])
                     + " trained with "
                     + LOSS_NAMES[r["loss_name"]]
-                    + (" using training parameters " + str(r["options"])) if method_params["print_task_options"] else ""
+                    + (" using training parameters " + str(r["options"]) if method_params["print_task_options"] else "")
                     + ":"
                 )
                 if calc_avg:
