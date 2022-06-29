@@ -90,7 +90,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
                                                      calc_perclass=calc_perclass, top=top, device=device)
                 
                 print(
-                    MODEL_NAMES(r["model_name"])
+                    MODEL_NAMES[r["model_name"]]
                     + " trained with "
                     + LOSS_NAMES[r["loss_name"]]
                     + (" using training parameters " + str(r["options"]) if method_params["print_task_options"] else "")
