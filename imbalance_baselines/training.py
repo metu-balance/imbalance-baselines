@@ -73,7 +73,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                  device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
-    dataset = cfg["Dataset"]["name"]
+    dataset = cfg["Dataset"]["dataset_name"]
     train_cfg = cfg["Training"]
     epoch_cnt = parse_cfg_str(train_cfg["epoch_count"], int)
     multi_gpu = train_cfg["multi_gpu"]
