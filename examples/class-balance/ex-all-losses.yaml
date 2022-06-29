@@ -47,7 +47,7 @@ DataGeneration:
       transform_name: "center_crop"
       transform_params: None
 Training:
-  epoch_count: 50
+  epoch_count: 200
   multi_gpu: True
   backup:
     save_models: False
@@ -94,7 +94,7 @@ Training:
     name: "sgd_linwarmup"
     params:
       lr: 0.1
-      lr_decay_epochs: [40, 45]
+      lr_decay_epochs: [160, 180]
       lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
