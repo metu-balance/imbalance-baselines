@@ -45,8 +45,3 @@ def get_size_per_class(data, num_classes=10):
         size[label] += 1
 
     return size
-
-
-# TODO: This should be renamed as a specific evaluation method. The overall get_accuracy function should
-#   iterate over trained model & eval. method preference pairs.
-

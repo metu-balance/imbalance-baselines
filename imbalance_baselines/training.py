@@ -82,6 +82,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     print_epoch_freq = train_cfg["printing"]["print_epoch_frequency"]
     draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
     plot_size = train_cfg["plotting"]["plot_size"]
+    plot_path = train_cfg["plotting"]["plot_path"]
     save_models = train_cfg["backup"]["save_models"]
     load_models = train_cfg["backup"]["load_models"]
     if save_models or load_models:
@@ -96,7 +97,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         print_epoch_freq = int(print_epoch_freq)
         print_batch_freq = int(print_batch_freq)
 
-    # Sanitize models_path
+    # Sanitize paths
     if save_models:
         if not models_path.endswith("/"):
             models_path += "/"
@@ -525,9 +526,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             )
             
             tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-            plt.savefig(
-                f"./plots/{dataset.lower()}-losses" + tstamp + ".png"
-            )
+            plt.savefig(plot_path + f"{dataset.lower()}-losses-" + tstamp + ".png")
             
             plt.show()
    

@@ -1,11 +1,30 @@
 Dataset:
-  name: "IMB_CIFAR10"
-  cifar10_imb_factor: 100
+  datasets_path: "datasets/"
+  dataset_name: "IMB_CIFAR10"
+  dataset_params:
+    imb_factor: 100
+    normalize_mu: (0.4914, 0.4822, 0.4465)
+    normalize_std: (0.2023, 0.1994, 0.2010)
+    jitter_brightness: 0.4
+    jitter_contrast: 0.4
+    jitter_saturation: 0.4
+    jitter_hue: 0.25
 DataGeneration:
   batch_size: 128
-  datasets_path: "datasets/"
+  pad: 4
+  image_size: (32, 32)
   train_shuffle: True
-  draw_plots: False
+  sampler: None
+  plotting:
+    draw_dataset_plots: True
+    plot_size: (16, 12)
+    plot_path: "output/dataset_plots/"
+  train_transform:
+    - ...
+    - ...
+  test_transform:
+    - ...
+    - ...
 Training:
   epoch_count: 1
   multi_gpu: False
@@ -42,6 +61,7 @@ Training:
   plotting:
     draw_loss_plots: False
     plot_size: (16, 12)
+    plot_path: "output/loss_plots/"
 Evaluation:
   -
     method_name: "get_accuracy"

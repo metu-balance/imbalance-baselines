@@ -12,21 +12,16 @@ class Config:
         # Check if obligatory fields are present in config.
         conf_keys = self.config.keys()
         
-        # TODO: Name correctness checks and default assignments are disorganized, need a more
-        #   functionized overhaul.
+        # TODO: Name correctness checks and default assignments are disorganized, need a more functionized overhaul.
         
         if "Dataset" not in conf_keys:
             raise Exception('"Dataset" field is missing from the configuration file.')
         else:
-            if self.config["Dataset"]["name"] not in DSET_NAMES.keys():
-                raise Exception("Unrecognized dataset name: " + self.config["Dataset"]["name"])
-            
-        if "DataGeneration" not in conf_keys:
-            raise Exception('"DataGeneration" field is missing from the configuration file.')
-        else:
-            if "datasets_path" not in self.config["DataGeneration"].keys():
-                raise Exception('"datasets_path" is missing from the DataGeneration field. Please'
+            if "datasets_path" not in self.config["Dataset"].keys():
+                raise Exception('"datasets_path" is missing from the Dataset field. Please'
                                 ' provide a path to store the datasets in.')
+            if self.config["Dataset"]["dataset_name"] not in DSET_NAMES.keys():
+                raise Exception("Unrecognized dataset name: " + self.config["Dataset"]["dataset_name"])
 
         if "Training" in conf_keys:
             train_keys = self.config["Training"].keys()
@@ -69,16 +64,17 @@ class Config:
             defaults = safe_load(f)
         
         # Datasets field and a valid name is known to exist now
-        if self.config["Dataset"]["name"] == "IMB_CIFAR10" \
-                and "cifar10_imb_factor" not in self.config["Dataset"].keys():
-            self.config["Dataset"]["cifar10_imb_factor"] = defaults["Dataset"]["cifar10_imb_factor"]
+        for key in defaults["Dataset"]:
+            if key not in self.config["Dataset"].keys():
+                self.config["Dataset"][key] = defaults["Dataset"][key]
         
-        # DataGeneration field and datasets_path are mandatory and known to exist.
-        #   Get rest from defaults if they do not exist.
-        datagen_keys = self.config["DataGeneration"].keys()
-        for key in defaults["DataGeneration"].keys():
-            if key not in datagen_keys:
-                self.config["DataGeneration"][key] = defaults["DataGeneration"][key]
+        if "DataGeneration" not in conf_keys:
+            self.config["DataGeneration"] = defaults["DataGeneration"]
+        else:
+            datagen_keys = self.config["DataGeneration"].keys()
+            for key in defaults["DataGeneration"].keys():
+                if key not in datagen_keys:
+                    self.config["DataGeneration"][key] = defaults["DataGeneration"][key]
 
         # Ensure Training field and each Training key exists
         if "Training" not in conf_keys:

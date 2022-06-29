@@ -1,3 +1,6 @@
+from torchvision import transforms as tr
+
+
 # Global variables for names & abbreviations
 DSET_NAMES = {
     "CIFAR10": "CIFAR10",
@@ -29,4 +32,12 @@ OPT_NAMES = {  # Names for optimizers
 
 EVAL_NAMES = {  # Names for evaluation methods
     "get_accuracy": "Prediction Accuracy Calculation"
+}
+
+TRANSFORMATIONS = {
+    "pad": tr.Pad,
+    "random_resized_crop": tr.RandomResizedCrop,
+    "random_horizontal_flip": tr.RandomHorizontalFlip,
+    "center_crop": tr.CenterCrop,
+    "color_jitter": tr.ColorJitter
 }

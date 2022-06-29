@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +10,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES
+from . import DSET_NAMES, TRANSFORMATIONS
 
 
 class CIFAR10LT(datasets.CIFAR10):
@@ -165,92 +166,91 @@ class INaturalist(Dataset):
     def get_cls_cnt_list(self):
         cls_cnt_list = [0] * self.class_cnt
         
-        for i in self.classes: cls_cnt_list[i] += 1
+        for i in self.classes:
+            cls_cnt_list[i] += 1
         
         return cls_cnt_list
 
 
-# TODO: Remove device param. if unneeded
-def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu")):
+def generate_data(cfg, sampler=None):
     # Parse configuration
-    dataset = cfg["Dataset"]["name"]
-    if dataset == "IMB_CIFAR10":
-        cifar10_imb_factor = cfg["Dataset"]["cifar10_imb_factor"]
-    batch_size = cfg["DataGeneration"]["batch_size"]
-    datasets_path = cfg["DataGeneration"]["datasets_path"]
-    train_shuffle = cfg["DataGeneration"]["train_shuffle"]
-    draw_plots = cfg["DataGeneration"]["draw_plots"]
+    dataset_cfg = cfg["Dataset"]
+    datasets_path = dataset_cfg["datasets_path"]
+    dataset_name = dataset_cfg["dataset_name"]
+    dataset_params = dataset_cfg["dataset_params"]
+
+    normalize_mu = dataset_params["normalize_mu"]
+    normalize_std = dataset_params["normalize_std"]
+    
+    datagen_cfg = cfg["DataGeneration"]
+    batch_size = datagen_cfg["batch_size"]
+    pad = datagen_cfg["pad"]
+    img_size = datagen_cfg["image_size"]
+    train_shuffle = datagen_cfg["train_shuffle"]
+    draw_dataset_plots = datagen_cfg["plotting"]["draw_dataset_plots"]
+    plot_size = datagen_cfg["plotting"]["plot_size"]
+    plot_path = datagen_cfg["plotting"]["plot_path"]
     
     # False if sampler is None or is offline
     sampler_is_online = isinstance(sampler, sampling.OnlineSampler) and (sampler is not None)
     
-    if not datasets_path.endswith("/"): datasets_path += "/"
+    if not datasets_path.endswith("/"):
+        datasets_path += "/"
     
-    # TODO: Find better jitter, mu and std. values for each dataset
-    if dataset == "CIFAR10":
-        normalize_mu = (0.4914, 0.4822, 0.4465)
-        normalize_std = (0.2023, 0.1994, 0.2010)
-        
-        im_size = 32
-        pad = 4
-        
-        #jtr_brightness = 0.4
-        #jtr_contrast = 0.4
-        #jtr_saturation = 0.4
-        #jtr_hue = 0.25
-    elif dataset == "IMB_CIFAR10":
-        normalize_mu = (0.5, 0.5, 0.5)
-        normalize_std = (0.5, 0.5, 0.5)
-        
-        im_size = 32
-        pad = 4
-        
-        #jtr_brightness = 0.4
-        #jtr_contrast = 0.4
-        #jtr_saturation = 0.4
-        #jtr_hue = 0.25
-    elif dataset == "INATURALIST_2017":
-        normalize_mu = (0.5, 0.5, 0.5)
-        normalize_std = (0.5, 0.5, 0.5)
-        
-        im_size = 224
-        pad = 32
-        
-        #jtr_brightness = 0.4
-        #jtr_contrast = 0.4
-        #jtr_saturation = 0.4
-        #jtr_hue = 0.25
-    elif dataset == "INATURALIST_2018":
-        normalize_mu = (0.485, 0.456, 0.406)
-        normalize_std = (0.229, 0.224, 0.225)
-        
-        im_size = 224
-        pad = 32
-        
-        #jtr_brightness = 0.4
-        #jtr_contrast = 0.4
-        #jtr_saturation = 0.4
-        #jtr_hue = 0.25
-    else:
-        raise ValueError("The given dataset name is not recognized.")
+    train_transforms = []
+    test_transforms = []
     
-    # TODO: Transformation pipeline should be easily customized - manage through config?
-    train_transforms = transforms.Compose([
-        transforms.Pad(padding=pad, fill=0, padding_mode="constant"),
-        transforms.RandomResizedCrop(im_size),
-        transforms.RandomHorizontalFlip(),
-        #transforms.ColorJitter(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=normalize_mu, std=normalize_std, inplace=True)
-    ])
+    # TODO: Avoid code repetition below
+    for tr in datagen_cfg["train_transform"]:
+        tr_name = tr["transform_name"]
+        tr_params = tr["transform_params"]
+        
+        tr_class = TRANSFORMATIONS[tr_name]
+        if tr_class == transforms.Pad:
+            train_transforms.append(tr_class(padding=pad, fill=tr_params["fill"], mode=tr_params["mode"]))
+        elif tr_class == transforms.ColorJitter:
+            jtr_brightness = dataset_params["jitter_brightness"]
+            jtr_contrast = dataset_params["jitter_contrast"]
+            jtr_saturation = dataset_params["jitter_saturation"]
+            jtr_hue = dataset_params["jitter_hue"]
+            
+            train_transforms.append(tr_class(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
+        elif tr_class in [transforms.RandomResizedCrop, transforms.CenterCrop]:
+            train_transforms.append(tr_class(img_size))
+        else:
+            train_transforms.append(tr_class())
+
+    train_transforms.append(transforms.ToTensor())
+    # TODO: Should test normalization be in place for train set?
+    train_transforms.append(transforms.Normalize(mean=normalize_mu, std=normalize_std, inplace=True))
     
-    test_transforms = transforms.Compose([
-        transforms.CenterCrop(im_size),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=normalize_mu, std=normalize_std)  # TODO: Should test normalization be in place too?
-    ])
+    for tr in datagen_cfg["test_transform"]:
+        tr_name = tr["transform_name"]
+        tr_params = tr["transform_params"]
     
-    if dataset == "CIFAR10":
+        tr_class = TRANSFORMATIONS[tr_name]
+        if tr_class == transforms.Pad:
+            test_transforms.append(tr_class(padding=pad, fill=tr_params["fill"], mode=tr_params["mode"]))
+        elif tr_class == transforms.ColorJitter:
+            jtr_brightness = dataset_params["jitter_brightness"]
+            jtr_contrast = dataset_params["jitter_contrast"]
+            jtr_saturation = dataset_params["jitter_saturation"]
+            jtr_hue = dataset_params["jitter_hue"]
+        
+            test_transforms.append(tr_class(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
+        elif tr_class in [transforms.RandomResizedCrop, transforms.CenterCrop]:
+            test_transforms.append(tr_class(img_size))
+        else:
+            test_transforms.append(tr_class())
+
+    test_transforms.append(transforms.ToTensor())
+    # TODO: Should test normalization be done for test set? Should it be in place?
+    test_transforms.append(transforms.Normalize(mean=normalize_mu, std=normalize_std))
+    
+    train_transforms = transforms.Compose(train_transforms)
+    test_transforms = transforms.Compose(test_transforms)
+    
+    if dataset_name == "CIFAR10":
         train_ds = datasets.CIFAR10(
             datasets_path + "cifar10",
             train=True,
@@ -264,10 +264,10 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
             download=True,
             transform=test_transforms
         )
-    elif dataset == "IMB_CIFAR10":  # Long-Tailed CIFAR10
+    elif dataset_name == "IMB_CIFAR10":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
-            imb_factor=cifar10_imb_factor,
+            imb_factor=dataset_params["cifar10_imb_factor"],
             train=True,
             download=True,
             transform=train_transforms,
@@ -280,7 +280,7 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
             download=True,
             transform=test_transforms
         )
-    elif dataset == "INATURALIST_2017":
+    elif dataset_name == "INATURALIST_2017":
         train_ds = INaturalist(
             datasets_path + "inat2017",
             "datasets/inat2017/train2017.json",
@@ -294,24 +294,7 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
             version="2017",
             transform=test_transforms
         )
-        
-        """
-        # To use pre-transformed datasets:
-        inat_path =  datasets_path + "inat2017_transf" + ("_32/" if inat_32x32 else "/")
-        
-        train_ds = INaturalist(
-            inat_path,
-            inat_path + "train2017.json",
-            version="2017"
-        )
-    
-        test_ds = INaturalist(
-            inat_path + "test2017/",
-            inat_path + "test2017.json",
-            version="2017"
-        )
-        """
-    elif dataset == "INATURALIST_2018":
+    elif dataset_name == "INATURALIST_2018":
         train_ds = INaturalist(
             datasets_path + "inat2018",
             "datasets/inat2018/train2018.json",
@@ -325,23 +308,6 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
             version="2018",
             transform=test_transforms
         )
-        
-        """
-        # To use pre-transformed datasets:
-        inat_path =  datasets_path + "inat2018_transf" + ("_32/" if inat_32x32 else "/")
-        
-        train_ds = INaturalist(
-            inat_path,
-            inat_path + "train2018.json",
-            version="2018"
-        )
-    
-        test_ds = INaturalist(
-            inat_path,
-            inat_path + "test2018.json",
-            version="2018"
-        )
-        """
     else:
         raise ValueError("The given dataset name is not recognized.")
     
@@ -359,21 +325,19 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
         num_workers=2
     )
     
-    class_cnt = 0
-    
-    if dataset == "CIFAR10":
+    if dataset_name == "CIFAR10":
         class_cnt = 10
         train_class_sizes = [5000] * class_cnt
         test_class_sizes = [1000] * class_cnt
-    elif dataset == "IMB_CIFAR10":
+    elif dataset_name == "IMB_CIFAR10":
         class_cnt = 10
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = [1000] * class_cnt
-    elif dataset == "INATURALIST_2017":
+    elif dataset_name == "INATURALIST_2017":
         class_cnt = 5089
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = test_ds.get_cls_cnt_list()
-    elif dataset == "INATURALIST_2018":
+    elif dataset_name == "INATURALIST_2018":
         class_cnt = 8142
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = test_ds.get_cls_cnt_list()
@@ -383,22 +347,23 @@ def generate_data(cfg, sampler=None, device: torch.device = torch.device("cpu"))
     print("Number of training samples:")
     print(np.array(train_class_sizes))  # Numpy array for cleaner output
     
-    if draw_plots:
+    if draw_dataset_plots:
         x = np.arange(class_cnt)
         fig, axs = plt.subplots(2, constrained_layout=True)
+
+        fig.set_figwidth(plot_size[0])
+        fig.set_figheight(plot_size[1])
         
-        fig.set_figheight(12)
-        fig.set_figwidth(16)
-        
-        fig.suptitle('Class Sizes & Weights for ' + DSET_NAMES[dataset])
+        fig.suptitle('Class Sizes & Weights for ' + DSET_NAMES[dataset_name])
         
         axs[0].set_title('Size Per Class (Unsorted)')
         axs[0].plot(x, train_class_sizes)
         
         axs[1].set_title('Size Per Class (Sorted)')
         axs[1].plot(x, sorted(train_class_sizes, reverse=True))
-        
-        plt.savefig(f"./plots/{dataset.lower()}_size_per_class.png")
+
+        tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        plt.savefig(plot_path + f"{dataset_name.lower()}-size-per-class-" + tstamp + ".png")
         
         plt.show()
     
