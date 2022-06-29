@@ -289,7 +289,7 @@ def generate_data(cfg):
     elif dataset_name == "IMB_CIFAR10":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
-            imb_factor=parse_cfg_str(dataset_params["cifar10_imb_factor"], int),
+            imb_factor=parse_cfg_str(dataset_params["imb_factor"], int),
             train=True,
             download=True,
             transform=train_transforms,

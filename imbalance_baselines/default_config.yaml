@@ -25,7 +25,9 @@ DataGeneration:
   sampler: None
   plotting:
     draw_dataset_plots: False
-    plot_size: (16, 12)
+    plot_size:
+      width: 16
+      height: 12
     plot_path: "output/dataset_plots/"
   train_transform:
     -
@@ -69,7 +71,9 @@ Training:
     print_batch_frequency: 50
   plotting:
     draw_loss_plots: False
-    plot_size: (16, 12)
+    plot_size:
+      width: 16
+      height: 12
     plot_path: "output/loss_plots/"
 Evaluation:
   -
