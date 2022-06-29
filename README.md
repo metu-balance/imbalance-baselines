@@ -17,6 +17,8 @@ configuraiton.
 # Feature TODO
 * May integrate wandb support
 * Should log print messages with dates and additionally in a log file
+* Should measure epoch times
+* Should be able to run a test on a test/valid set every few epochs
 ---
 
 # imbalance-baselines
