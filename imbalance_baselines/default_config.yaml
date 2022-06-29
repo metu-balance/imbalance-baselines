@@ -2,8 +2,14 @@ Dataset:
   #datasets_path: "datasets/"  # Mandatory field. Ignore in this defaults config.
   #dataset_name: "CIFAR10"  # Mandatory field. Ignore in this defaults config.
   dataset_params:
-    normalize_mu: (0.5, 0.5, 0.5)
-    normalize_std: (0.5, 0.5, 0.5)
+    normalize_mu:
+      val1: 0.5
+      val2: 0.5
+      val3: 0.5
+    normalize_std:
+      val1: 0.5
+      val2: 0.5
+      val3: 0.5
     jitter_brightness: 0.4
     jitter_contrast: 0.4
     jitter_saturation: 0.4
@@ -12,7 +18,9 @@ DataGeneration:
   batch_size: 128
   num_workers: 2
   pad: 4
-  image_size: (32, 32)
+  image_size:
+    width: 32
+    height: 32
   train_shuffle: True
   sampler: None
   plotting:

@@ -180,18 +180,28 @@ def generate_data(cfg):
     dataset_name = dataset_cfg["dataset_name"]
     dataset_params = dataset_cfg["dataset_params"]
 
-    normalize_mu = dataset_params["normalize_mu"]
-    normalize_std = dataset_params["normalize_std"]
+    normalize_mu = (
+        dataset_params["normalize_mu"]["val1"],
+        dataset_params["normalize_mu"]["val2"],
+        dataset_params["normalize_mu"]["val3"],
+    )
+    normalize_std = (
+        dataset_params["normalize_std"]["val1"],
+        dataset_params["normalize_std"]["val2"],
+        dataset_params["normalize_std"]["val3"],
+    )
     
     datagen_cfg = cfg["DataGeneration"]
     batch_size = datagen_cfg["batch_size"]
     worker_count = datagen_cfg["num_workers"]
     pad = datagen_cfg["pad"]
-    img_size = datagen_cfg["image_size"]
+    img_size = (datagen_cfg["image_size"]["width"], datagen_cfg["image_size"]["height"])
     train_shuffle = datagen_cfg["train_shuffle"]
-    draw_dataset_plots = datagen_cfg["plotting"]["draw_dataset_plots"]
-    plot_size = datagen_cfg["plotting"]["plot_size"]
-    plot_path = datagen_cfg["plotting"]["plot_path"]
+    
+    plot_cfg = datagen_cfg["plotting"]
+    draw_dataset_plots = plot_cfg["draw_dataset_plots"]
+    plot_size = (plot_cfg["plot_size"]["width"], plot_cfg["plot_size"]["height"])
+    plot_path = plot_cfg["plot_path"]
     
     class_count = DSET_CLASS_CNTS[dataset_name]
     sampler = datagen_cfg["sampler"]

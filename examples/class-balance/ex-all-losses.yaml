@@ -3,8 +3,14 @@ Dataset:
   dataset_name: "IMB_CIFAR10"
   dataset_params:
     imb_factor: 100
-    normalize_mu: (0.4914, 0.4822, 0.4465)
-    normalize_std: (0.2023, 0.1994, 0.2010)
+    normalize_mu:
+      val1: 0.4914
+      val2: 0.4822
+      val3: 0.4465
+    normalize_std:
+      val1: 0.2023
+      val2: 0.1994
+      val3: 0.2010
     jitter_brightness: 0.4
     jitter_contrast: 0.4
     jitter_saturation: 0.4
@@ -13,7 +19,9 @@ DataGeneration:
   batch_size: 256
   num_workers: 2
   pad: 4
-  image_size: (32, 32)
+  image_size:
+    width: 32
+    height: 32
   train_shuffle: True
   sampler: None
   plotting:
