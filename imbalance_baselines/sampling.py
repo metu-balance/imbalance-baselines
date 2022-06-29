@@ -11,9 +11,7 @@ class OfflineSampler:
     def group_by_labels(self, dataset):
         # This function assumes the dataset to be in the form of
         # [(Feature_1, Label_1), (Feature_2, Label_2), .....]
-        # (what if? ([FEATURES], [labels]))
-        # TODO: Does get_item return value in the standard way ((feat, label) pairs)?
-        #   If so, remove assumption.
+        # Note that __getitem__ returns (image, label) in torch.Dataset & derivatives.
         num_classes = self.num_classes
         groups = []
         
@@ -21,7 +19,7 @@ class OfflineSampler:
             groups.append([])
         
         for (feature, label) in dataset:
-            groups[label].append((feature, label))
+            groups[label].append([feature, label])
         
         return groups
 

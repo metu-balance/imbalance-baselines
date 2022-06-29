@@ -9,6 +9,13 @@ DSET_NAMES = {
     "INATURALIST_2018": "iNaturalist 2018"
 }
 
+DSET_CLASS_CNTS = {
+    "CIFAR10": 10,
+    "IMB_CIFAR10": 10,
+    "INATURALIST_2017": 5089,
+    "INATURALIST_2018": 8142
+}
+
 LOSS_NAMES = {
     "focal": "Focal Loss",
     "ce_sigmoid": "Cross Entropy Loss w/ Sigmoid",
