@@ -4,33 +4,31 @@
 different imbalance mitigation methods.  
 
 ## Table of Contents
-1. [Installation](#installation)
-   1. [Requirements](#requirements)
-2. [Usage](#usage)
+1. [Requirements](#requirements)
+2. [Installation](#installation)
+3. [Usage](#usage)
    1. [Configuration Files](#configuration-files)
    2. [Example](#example)
-3. [Directory Structure](#directory-structure)
-4. [Implemented Components & Imbalance Mitigation Methods](#implemented-components--imbalance-mitigation-methods)
-5. [Adding New Components](#adding-new-components)
+4. [Directory Structure](#directory-structure)
+5. [Implemented Components & Imbalance Mitigation Methods](#implemented-components--imbalance-mitigation-methods)
+6. [Adding New Components](#adding-new-components)
    1. [Adding a new dataset](#adding-a-new-dataset)
    2. [Adding a new model (backbone)](#adding-a-new-model-backbone)
    3. [Adding a new optimizer](#adding-a-new-optimizer)
    4. [Adding a new evaluation method](#adding-a-new-evaluation-method)
    5. [Adding a new loss function](#adding-a-new-loss-function)
    6. [Adding a new sampling method](#adding-a-new-sampling-method)
-6. [Features Considered for Addition](#features-considered-for-addition)
-7. [License](#license)
+7. [Features Considered for Addition](#features-considered-for-addition)
+8. [License](#license)
 
-## Installation
-...
+## Requirements
 
-### Requirements
+The experiments were run using the Conda environment specified in `environment.yaml`, using Python 3.8.
 
-The experiments were run using the Conda environment specified in `environment.yaml`, using Python 3.8. Used libraries
-are:
+Used libraries are:
 * torch
 * numpy
-* pilllow
+* pillow
 * datetime
 * json
 * matplotlib
@@ -42,6 +40,20 @@ are:
 * os
 
 (TODO: Specify each required library with version)
+
+## Installation
+
+First, install the appropriate version of PyTorch, preferably using a command from
+[their website](https://pytorch.org/).
+
+Then, install the libraries that were not already installed as a dependency of PyTorch:
+
+* matplotlib
+* yaml
+
+To install with Conda:
+
+`conda install yaml matplotlib`
 
 ## Usage
 
