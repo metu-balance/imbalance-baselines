@@ -1,6 +1,7 @@
 # TODO: Check out wandb
 import datetime as dt
 import matplotlib.pyplot as plt
+import numpy.random
 import os
 import sys
 import torch
@@ -21,10 +22,14 @@ class TrainTask:
         
         self.model_name = task_cfg["model"]
         self.loss_name = task_cfg["loss"]
-        
+
+        # If required, create a random number generator
+        if self.model_name in ["resnet32-manif-mu"]:
+            self.random_gen = numpy.random.default_rng()
+
         self.model_obj = None
         self.loss_obj = None
-        
+
         self.loss_history = []
         self.epoch_total_loss = 0
         
@@ -37,7 +42,7 @@ class TrainTask:
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
         elif self.model_name == "resnet32-manif-mu":
-            self.model = models.ResNet32ManifoldMixup
+            self.model = models.ResNet32ManifoldMixup(random_gen=self.random_gen)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
@@ -47,6 +52,10 @@ class TrainTask:
             self.loss = nn.CrossEntropyLoss
         else:
             raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
+        
+        # Pass loss through MixupLoss
+        if self.model_name == "resnet32-manif-mu":
+            ...
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -106,6 +115,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         parse_cfg_str(train_cfg["plotting"]["plot_size"]["height"], int)
     )
     plot_path = train_cfg["plotting"]["plot_path"]
+    # TODO: Should also include config.s for backup types: end of x epochs, interrupt... etc.
     save_models = train_cfg["backup"]["save_models"]
     load_models = train_cfg["backup"]["load_models"]
     if save_models or load_models:
