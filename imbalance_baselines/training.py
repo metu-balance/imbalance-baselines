@@ -23,9 +23,8 @@ class TrainTask:
         self.model_name = task_cfg["model"]
         self.loss_name = task_cfg["loss"]
 
-        # If required, create a random number generator
         if self.model_name in ["resnet32-manif-mu"]:
-            self.random_gen = numpy.random.default_rng()
+            self.seed = numpy.random.default_rng().integers(0, 100000)
 
         self.model_obj = None
         self.loss_obj = None
@@ -42,7 +41,7 @@ class TrainTask:
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
         elif self.model_name == "resnet32-manif-mu":
-            self.model = models.ResNet32ManifoldMixup(random_gen=self.random_gen)
+            self.model = models.ResNet32ManifoldMixup(seed=self.seed)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
