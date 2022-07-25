@@ -128,9 +128,10 @@ class MixupLoss:
             loss = lamb * self.criterion(logits, label_a) + (1 - lamb) * self.criterion(logits, label_b)
         
         else:
+            # FIXME: Usage might be incorrect, must check
             loss = self.criterion(logits, labels)
         
         return loss
-    
+
     def close_mixup(self):
         self.mixup = False

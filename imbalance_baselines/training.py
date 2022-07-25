@@ -24,6 +24,7 @@ class TrainTask:
         self.loss_name = task_cfg["loss"]
 
         if self.model_name in ["resnet32-manif-mu"]:
+            # Set common seed for the model and loss objects
             self.seed = numpy.random.default_rng().integers(0, 100000)
 
         self.model_obj = None
@@ -41,7 +42,7 @@ class TrainTask:
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
         elif self.model_name == "resnet32-manif-mu":
-            self.model = models.ResNet32ManifoldMixup(seed=self.seed)
+            self.model = models.ResNet32ManifoldMixup(alpha=self.options["beta-dist-alpha"], seed=self.seed)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
@@ -51,10 +52,6 @@ class TrainTask:
             self.loss = nn.CrossEntropyLoss
         else:
             raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
-        
-        # Pass loss through MixupLoss
-        if self.model_name == "resnet32-manif-mu":
-            ...
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -174,6 +171,10 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                 t.loss_obj = t.loss(weight=weights, reduction="sum")
         else:
             raise Exception("Unhandled loss type in task: " + str(t.loss))
+
+        if t.model_name == "resnet32-manif-mu":
+            # Pass loss through MixupLoss
+            t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta-dist-alpha"], seed=t.seed)
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:
@@ -236,7 +237,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         b = -torch.log((1 - b_pi) / b_pi)
         for t in training_tasks:
             if t["init_fc_bias"]:
-                # Initialize FC biases of models using sigmoid_ce and focal losses
+                # Initialize FC biases of models using sigmoid CE and focal losses
                 #   to avoid instability at the beginning of the training
                 if t.loss == FocalLoss:  # Used for focal loss and CE with sigmoid
                     if multi_gpu:
@@ -420,7 +421,26 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                     
                     if print_training:
                         print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
-                    
+
+            # Mix-up fine-tuning phase, executed in separate loops for each model:
+            for t in training_tasks:
+                if t.model_name in ["resnet32-manif-mu"]:
+                    for epoch in range(t["finetune-mixup-epochs"]):
+                        print(
+                            "Starting mix-up finetuning for "
+                            + MODEL_NAMES[t.model_name]
+                            + " trained with "
+                            + LOSS_NAMES[t.loss_name]
+                            + (" using training parameters " + str(t.options) if t.options else "")
+                            + ":"
+                        )
+
+                        t.model_obj.close_mixup()
+                        t.loss_obj.close_mixup()
+
+                        # TODO: Adapt from above, consider the plots and print logs
+                        ...
+
         except KeyboardInterrupt:
             print("Got KeyboardInterrupt.")
             
