@@ -4,22 +4,33 @@
 different imbalance mitigation methods.  
 
 ## Table of Contents
-1. [Requirements](#requirements)
-2. [Installation](#installation)
-3. [Usage](#usage)
+1. [About imbalance-baselines](#about-imbalance-baselines)
+2. [Requirements](#requirements)
+3. [Installation](#installation)
+4. [Usage](#usage)
    1. [Configuration Files](#configuration-files)
    2. [Example](#example)
-4. [Directory Structure](#directory-structure)
-5. [Implemented Components & Imbalance Mitigation Methods](#implemented-components--imbalance-mitigation-methods)
-6. [Adding New Components](#adding-new-components)
+5. [Directory Structure](#directory-structure)
+6. [Implemented Components & Imbalance Mitigation Methods](#implemented-components--imbalance-mitigation-methods)
+7. [Adding New Components](#adding-new-components)
    1. [Adding a new dataset](#adding-a-new-dataset)
    2. [Adding a new model (backbone)](#adding-a-new-model-backbone)
    3. [Adding a new optimizer](#adding-a-new-optimizer)
    4. [Adding a new evaluation method](#adding-a-new-evaluation-method)
    5. [Adding a new loss function](#adding-a-new-loss-function)
    6. [Adding a new sampling method](#adding-a-new-sampling-method)
-7. [Features Considered for Addition](#features-considered-for-addition)
-8. [License](#license)
+8. [Features Considered for Addition](#features-considered-for-addition)
+9. [License](#license)
+
+## About imbalance-baselines
+
+TODO
+
+developed for... as...
+
+aims to fill the gap / need for... quickly changing methods, new ones emerge. need a common evaluation basis
+
+adopts a "single-loop -- multiple models" approach
 
 ## Requirements
 
@@ -396,6 +407,7 @@ Done!
 ## Focal Loss
 Implemented under: `imbalance_baselines/loss_functions.py`, in `FocalLoss` class.
 ...
+TODO should also provide pytorch version
 
 ## Class-balancing Weights Based on Effective Number of Samples
 Implemented under: `imbalance_baselines/loss_functions.py` in `FocalLoss` class and
@@ -472,6 +484,7 @@ the class should also receive the sampler object as a parameter and use it to mo
 * Print messages should be timestamped and logged in a file.
 * Epoch times should be measured.
 * Evaluation on test or validation sets should be able to be run every few epochs.
+* `tqdm` module may be utilized to track the progress better.
 
 # License
 This program is licensed under Apache License 2.0. See the `LICENSE` file for details.
