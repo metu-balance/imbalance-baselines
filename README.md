@@ -51,7 +51,11 @@ The components of the library representing different parts of the deep learning 
 needed. The preferences and specifications for the pipeline are supplied through a configuration file.
 
 ### Configuration files
-...
+takes advantage of the flexibility of YAML format and `omegaconf`...
+expected format:
+... TODO
+
+TODO custom params for different losses, optimizers, datasets, eval. methods
 
 ### Example
 
@@ -471,3 +475,5 @@ the class should also receive the sampler object as a parameter and use it to mo
 
 # License
 This program is licensed under Apache License 2.0. See the `LICENSE` file for details.
+
+TODO credits - authors and advisors 

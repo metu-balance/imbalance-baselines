@@ -1,141 +1,46 @@
 import os
-
 from pathlib import Path
-from pprint import pprint
-from yaml import safe_load
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES, EVAL_NAMES
+
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, EVAL_NAMES
+
+import omegaconf.errors
+from omegaconf import OmegaConf
 
 
 class Config:
     def __init__(self, yaml_path, defaults_path=(Path(__file__).parent / "./default_config.yaml").resolve()):
-        with open(yaml_path, "r") as f:
-            self.config = safe_load(f)
+        self.config = OmegaConf.load(yaml_path)
+        self._defaults = OmegaConf.load(defaults_path)
 
-        # Check if obligatory fields are present in config.
-        conf_keys = self.config.keys()
-        
-        # TODO: Name correctness checks and default assignments are disorganized, need a more functionized overhaul.
-        #   Use omeageconf?
-        
-        if "Dataset" not in conf_keys:
-            raise Exception('"Dataset" field is missing from the configuration file.')
-        else:
-            if "datasets_path" not in self.config["Dataset"].keys():
-                raise Exception('"datasets_path" is missing from the Dataset field. Please'
-                                ' provide a path to store the datasets in.')
-            if self.config["Dataset"]["dataset_name"] not in DSET_NAMES.keys():
-                raise Exception("Unrecognized dataset name: " + self.config["Dataset"]["dataset_name"])
+        # Sanitize configuration
+        assert self.config.Dataset.dataset_name in DSET_NAMES.keys()
+        assert self.config.Training.optimizer.name in OPTIMIZER_NAMES.keys()
+        for task in self.config.Training.tasks:
+            assert task.model in MODEL_NAMES.keys()
+            assert task.loss in LOSS_NAMES.keys()
+        for eval_method in self.config.Evaluation:
+            assert eval_method.method_name in EVAL_NAMES.keys()
 
-        if "Training" in conf_keys:
-            train_keys = self.config["Training"].keys()
-            if "backup" in train_keys:
-                # If need to save/load models but no model path is specified, raise exception
-                backup_keys = self.config["Training"]["backup"].keys()
-                if (("save_models" in backup_keys
-                        and self.config["Training"]["backup"]["save_models"])
-                        or ("load_models" in backup_keys
-                            and self.config["Training"]["backup"]["load_models"])) \
-                        and "models_path" not in backup_keys:
-                    raise Exception('Need model path to save/load models but "models_path" is not'
-                                    ' specified in "backup" field under "Training".')
-            if "optimizer" in train_keys:
-                if not ("name" in self.config["Training"]["optimizer"].keys()
-                        and self.config["Training"]["optimizer"]["name"] in OPT_NAMES.keys()):
-                    # Assign SGD as default name
-                    self.config["Training"]["optimizer"]["name"] = "sgd"
-            if "tasks" in train_keys:
-                loss_names = LOSS_NAMES.keys()
-                model_names = MODEL_NAMES.keys()
-                for t in self.config["Training"]["tasks"]:
-                   if t["loss"] not in loss_names:  # Valid loss names list/set
-                     raise Exception("Unrecognized loss function name: " + t["loss"])
-                   if t["model"] not in model_names:  # Valid model names list/set
-                     raise Exception("Unrecognized model name: " + t["model"])
-        
-        if "Evaluation" in conf_keys:
-            eval_names = EVAL_NAMES.keys()
-            for e in self.config["Evaluation"]:
-                method_name = e["method_name"]
-                if method_name not in eval_names:
-                    raise Exception("Unrecognized evaluation method name: " + e["method_name"])
-                if method_name != "get_accuracy" and "method_params" not in e.keys():
-                    raise Exception("Missing method parameters for method: " + e["method_name"])
-                
-        # Load default values if they do not exist in given YAML file. Warn user if default values are
-        #   being used.
-        with open(defaults_path, "r") as f:
-            defaults = safe_load(f)
-        
-        # Datasets field and a valid name is known to exist now
-        for key in defaults["Dataset"]:
-            if key not in self.config["Dataset"].keys():
-                self.config["Dataset"][key] = defaults["Dataset"][key]
-        
-        if "DataGeneration" not in conf_keys:
-            self.config["DataGeneration"] = defaults["DataGeneration"]
-        else:
-            datagen_keys = self.config["DataGeneration"].keys()
-            for key in defaults["DataGeneration"].keys():
-                if key not in datagen_keys:
-                    self.config["DataGeneration"][key] = defaults["DataGeneration"][key]
+        # Create directories if they do not exist
+        if self.config.DataGeneration.plotting.draw_dataset_plots:
+            os.makedirs(self.config.DataGeneration.plotting.plot_path, exist_ok=True)
 
-        # Ensure Training field and each Training key exists
-        if "Training" not in conf_keys:
-            self.config["Training"] = defaults["Training"]
-        else:
-            train_keys = self.config["Training"].keys()
-            for key in defaults["Training"].keys():
-                if key not in train_keys:
-                    self.config["Training"][key] = defaults["Training"][key]
-                    
-            if not self.config["Training"]["tasks"]:  # Check for empty tasks list
-                self.config["Training"]["tasks"] = defaults["Training"]["tasks"]
-            
-            # Repeat key checks for sub-dictionaries
-            for key in defaults["Training"]["backup"].keys():
-                if key not in self.config["Training"]["backup"].keys():
-                    self.config["Training"]["backup"][key] = defaults["Training"]["backup"][key]
-            
-            for key in defaults["Training"]["optimizer"].keys():
-                if key not in self.config["Training"]["optimizer"].keys():
-                    self.config["Training"]["optimizer"][key] = defaults["Training"]["optimizer"][key]
-            
-            # If SGD is used, and the parameters are not given, load defaults
-            if self.config["Training"]["optimizer"]["name"] == "sgd":
-                for key in defaults["Training"]["optimizer"]["params"].keys():
-                    if key not in self.config["Training"]["optimizer"].keys():
-                        self.config["Training"]["backup"]["optimizer"][key] = \
-                            defaults["Training"]["optimizer"]["params"][key]
-            # TODO: Also set defaults for other optimizer types
-                    
-            for key in defaults["Training"]["printing"].keys():
-                if key not in self.config["Training"]["printing"].keys():
-                    self.config["Training"]["printing"][key] = defaults["Training"]["printing"][key]
-            
-            for key in defaults["Training"]["plotting"].keys():
-                if key not in self.config["Training"]["plotting"].keys():
-                    self.config["Training"]["plotting"][key] = defaults["Training"]["plotting"][key]
-
-        if "Evaluation" not in conf_keys:
-            self.config["Evaluation"] = defaults["Evaluation"]
-        else:
-            if not self.config["Evaluation"]:  # Check for empty evaluation methods list
-                self.config["Evaluation"] = defaults["Evaluation"]
-            else:
-                for e in self.config["Evaluation"]:
-                    if e["method_name"] == "get_accuracy":
-                        if "method_params" not in e.keys():
-                            e["method_params"] = defaults["Evaluation"]
-                        else:
-                            for key in defaults["Evaluation"][0]["method_params"]:
-                                if key not in e["method_params"].keys():
-                                    e["method_params"][key] = defaults["Evaluation"][0]["method_params"][key]
-
-        # TODO: Make dir.s if they do not exist. Single example:
-        os.makedirs(self.config["DataGeneration"]["plotting"]["plot_path"], exist_ok=True)
+        if self.config.Training.backup.save_models or self.config.Training.backup.load_models:
+            os.makedirs(self.config.Training.backup.models_path, exist_ok=True)
 
         print("Got configuration:")
-        pprint(self.config)
+        print(OmegaConf.to_yaml(self.config))
 
     def __getitem__(self, item):
-        return self.config[item]
+        try:
+            return self.config[item]
+        except omegaconf.errors.ConfigKeyError:  # This should capture errors arising from subsequent key accesses as well
+            print(f'Value "{item} not found in configuration. Trying to use the default value..."')  # TODO: Use logging instead
+            return self._defaults[item]
+
+    def __getattr__(self, item):
+        try:
+            return getattr(self.config, item)
+        except omegaconf.errors.ConfigAttributeError:  # This should capture errors arising from subsequent attribute accesses as well
+            print(f'Value "{item} not found in configuration. Trying to use the default value..."')  # TODO: Use logging instead
+            return getattr(self._defaults, item)
