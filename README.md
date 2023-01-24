@@ -1,6 +1,6 @@
 # imbalance-baselines
 
-**imbalance-baselines** is a modular Python deep learning library that provides a common measure for the performance of
+**imbalance-baselines** is a modular Python deep learning library, providing a common measure for the performance of
 different imbalance mitigation methods.  
 
 ## Table of Contents
@@ -23,37 +23,27 @@ different imbalance mitigation methods.
 
 ## Requirements
 
-The experiments were run using the Conda environment specified in `environment.yaml`, using Python 3.8.
+The experiments were run using Python 3.8.
 
-Used libraries are:
-* torch
-* numpy
-* pillow
-* datetime
-* json
-* matplotlib
-* typing
-* pathlib
-* pprint
-* yaml
-* sys
-* os
+Used third-party libraries are:
+* matplotlib (3.5.1)
+* numpy (1.22)
+* omegaconf (2.3.0)
+* pillow (9.2.0)
+* torch (1.12)
+* yaml (0.2.5)
 
-(@TODO: Specify each required library with version)
+Our Conda environment is also available under the file `environment.yaml`.
 
 ## Installation
 
 First, install the appropriate version of PyTorch, preferably using a command from
 [their website](https://pytorch.org/).
 
-Then, install the libraries that were not already installed as a dependency of PyTorch:
-
-* matplotlib
-* yaml
-
+Then, install the libraries that were not already installed as a dependency of PyTorch.
 To install with Conda:
 
-`conda install yaml matplotlib`
+`conda install -c conda-forge yaml matplotlib omegaconf`
 
 ## Usage
 
