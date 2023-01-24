@@ -55,12 +55,12 @@ Training:
     #load_models: False
   tasks:
     -
-      model: "resnet32-manif-mu"
+      model: "resnet32_manif_mu"
       loss: "ce_sigmoid"
       task_options:
         init_fc_bias: True
-        beta-dist-alpha: 1
-        finetune-mixup-epochs: 20
+        beta_dist_alpha: 1
+        finetune_mixup_epochs: 20
   optimizer:
     name: "sgd_linwarmup"
     params:

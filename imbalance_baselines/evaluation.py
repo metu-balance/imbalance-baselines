@@ -68,15 +68,15 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
 
 
 def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device = torch.device("cpu")):
-    eval_list = cfg["Evaluation"]
+    eval_list = cfg.Evaluation
     
     for e in eval_list:
-        method_name = e["method_name"]
-        method_params = e["method_params"]
+        method_name = e.method_name
+        method_params = e.method_params
 
-        calc_avg = method_params["calc_avg"]
-        calc_perclass = method_params["calc_perclass"]
-        top = parse_cfg_str(method_params["top"], int)
+        calc_avg = method_params.calc_avg
+        calc_perclass = method_params.calc_perclass
+        top = parse_cfg_str(method_params.top, int)
         
         if not (calc_avg or calc_perclass):
             print("Both average and per-class accuracy calculation options were disabled, returning.")
@@ -93,7 +93,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
                     MODEL_NAMES[r["model_name"]]
                     + " trained with "
                     + LOSS_NAMES[r["loss_name"]]
-                    + (" using training parameters " + str(r["options"]) if method_params["print_task_options"] else "")
+                    + (" using training parameters " + str(r["options"]) if method_params.print_task_options else "")
                     + ":"
                 )
 

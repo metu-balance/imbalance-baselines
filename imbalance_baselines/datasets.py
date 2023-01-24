@@ -176,53 +176,53 @@ class INaturalist(Dataset):
 
 def generate_data(cfg):
     # Parse configuration
-    dataset_cfg = cfg["Dataset"]
-    datasets_path = dataset_cfg["datasets_path"]
-    dataset_name = dataset_cfg["dataset_name"]
-    dataset_params = dataset_cfg["dataset_params"]
+    dataset_cfg = cfg.Dataset
+    datasets_path = dataset_cfg.datasets_path
+    dataset_name = dataset_cfg.dataset_name
+    dataset_params = dataset_cfg.dataset_params
 
     normalize_mu = (
-        parse_cfg_str(dataset_params["normalize_mu"]["val1"], float),
-        parse_cfg_str(dataset_params["normalize_mu"]["val2"], float),
-        parse_cfg_str(dataset_params["normalize_mu"]["val3"], float),
+        parse_cfg_str(dataset_params.normalize_mu.val1, float),
+        parse_cfg_str(dataset_params.normalize_mu.val2, float),
+        parse_cfg_str(dataset_params.normalize_mu.val3, float),
     )
     normalize_std = (
-        parse_cfg_str(dataset_params["normalize_std"]["val1"], float),
-        parse_cfg_str(dataset_params["normalize_std"]["val2"], float),
-        parse_cfg_str(dataset_params["normalize_std"]["val3"], float),
+        parse_cfg_str(dataset_params.normalize_std.val1, float),
+        parse_cfg_str(dataset_params.normalize_std.val2, float),
+        parse_cfg_str(dataset_params.normalize_std.val3, float),
     )
     
-    datagen_cfg = cfg["DataGeneration"]
-    batch_size = parse_cfg_str(datagen_cfg["batch_size"], int)
-    worker_count = parse_cfg_str(datagen_cfg["num_workers"], int)
-    pad = parse_cfg_str(datagen_cfg["pad"], int)
+    datagen_cfg = cfg.DataGeneration
+    batch_size = parse_cfg_str(datagen_cfg.batch_size, int)
+    worker_count = parse_cfg_str(datagen_cfg.num_workers, int)
+    pad = parse_cfg_str(datagen_cfg.pad, int)
     img_size = (
-        parse_cfg_str(datagen_cfg["image_size"]["width"], int),
-        parse_cfg_str(datagen_cfg["image_size"]["height"], int)
+        parse_cfg_str(datagen_cfg.image_size.width, int),
+        parse_cfg_str(datagen_cfg.image_size.height, int)
     )
-    train_shuffle = datagen_cfg["train_shuffle"]
+    train_shuffle = datagen_cfg.train_shuffle
     
-    plot_cfg = datagen_cfg["plotting"]
-    draw_dataset_plots = plot_cfg["draw_dataset_plots"]
+    plot_cfg = datagen_cfg.plotting
+    draw_dataset_plots = plot_cfg.draw_dataset_plots
     plot_size = (
-        parse_cfg_str(plot_cfg["plot_size"]["width"], int),
-        parse_cfg_str(plot_cfg["plot_size"]["height"], int)
+        parse_cfg_str(plot_cfg.plot_size.width, int),
+        parse_cfg_str(plot_cfg.plot_size.height, int)
     )
-    plot_path = plot_cfg["plot_path"]
+    plot_path = plot_cfg.plot_path
     
     class_count = DSET_CLASS_CNTS[dataset_name]
-    sampler = parse_cfg_str(datagen_cfg["sampler"], None)
+    sampler = parse_cfg_str(datagen_cfg.sampler, None)
     
     if sampler is not None:
         # Initialize sampler if offline
-        sampler_name = datagen_cfg["sampler"]["sampler_name"]
-        sampler_params = datagen_cfg["sampler"]["sampler_params"]
+        sampler_name = datagen_cfg.sampler.sampler_name
+        sampler_params = datagen_cfg.sampler.sampler_params
         
         if sampler_name == "oversampler":
-            sampler = sampling.OverSampler(class_count, sampler_params["ratio"])
+            sampler = sampling.OverSampler(class_count, sampler_params.ratio)
             sampler_is_online = False
         elif sampler_name == "undersampler":
-            sampler = sampling.UnderSampler(class_count, sampler_params["ratio"])
+            sampler = sampling.UnderSampler(class_count, sampler_params.ratio)
             sampler_is_online = False
         else:  # It is known that a valid online sampler name is provided by the config.
             sampler_is_online = True
@@ -236,20 +236,20 @@ def generate_data(cfg):
         transf_list = []
         
         for transf in dg_cfg["train_transform" if is_train else "test_transform"]:
-            tr_name = transf["transform_name"]
-            tr_params = transf["transform_params"]
+            tr_name = transf.transform_name
+            tr_params = transf.transform_params
     
             if tr_name == "pad":
                 transf_list.append(
                     transforms.Pad(
                         padding=pad,
-                        fill=parse_cfg_str(tr_params["fill"], int),
-                        padding_mode=tr_params["mode"]))
+                        fill=parse_cfg_str(tr_params.fill, int),
+                        padding_mode=tr_params.mode))
             elif tr_name == "color_jitter":
-                jtr_brightness = parse_cfg_str(dataset_params["jitter_brightness"], float)
-                jtr_contrast = parse_cfg_str(dataset_params["jitter_contrast"], float)
-                jtr_saturation = parse_cfg_str(dataset_params["jitter_saturation"], float)
-                jtr_hue = parse_cfg_str(dataset_params["jitter_hue"], float)
+                jtr_brightness = parse_cfg_str(dataset_params.jitter_brightness, float)
+                jtr_contrast = parse_cfg_str(dataset_params.jitter_contrast, float)
+                jtr_saturation = parse_cfg_str(dataset_params.jitter_saturation, float)
+                jtr_hue = parse_cfg_str(dataset_params.jitter_hue, float)
         
                 transf_list.append(transforms.ColorJitter(jtr_brightness, jtr_contrast, jtr_saturation, jtr_hue))
             elif tr_name == "random_resized_crop":
@@ -289,7 +289,7 @@ def generate_data(cfg):
     elif dataset_name == "IMB_CIFAR10":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
-            imb_factor=parse_cfg_str(dataset_params["imb_factor"], int),
+            imb_factor=parse_cfg_str(dataset_params.imb_factor, int),
             train=True,
             download=True,
             transform=train_transforms,
@@ -335,13 +335,13 @@ def generate_data(cfg):
     
     if sampler_is_online:  # It is known that sampler is not None and is online
         # Initialize online sampler
-        sampler_name = datagen_cfg["sampler"]["sampler_name"]
-        sampler_params = datagen_cfg["sampler"]["sampler_params"]
+        sampler_name = datagen_cfg.sampler.sampler_name
+        sampler_params = datagen_cfg.sampler.sampler_params
         
         if sampler_name == "cb_sampler":
-            sampler = sampling.ClassBalancedSampling(train_ds, class_count, sampler_params["q_value"])
+            sampler = sampling.ClassBalancedSampling(train_ds, class_count, sampler_params.q_value)
         elif sampler_name == "progb_sampler":
-            sampler = sampling.ProgressivelyBalancedSampling(train_ds, class_count, sampler_params["total_epochs"])
+            sampler = sampling.ProgressivelyBalancedSampling(train_ds, class_count, sampler_params.total_epochs)
         else:
             raise ValueError("Invalid sampler name encountered: " + sampler_name)
     

@@ -12,18 +12,18 @@ from torchvision import models as torchmodels
 from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str
 from . import models
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPT_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES
 
 
 class TrainTask:
     def __init__(self, task_cfg):
         # Additional task-specific configurations: None if not specified; else, a dict of config.s.
-        self.options = task_cfg["task_options"]
+        self.options = task_cfg.task_options
         
-        self.model_name = task_cfg["model"]
-        self.loss_name = task_cfg["loss"]
+        self.model_name = task_cfg.model
+        self.loss_name = task_cfg.loss
 
-        if self.model_name in ["resnet32-manif-mu"]:
+        if self.model_name in ["resnet32_manif_mu"]:
             # Set common seed for the model and loss objects
             self.seed = numpy.random.default_rng().integers(0, 100000)
 
@@ -41,8 +41,8 @@ class TrainTask:
             self.model = torchmodels.resnet101
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
-        elif self.model_name == "resnet32-manif-mu":
-            self.model = models.ResNet32ManifoldMixup(alpha=self.options["beta-dist-alpha"], seed=self.seed)
+        elif self.model_name == "resnet32_manif_mu":
+            self.model = models.ResNet32ManifoldMixup(alpha=self.options.beta_dist_alpha, seed=self.seed)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
@@ -55,6 +55,7 @@ class TrainTask:
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
+        # TODO: Should use attributes or the task config. directly instead
         if item in self.options.keys():
             return self.options[item]
         else:
@@ -98,24 +99,25 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                  device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
-    dataset = cfg["Dataset"]["dataset_name"]
-    train_cfg = cfg["Training"]
-    epoch_cnt = parse_cfg_str(train_cfg["epoch_count"], int)
-    multi_gpu = train_cfg["multi_gpu"]
-    print_training = train_cfg["printing"]["print_training"]
-    print_batch_freq = parse_cfg_str(train_cfg["printing"]["print_batch_frequency"], int)
-    print_epoch_freq = parse_cfg_str(train_cfg["printing"]["print_epoch_frequency"], int)
-    draw_loss_plots = train_cfg["plotting"]["draw_loss_plots"]
+    #   May use some values directly from configuration without defining variables.
+    dataset = cfg.Dataset.dataset_name
+    train_cfg = cfg.Training
+    epoch_cnt = parse_cfg_str(train_cfg.epoch_count, int)
+    multi_gpu = train_cfg.multi_gpu
+    print_training = train_cfg.printing.print_training
+    print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
+    print_epoch_freq = parse_cfg_str(train_cfg.printing.print_epoch_frequency, int)
+    draw_loss_plots = train_cfg.plotting.draw_loss_plots
     plot_size = (
-        parse_cfg_str(train_cfg["plotting"]["plot_size"]["width"], int),
-        parse_cfg_str(train_cfg["plotting"]["plot_size"]["height"], int)
+        parse_cfg_str(train_cfg.plotting.plot_size.width, int),
+        parse_cfg_str(train_cfg.plotting.plot_size.height, int)
     )
-    plot_path = train_cfg["plotting"]["plot_path"]
+    plot_path = train_cfg.plotting.plot_path
     # TODO: Should also include config.s for backup types: end of x epochs, interrupt... etc.
-    save_models = train_cfg["backup"]["save_models"]
-    load_models = train_cfg["backup"]["load_models"]
+    save_models = train_cfg.backup.save_models
+    load_models = train_cfg.backup.load_models
     if save_models or load_models:
-        models_path = train_cfg["backup"]["models_path"]
+        models_path = train_cfg.backup.models_path
     else:
         models_path = ""
     
@@ -172,7 +174,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         else:
             raise Exception("Unhandled loss type in task: " + str(t.loss))
 
-        if t.model_name == "resnet32-manif-mu":
+        if t.model_name == "resnet32_manif_mu":
             # Pass loss through MixupLoss
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta-dist-alpha"], seed=t.seed)
     
@@ -259,18 +261,18 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
         #rn_cb_sigmoid_ce.fc.bias.requires_grad_(False)
         
         # Initialize optimizer
-        opt_name = train_cfg["optimizer"]["name"]
-        opt_params = train_cfg["optimizer"]["params"]
+        opt_name = train_cfg.optimizer.name
+        opt_params = train_cfg.optimizer.params
         if opt_name == "sgd":
             optimizer = torch.optim.SGD(
                 param_list,
-                lr=parse_cfg_str(opt_params["lr"], casttype=float),
-                momentum=parse_cfg_str(opt_params["momentum"], casttype=float),
-                weight_decay=parse_cfg_str(opt_params["weight_decay"], casttype=float)
+                lr=parse_cfg_str(opt_params.lr, casttype=float),
+                momentum=parse_cfg_str(opt_params.momentum, casttype=float),
+                weight_decay=parse_cfg_str(opt_params.weight_decay, casttype=float)
             )
             
-            lr_decay_epochs = opt_params["lr_decay_epochs"]
-            lr_decay_rate = parse_cfg_str(opt_params["lr_decay_rate"], casttype=float)
+            lr_decay_epochs = opt_params.lr_decay_epochs
+            lr_decay_rate = parse_cfg_str(opt_params.lr_decay_rate, casttype=float)
             
             # Unused param.s. Initialize nonetheless
             warmup_epochs = 0
@@ -279,21 +281,21 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             optimizer = torch.optim.SGD(
                 param_list,
                 lr=0,  # Will be graudally increased during training
-                momentum=parse_cfg_str(opt_params["momentum"], casttype=float),
-                weight_decay=parse_cfg_str(opt_params["weight_decay"], casttype=float)
+                momentum=parse_cfg_str(opt_params.momentum, casttype=float),
+                weight_decay=parse_cfg_str(opt_params.weight_decay, casttype=float)
             )
             
-            warmup_epochs = parse_cfg_str(opt_params["warmup_epochs"], int)
-            lr_warmup_step = parse_cfg_str(opt_params["lr"], casttype=float) / warmup_epochs
+            warmup_epochs = parse_cfg_str(opt_params.warmup_epochs, int)
+            lr_warmup_step = parse_cfg_str(opt_params.lr, casttype=float) / warmup_epochs
 
-            lr_decay_epochs = opt_params["lr_decay_epochs"]
-            lr_decay_rate = opt_params["lr_decay_rate"]
+            lr_decay_epochs = opt_params.lr_decay_epochs
+            lr_decay_rate = opt_params.lr_decay_rate
         else:
             raise Exception("Optimizer name is not recognized: " + opt_name)
         
         print("Starting training.")
         print(f"Dataset: {DSET_NAMES[dataset]}")
-        print(f"Optimizer: {OPT_NAMES[opt_name]}")
+        print(f"Optimizer: {OPTIMIZER_NAMES[opt_name]}")
         
         try:
             for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
@@ -424,8 +426,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
 
             # Mix-up fine-tuning phase, executed in separate loops for each model:
             for t in training_tasks:
-                if t.model_name in ["resnet32-manif-mu"]:
-                    for epoch in range(t["finetune-mixup-epochs"]):
+                if t.model_name in ["resnet32_manif_mu"]:
+                    for epoch in range(t["finetune_mixup_epochs"]):
                         # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
 
                         print(
@@ -447,13 +449,6 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             print("Got KeyboardInterrupt.")
             
             if save_models:
-                print("Deleting previous backups.")
-                # Delete all temporary files under temp/interrupted/
-                for f in os.listdir(models_path + "temp/interrupted/"):
-                    fpath = models_path + "temp/interrupted/" + f
-                    os.remove(fpath)
-                    print("Removed:", fpath)
-                
                 print("Backing up the models.")
 
                 tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
@@ -507,11 +502,18 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                     print(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
                           models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
                 """
-            
+
+            print("Deleting previous backups.")
+            # Delete all OLD temporary files under temp/interrupted/
+            # FIXME: delete only old files! create a list of old files before backing up.
+            for f in os.listdir(models_path + "temp/interrupted/"):
+                fpath = models_path + "temp/interrupted/" + f
+                os.remove(fpath)
+                print("Removed:", fpath)
+
             print("Terminating.")
             sys.exit(1)
-        
-        
+
         # Save the trained models
         if save_models:
             tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
