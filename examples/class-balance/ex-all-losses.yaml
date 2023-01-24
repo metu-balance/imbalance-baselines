@@ -81,7 +81,8 @@ Training:
       loss: "ce_softmax"
       task_options:
         init_fc_bias: True
-    - model: "resnet50"
+    -
+      model: "resnet50"
       loss: "ce_softmax"
       task_options:
         init_fc_bias: True

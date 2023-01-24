@@ -426,6 +426,8 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             for t in training_tasks:
                 if t.model_name in ["resnet32-manif-mu"]:
                     for epoch in range(t["finetune-mixup-epochs"]):
+                        # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
+
                         print(
                             "Starting mix-up finetuning for "
                             + MODEL_NAMES[t.model_name]

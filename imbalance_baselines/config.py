@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 from pprint import pprint
 from yaml import safe_load
@@ -13,6 +15,7 @@ class Config:
         conf_keys = self.config.keys()
         
         # TODO: Name correctness checks and default assignments are disorganized, need a more functionized overhaul.
+        #   Use omeageconf?
         
         if "Dataset" not in conf_keys:
             raise Exception('"Dataset" field is missing from the configuration file.')
@@ -127,6 +130,9 @@ class Config:
                             for key in defaults["Evaluation"][0]["method_params"]:
                                 if key not in e["method_params"].keys():
                                     e["method_params"][key] = defaults["Evaluation"][0]["method_params"][key]
+
+        # TODO: Make dir.s if they do not exist. Single example:
+        os.makedirs(self.config["DataGeneration"]["plotting"]["plot_path"], exist_ok=True)
 
         print("Got configuration:")
         pprint(self.config)
