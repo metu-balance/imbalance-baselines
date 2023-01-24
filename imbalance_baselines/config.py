@@ -35,12 +35,12 @@ class Config:
         try:
             return self.config[item]
         except omegaconf.errors.ConfigKeyError:  # This should capture errors arising from subsequent key accesses as well
-            print(f'Value "{item} not found in configuration. Trying to use the default value..."')  # TODO: Use logging instead
+            print(f'Value "{item} is incomplete in configuration. Trying to use the default value..."')  # TODO: Use logging instead
             return self._defaults[item]
 
     def __getattr__(self, item):
         try:
             return getattr(self.config, item)
         except omegaconf.errors.ConfigAttributeError:  # This should capture errors arising from subsequent attribute accesses as well
-            print(f'Value "{item} not found in configuration. Trying to use the default value..."')  # TODO: Use logging instead
+            print(f'Value "{item} is incomplete in configuration. Trying to use the default value..."')  # TODO: Use logging instead
             return getattr(self._defaults, item)

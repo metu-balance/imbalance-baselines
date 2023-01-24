@@ -1,4 +1,5 @@
-from torchvision import transforms as tr
+# TODO: May just use transformation classes themselves rather than their names in TRANSFORM_NAMES
+# from torchvision import transforms as tr
 
 
 # Global variables for names & abbreviations
@@ -33,11 +34,18 @@ MODEL_NAMES = {
     "resnet32-manif-mu": "Resnet-32 w/ Manifold Mix-up"
 }
 
-OPT_NAMES = {  # Names for optimizers
+OPTIMIZER_NAMES = {  # Names for optimizers
     "sgd": "Stochastic Gradient Descent with Momentum",
     "sgd_linwarmup": "Stochastic Gradient Descent with Momentum and Linear Warm-up"
 }
 
 EVAL_NAMES = {  # Names for evaluation methods
     "get_accuracy": "Prediction Accuracy Calculation"
+}
+
+TRANSFORM_NAMES = {  # Names for data transformations / augmentations
+    "pad": "Padding",
+    "random_resized_crop": "RandomResizedCrop",
+    "random_horizontal_crop": "RandomHorizontalCrop",
+    "center_crop": "CenterCrop"
 }

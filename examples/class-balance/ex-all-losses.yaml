@@ -51,8 +51,8 @@ Training:
   multi_gpu: True
   backup:
     save_models: False
-    #models_path: ""
-    #load_models: False
+    models_path: ""
+    load_models: False
   tasks:
     -
       model: "resnet32"

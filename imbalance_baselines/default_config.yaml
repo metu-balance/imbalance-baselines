@@ -1,6 +1,6 @@
 Dataset:
-  #datasets_path: "datasets/"  # Mandatory field. Ignore in this defaults config.
-  #dataset_name: "CIFAR10"  # Mandatory field. Ignore in this defaults config.
+  datasets_path: ???  # Mandatory field
+  dataset_name: ???  # Mandatory field
   dataset_params:
     normalize_mu:
       val1: 0.5
@@ -49,8 +49,8 @@ Training:
   epoch_count: 100
   multi_gpu: False
   backup:
-    #models_path: ""  # Mandatory field only if save_models or load_models is True.
     save_models: False
+    models_path: "output/models/"  # Mandatory field (only if save_models or load_models is True)
     load_models: False
   optimizer:
     name: "sgd"
