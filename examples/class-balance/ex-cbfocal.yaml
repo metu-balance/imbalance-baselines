@@ -47,7 +47,7 @@ DataGeneration:
       transform_name: "center_crop"
       transform_params: None
 Training:
-  epoch_count: 1
+  epoch_count: 10
   multi_gpu: False
   backup:
     save_models: False
@@ -66,6 +66,7 @@ Training:
       task_options:
         init_fc_bias: True
         focal_loss_gamma: 0.5
+        cb_beta: 0.999
   optimizer:
     name: "sgd_linwarmup"
     params:

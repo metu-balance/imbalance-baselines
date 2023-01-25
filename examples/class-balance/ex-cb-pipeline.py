@@ -8,19 +8,14 @@ from imbalance_baselines.config import Config
 
 import torch.cuda
 
-beta = 0.9999  # TODO: Pass beta thru. config.
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
 
-train_dl, test_dl, class_cnt, train_class_sizes, test_class_sizes = datasets.generate_data(cfg)
+train_dl, test_dl, dataset_info = datasets.generate_data(cfg)
+# dataset_info holds: class_count, train_class_sizes, test_class_sizes
+print(f"Formed dataset and dataloaders with {dataset_info['class_count']} classes.")
 
-weights = utils.get_weights(train_class_sizes, beta, device=device)
-weights.requires_grad = False
+training_results = training.train_models(cfg, train_dl, dataset_info, device=device)
+print("Training completed, evaluating models...")
 
-print("Got weights:", weights)
-
-training_results = training.train_models(cfg, train_dl, class_cnt, weights, device=device)
-evaluation.evaluate(cfg, training_results, test_dl, test_class_sizes, device=device)
-
-print("Done!")
+evaluation.evaluate(cfg, training_results, test_dl, dataset_info, device=device)

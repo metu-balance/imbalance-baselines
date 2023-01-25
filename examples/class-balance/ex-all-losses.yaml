@@ -47,7 +47,7 @@ DataGeneration:
       transform_name: "center_crop"
       transform_params: None
 Training:
-  epoch_count: 200
+  epoch_count: 2
   multi_gpu: True
   backup:
     save_models: False
@@ -66,6 +66,7 @@ Training:
       task_options:
         init_fc_bias: True
         focal_loss_gamma: 0.5
+        cb_beta: 0.999
     -
       model: "resnet32"
       loss: "ce_sigmoid"
@@ -76,6 +77,7 @@ Training:
       loss: "cb_ce_sigmoid"
       task_options:
         init_fc_bias: True
+        cb_beta: 0.999
     -
       model: "resnet32"
       loss: "ce_softmax"
@@ -91,6 +93,7 @@ Training:
       loss: "cb_ce_softmax"
       task_options:
         init_fc_bias: True
+        cb_beta: 0.999
   optimizer:
     name: "sgd_linwarmup"
     params:

@@ -65,7 +65,7 @@ class FocalLoss:
             Args:
               z: Predictions tensor of shape [BATCH_SIZE, label_count], output of ResNet
               lbl: Labels tensor of shape [BATCH_SIZE]
-              alpha: Class balance weights tensor of shape [lable_count]. Taken 1 for all classes
+              alpha: Class balance cb_weights tensor of shape [lable_count]. Taken 1 for all classes
                 if None is given.
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
             """
@@ -80,7 +80,7 @@ class FocalLoss:
     
         if alpha is None:
             alpha = torch.as_tensor([1] * batch_size, device=self.device)
-        else:  # Get weights for each image in batch
+        else:  # Get cb_weights for each image in batch
             alpha = (alpha * lbl).sum(axis=1)
     
         lbl_bool = lbl.type(torch.bool)  # Cast to bool for torch.where()

@@ -397,6 +397,7 @@ def generate_data(cfg):
         
         # plt.show()
     
-    return train_dl, test_dl, class_count, train_class_sizes, test_class_sizes
+    return train_dl, test_dl,\
+        {"class_count": class_count, "train_class_sizes": train_class_sizes, "test_class_sizes": test_class_sizes}
 
 

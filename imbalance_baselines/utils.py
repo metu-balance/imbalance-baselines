@@ -32,12 +32,12 @@ def get_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
         weights, 1 - torch.pow(beta, class_sizes)
     ).to(device)
 
-    # Normalize the weights
+    # Normalize the cb_weights
     weights = torch.mul(weights, class_cnt / torch.sum(weights))
     
     weights.requires_grad = False
     
-    # TODO: Check whether data type of weights are dtype or not
+    # TODO: Check whether data type of cb_weights are dtype or not
     return weights.to(device)
 
 

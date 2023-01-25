@@ -67,7 +67,7 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
         return avg_acc, per_class_acc.tolist()
 
 
-def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device = torch.device("cpu")):
+def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.device = torch.device("cpu")):
     eval_list = cfg.Evaluation
     
     for e in eval_list:
@@ -86,8 +86,9 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
         
         if method_name == "get_accuracy":
             for r in train_results:
-                avg_acc, perclass_acc = get_accuracy(test_dl, r["model"], test_class_sizes, calc_avg=calc_avg,
-                                                     calc_perclass=calc_perclass, top=top, device=device)
+                avg_acc, perclass_acc = get_accuracy(test_dl, r["model"], dataset_info["test_class_sizes"],
+                                                     calc_avg=calc_avg, calc_perclass=calc_perclass, top=top,
+                                                     device=device)
                 
                 print(
                     MODEL_NAMES[r["model_name"]]
@@ -102,7 +103,7 @@ def evaluate(cfg, train_results, test_dl, test_class_sizes, device: torch.device
                 if calc_perclass:
                     print(f"Top-{top} accuracy per class:", perclass_acc)
                 
-                print()  # Empty line
+                print()  # Print empty line
         else:
             raise Exception("Invalid method name encountered during evaluation: " + method_name)
 

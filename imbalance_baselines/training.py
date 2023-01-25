@@ -10,13 +10,13 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss, MixupLoss
-from .utils import parse_cfg_str
+from .utils import parse_cfg_str, get_weights
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES
 
 
 class TrainTask:
-    def __init__(self, task_cfg):
+    def __init__(self, task_cfg, dataset_info: dict, device: torch.device = torch.device("cpu")):
         # Additional task-specific configurations: None if not specified; else, a dict of config.s.
         self.options = task_cfg.task_options
         
@@ -29,6 +29,7 @@ class TrainTask:
 
         self.model_obj = None
         self.loss_obj = None
+        self.cb_weights = None
 
         self.loss_history = []
         self.epoch_total_loss = 0
@@ -52,6 +53,13 @@ class TrainTask:
             self.loss = nn.CrossEntropyLoss
         else:
             raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
+
+        # Get class balancing weights if loss is a class balancing loss
+        if self.cb_weights is None and self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
+            self.cb_weights = get_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
+            self.cb_weights.requires_grad = False
+
+            print("Got class-balancing weights:", self.cb_weights)  # TODO: Use logging instead
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -94,25 +102,31 @@ def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_
 
 
 # TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
-# TODO [3]: Should not pass weights, should call utils.get_weights when necessary
-def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = None,
-                 device: torch.device = torch.device("cpu")):
+# TODO [3]: Should not pass cb_weights, should call utils.get_weights when necessary
+def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
     #   May use some values directly from configuration without defining variables.
     dataset = cfg.Dataset.dataset_name
     train_cfg = cfg.Training
     epoch_cnt = parse_cfg_str(train_cfg.epoch_count, int)
+
     multi_gpu = train_cfg.multi_gpu
+
+    class_cnt = dataset_info["class_count"]
+
+
     print_training = train_cfg.printing.print_training
     print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
     print_epoch_freq = parse_cfg_str(train_cfg.printing.print_epoch_frequency, int)
+
     draw_loss_plots = train_cfg.plotting.draw_loss_plots
     plot_size = (
         parse_cfg_str(train_cfg.plotting.plot_size.width, int),
         parse_cfg_str(train_cfg.plotting.plot_size.height, int)
     )
     plot_path = train_cfg.plotting.plot_path
+
     # TODO: Should also include config.s for backup types: end of x epochs, interrupt... etc.
     save_models = train_cfg.backup.save_models
     load_models = train_cfg.backup.load_models
@@ -145,7 +159,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
     # Create training tasks
     training_tasks = []
     for task_cfg in train_cfg["tasks"]:
-        training_tasks.append(TrainTask(task_cfg))
+        training_tasks.append(TrainTask(task_cfg, dataset_info, device=device))
     
     # Initialize models & losses of the tasks
     for t in training_tasks:
@@ -170,7 +184,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             if t.loss_name == "ce_softmax":
                 t.loss_obj = t.loss()
             elif t.loss_name == "cb_ce_softmax":
-                t.loss_obj = t.loss(weight=weights, reduction="sum")
+                t.loss_obj = t.loss(weight=t.cb_weights, reduction="sum")
         else:
             raise Exception("Unhandled loss type in task: " + str(t.loss))
 
@@ -331,7 +345,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                             loss = t.loss_obj(
                                 t.model_obj(inp),
                                 target,
-                                alpha=weights if t.loss_name.startswith("cb") else None,
+                                alpha=t.cb_weights if t.loss_name.startswith("cb") else None,
                                 gamma=g
                             )
                         elif t.loss_name in ["ce_softmax", "cb_ce_softmax"]:
@@ -339,7 +353,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
                                 t.model_obj(inp),
                                 target
                             ) / (target.shape[0] if t.loss_name.startswith("cb") else 1)
-                            # If class-balancing, only normalization is needed since weights are passed in loss
+                            # If class-balancing, only normalization is needed since cb_weights are passed in loss
                             #   initialization.
                         else:
                             raise Exception("Invalid loss name encountered during training: " + t.loss_name)
