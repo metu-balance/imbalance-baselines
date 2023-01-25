@@ -30,11 +30,12 @@ developed for... as...
 
 aims to fill the gap / need for... quickly changing methods, new ones emerge. need a common evaluation basis
 
+not initial aim, but also provides a sample training code. currently only class balanced losses are supported.
 adopts a "single-loop -- multiple models" approach
 
 ## Requirements
 
-The experiments were run using Python 3.8.
+The library is developed and tested using Python 3.10.
 
 Used third-party libraries are:
 * matplotlib (3.5.1)
