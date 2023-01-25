@@ -9,7 +9,6 @@ from imbalance_baselines.config import Config
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-# TODO: Use argparse
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
 
 

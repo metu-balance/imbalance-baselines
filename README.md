@@ -80,7 +80,7 @@ The code and output below illustrates the example in `examples/class-balance`. C
 <details>
 <summary>The configuration file</summary>
 
-(@TODO: Use better config & output when backup is implemented)
+TODO: update config. Use better config & output when backup is implemented?
 ```yaml
 Dataset:
   datasets_path: "datasets/"
@@ -225,6 +225,7 @@ producing the output:
 
 <details>
 <summary>Output</summary>
+TODO update output
 
 ```
 Got configuration:
