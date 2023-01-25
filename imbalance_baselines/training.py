@@ -10,7 +10,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 from .loss_functions import FocalLoss, MixupLoss
-from .utils import parse_cfg_str, get_weights
+from .utils import parse_cfg_str, get_cb_weights
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES
 
@@ -56,7 +56,7 @@ class TrainTask:
 
         # Get class balancing weights if loss is a class balancing loss
         if self.cb_weights is None and self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
-            self.cb_weights = get_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
+            self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
 
             print("Got class-balancing weights:", self.cb_weights)  # TODO: Use logging instead
@@ -102,7 +102,7 @@ def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_
 
 
 # TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
-# TODO [3]: Should not pass cb_weights, should call utils.get_weights when necessary
+# TODO [3]: Should not pass cb_weights, should call utils.get_cb_weights when necessary
 def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.

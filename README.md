@@ -30,8 +30,7 @@ developed for... as...
 
 aims to fill the gap / need for... quickly changing methods, new ones emerge. need a common evaluation basis
 
-not initial aim, but also provides a sample training code. currently only class balanced losses are supported.
-adopts a "single-loop -- multiple models" approach
+not initial aim, but also provides a sample training code. adopts a "single-loop -- multiple models" approach
 
 ## Requirements
 
@@ -413,7 +412,7 @@ TODO should also provide pytorch version
 
 ## Class-balancing Weights Based on Effective Number of Samples
 Implemented under: `imbalance_baselines/loss_functions.py` in `FocalLoss` class and
-`imbalance_baselines/utils.py` in `get_weights` function.
+`imbalance_baselines/utils.py` in `get_cb_weights` function.
 ...
 
 ## Input Mix-up

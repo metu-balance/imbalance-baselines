@@ -24,7 +24,7 @@ class CostSensitiveCrossEntropy:
 class ClassBalancedCrossEntropy:
     def __init__(self, dataset, num_classes: int, beta: float):
         class_sizes = utils.get_size_per_class(dataset, num_classes)
-        weights = utils.get_weights(class_sizes, beta)
+        weights = utils.get_cb_weights(class_sizes, beta)
         self.CB_CE = torch.nn.CrossEntropyLoss(weight=weights, reduction='Sum')
         self.weights = weights
         self.beta = beta
