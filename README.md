@@ -76,6 +76,9 @@ dataset. The imbalance of the dataset is visualized with a plot when it is initi
 loss functions are used as the imbalance mitigation method. When the training completes, convergence of the loss is
 visualized for every model and loss configuration. Later, the models' accuracies are tested and compared.
 
+Other examples under `examples/` can be reproduced by placing the `.py` scripts in an environment that can access the
+`imbalance_baselines` repository, and passing the desired configuration file as a command line argument.
+
 The code and output below illustrates the example in `examples/class-balance`. Click to expand the relevant sections:
 <details>
 <summary>The configuration file</summary>

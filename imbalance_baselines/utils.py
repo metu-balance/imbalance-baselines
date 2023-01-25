@@ -8,8 +8,6 @@ def parse_cfg_str(inp, casttype):
         return casttype(inp) if isinstance(inp, str) else inp
 
 
-# TODO [3]: This weight function should be renamed/refactored to better represent the
-#   specific method it uses (effective no. of samples?)
 def get_cb_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
                    device: torch.device = torch.device("cpu")) -> torch.Tensor:
     """Get normalized weight (inverse of effective number of samples) per class."""

@@ -102,7 +102,6 @@ def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_
 
 
 # TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
-# TODO [3]: Should not pass cb_weights, should call utils.get_cb_weights when necessary
 def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.device = torch.device("cpu")):
     # Parse configuration
     # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
@@ -114,7 +113,6 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     multi_gpu = train_cfg.multi_gpu
 
     class_cnt = dataset_info["class_count"]
-
 
     print_training = train_cfg.printing.print_training
     print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
