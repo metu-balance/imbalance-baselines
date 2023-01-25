@@ -59,7 +59,7 @@ def get_cb_weights(class_sizes, beta=0, dtype: torch.dtype = torch.double,
     
     weights.requires_grad = False
     
-    # TODO: Check whether data type of cb_weights are dtype or not
+    # TODO [2]: Check whether data type of cb_weights are dtype or not
     return weights.to(device)
 
 

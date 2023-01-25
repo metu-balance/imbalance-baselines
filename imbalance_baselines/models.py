@@ -13,7 +13,7 @@ class ResNet32(nn.Module):
         self.filters = [16, 16, 32, 64]
         self.strides = [1, 2, 2]
         
-        # TODO: (3, 16, (3, 1), padding=..., ...) instead?
+        # TODO [5]: (3, 16, (3, 1), padding=..., ...) instead?
         #   Is 1 supposed to be the stride? Is it evaluated as the stride size, or as the kernel's 2nd dim?
         self.conv = nn.Conv2d(3, 16, 3, 1, padding='same', bias=False)
         self.norm = nn.BatchNorm2d(16)
@@ -103,7 +103,7 @@ class ResNet32ManifoldMixup(nn.Module):
         
         if self.mixup:
             lamb = self.random_gen.beta(self.alpha, self.alpha)
-            # TODO: Check whether numpy generator (instead of torch generator) works
+            # TODO [5]: Check whether numpy generator (instead of torch generator) works
             idx = torch.randperm(x.size(0), generator=self.random_gen)
             x_a, x_b = x, x[idx]
             x = lamb * x_a + (1 - lamb) * x_b
@@ -122,12 +122,12 @@ class ResBlock(nn.Module):
     def __init__(self, in_filter, out_filter, stride):
         super(ResBlock, self).__init__()
         
-        # TODO: See line 15 TODO
+        # TODO [5]: See line 15 TODO
         self.conv1 = nn.Conv2d(in_filter, out_filter, 3, stride, padding=1, bias=False)
         self.norm1 = nn.BatchNorm2d(out_filter)
         self.relu = nn.ReLU()
 
-        # TODO: See line 15 TODO
+        # TODO [5]: See line 15 TODO
         self.conv2 = nn.Conv2d(out_filter, out_filter, 3, 1, padding='same', bias=False)
         self.norm2 = nn.BatchNorm2d(out_filter)
         

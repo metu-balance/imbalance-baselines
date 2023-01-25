@@ -35,7 +35,7 @@ class Config:
         try:
             return self.config[item]
         except omegaconf.errors.ConfigKeyError:  # Also captures errors arising from subsequent key accesses
-            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO: Use logging warning instead
+            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO [4]: Use logging warning instead
             retval = self._defaults[item]
             print(f'Got default value: {retval}')
 
@@ -45,7 +45,7 @@ class Config:
         try:
             return getattr(self.config, item)
         except omegaconf.errors.ConfigAttributeError:  # Also captures errors arising from subsequent attribute accesses
-            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO: Use logging warning instead
+            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO [4]: Use logging warning instead
             retval = getattr(self._defaults, item)
             print(f'Got default value: {retval}')
 

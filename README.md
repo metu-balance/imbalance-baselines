@@ -66,6 +66,10 @@ takes advantage of the flexibility of YAML format and `omegaconf`...
 expected format:
 ... TODO
 
+TODO supports using a global seed for torch, numpy, python random components -- same model types in configs 
+are initialized with the same weights. however may need env var modifications
+to be truly reproducible -- sgd etc. have slight deviations across resnets? ...  
+
 TODO custom params for different losses, optimizers, datasets, eval. methods
 
 ### Example

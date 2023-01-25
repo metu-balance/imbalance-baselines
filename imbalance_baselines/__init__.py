@@ -65,7 +65,7 @@ def get_global_seed():
     global _global_seed
 
     if _global_seed is None:
-        print("Global seed is accessed but not initialized. Setting 42 as the global seed.")  # TODO: Use logging warning instead
+        print("Global seed is accessed but not initialized. Setting 42 as the global seed.")  # TODO [4]: Use logging warning instead
         _global_seed = 42
 
     return _global_seed

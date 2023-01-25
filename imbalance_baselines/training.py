@@ -1,7 +1,5 @@
-# TODO: Check out wandb
 import datetime as dt
 import matplotlib.pyplot as plt
-import numpy.random
 import os
 import sys
 import torch
@@ -58,7 +56,7 @@ class TrainTask:
             self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
 
-            print("Got class-balancing weights:", self.cb_weights)  # TODO: Use logging instead
+            print("Got class-balancing weights:", self.cb_weights)  # TODO [4]: Use logging instead
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -100,18 +98,14 @@ def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_
     return model
 
 
-# TODO: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
+# TODO [2]: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
 def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.device = torch.device("cpu")):
     # Parse configuration
-    # TODO: Check these config variable usages since they were converted from func. param.s, may omit some.
-    #   May use some values directly from configuration without defining variables.
     dataset = cfg.Dataset.dataset_name
     train_cfg = cfg.Training
     epoch_cnt = parse_cfg_str(train_cfg.epoch_count, int)
 
     multi_gpu = train_cfg.multi_gpu
-
-    class_cnt = dataset_info["class_count"]
 
     print_training = train_cfg.printing.print_training
     print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
@@ -124,7 +118,6 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     )
     plot_path = train_cfg.plotting.plot_path
 
-    # TODO: Should also include config.s for backup types: end of x epochs, interrupt... etc.
     save_models = train_cfg.backup.save_models
     load_models = train_cfg.backup.load_models
     if save_models or load_models:
@@ -161,7 +154,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     # Initialize models & losses of the tasks
     for t in training_tasks:
         # Initialize models
-        model = t.model(num_classes=class_cnt).double().to(device)
+        model = t.model(num_classes=dataset_info["class_count"]).double().to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
         
@@ -189,11 +182,11 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             # Pass loss through MixupLoss
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
     
-    # TODO: Loading models may be handled by a different func. or with different parameters
+    # TODO [1]: Loading models may be handled by a different func. or with different parameters
     if load_models:
         # Assuming the file exists for each model that will be tested:
-        # TODO: Catch loading errors in try-except blocks
-        # TODO: Reach saved models using task objects' loss_name, model_name, ... fields
+        # TODO [1]: Catch loading errors in try-except blocks
+        # TODO [1]: Reach saved models using task objects' loss_name, model_name, ... fields
         """
         if train_focal:
             rn_focal.load_state_dict(
@@ -264,7 +257,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                     else:
                         t.model_obj.fc.bias.data.fill_(0)
 
-        # TODO: Add option to disable optimizer's weight decay for the biases.
+        # TODO [3]: Add option to disable optimizer's weight decay for the biases.
         #  (is simply turning grad. off correct?)
         #rn_focal.fc.bias.requires_grad_(False)
         #rn_sigmoid_ce.fc.bias.requires_grad_(False)
@@ -453,7 +446,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                         t.model_obj.close_mixup()
                         t.loss_obj.close_mixup()
 
-                        # TODO: Adapt from above, consider the plots and print logs
+                        # TODO [5]: Adapt from above, consider the plots and print logs
                         ...
 
         except KeyboardInterrupt:
@@ -516,7 +509,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
 
             print("Deleting previous backups.")
             # Delete all OLD temporary files under temp/interrupted/
-            # FIXME: delete only old files! create a list of old files before backing up.
+            # FIXME [1]: delete only old files! create a list of old files before backing up.
             for f in os.listdir(models_path + "temp/interrupted/"):
                 fpath = models_path + "temp/interrupted/" + f
                 os.remove(fpath)

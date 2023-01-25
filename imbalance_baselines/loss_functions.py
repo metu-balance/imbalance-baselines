@@ -121,14 +121,14 @@ class MixupLoss:
     def __call__(self, logits, labels):
         if self.mixup:
             lamb = self.random_gen.beta(self.alpha, self.alpha)
-            # TODO: Check whether numpy generator (instead of torch generator) works
+            # TODO [5]: Check whether numpy generator (instead of torch generator) works
             idx = torch.randperm(labels.size(0), generator=self.random_gen)
             
             label_a, label_b = labels, labels[idx]
             loss = lamb * self.criterion(logits, label_a) + (1 - lamb) * self.criterion(logits, label_b)
         
         else:
-            # FIXME: Usage might be incorrect, must check
+            # FIXME [5]: Usage might be incorrect, must check
             loss = self.criterion(logits, labels)
         
         return loss
