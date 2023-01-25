@@ -12,7 +12,7 @@ from torchvision import models as torchmodels
 from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str, get_cb_weights
 from . import models
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, get_global_seed
 
 
 class TrainTask:
@@ -23,9 +23,8 @@ class TrainTask:
         self.model_name = task_cfg.model
         self.loss_name = task_cfg.loss
 
-        if self.model_name in ["resnet32_manif_mu"]:
-            # Set common seed for the model and loss objects
-            self.seed = numpy.random.default_rng().integers(0, 100000)
+        # Set common seed for the model and loss objects
+        self.seed = get_global_seed()
 
         self.model_obj = None
         self.loss_obj = None
@@ -188,7 +187,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
 
         if t.model_name == "resnet32_manif_mu":
             # Pass loss through MixupLoss
-            t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta-dist-alpha"], seed=t.seed)
+            t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
     
     # TODO: Loading models may be handled by a different func. or with different parameters
     if load_models:

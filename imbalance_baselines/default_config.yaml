@@ -1,3 +1,4 @@
+global_seed: 42
 Dataset:
   datasets_path: ???  # Mandatory field
   dataset_name: ???  # Mandatory field

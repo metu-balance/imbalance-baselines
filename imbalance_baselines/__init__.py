@@ -1,5 +1,6 @@
 # TODO: May just use transformation classes themselves rather than their names in TRANSFORM_NAMES
 # from torchvision import transforms as tr
+from .utils import seed_everything
 
 
 # Global variables for names & abbreviations
@@ -49,3 +50,22 @@ TRANSFORM_NAMES = {  # Names for data transformations / augmentations
     "random_horizontal_crop": "RandomHorizontalCrop",
     "center_crop": "CenterCrop"
 }
+
+_global_seed = None
+
+
+def set_global_seed(seed):
+    global _global_seed
+    _global_seed = seed
+
+    seed_everything(seed)
+
+
+def get_global_seed():
+    global _global_seed
+
+    if _global_seed is None:
+        print("Global seed is accessed but not initialized. Setting 42 as the global seed.")  # TODO: Use logging warning instead
+        _global_seed = 42
+
+    return _global_seed
