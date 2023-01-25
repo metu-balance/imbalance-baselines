@@ -30,8 +30,8 @@ DataGeneration:
   plotting:
     draw_dataset_plots: True
     plot_size:
-      width: 16
-      height: 12
+      width: 8
+      height: 6
     plot_path: "output/dataset_plots/"
   train_transform:
     -
@@ -85,8 +85,8 @@ Training:
   plotting:
     draw_loss_plots: False
     plot_size:
-      width: 16
-      height: 12
+      width: 8
+      height: 6
     plot_path: "output/loss_plots/"
 Evaluation:
   -
