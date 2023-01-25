@@ -395,7 +395,7 @@ def generate_data(cfg):
         tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         plt.savefig(plot_path + f"{dataset_name.lower()}-size-per-class-" + tstamp + ".png")
         
-        plt.show()
+        # plt.show()
     
     return train_dl, test_dl, class_count, train_class_sizes, test_class_sizes
 

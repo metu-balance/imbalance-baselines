@@ -586,7 +586,7 @@ def train_models(cfg, train_dl: DataLoader, class_cnt: int, weights: [float] = N
             tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
             plt.savefig(plot_path + f"{dataset.lower()}-losses-" + tstamp + ".png")
             
-            plt.show()
+            # plt.show()
    
     # Return trained models along with loss and model names
     return [{"model": t.model_obj, "loss_name": t.loss_name, "model_name": t.model_name, "options": t.options}
