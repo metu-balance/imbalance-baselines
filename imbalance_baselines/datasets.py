@@ -108,7 +108,7 @@ class CIFAR10LT(datasets.CIFAR10):
         return cls_cnt_list
 
 
-# TODO: Add sampler support
+# TODO: Add sampler support to INaturalist
 class INaturalist(Dataset):
     def __init__(
             self,
@@ -233,6 +233,8 @@ def generate_data(cfg):
         datasets_path += "/"
     
     def form_transf(dg_cfg, is_train):
+        """Form a sequence of data transformations to be applied."""
+
         transf_list = []
         
         for transf in dg_cfg["train_transform" if is_train else "test_transform"]:
@@ -262,11 +264,11 @@ def generate_data(cfg):
                 raise ValueError("Unrecognized transformation name: " + tr_name)
     
         transf_list.append(transforms.ToTensor())
-        # TODO: Should test normalization be in place for train set?
         transf_list.append(transforms.Normalize(mean=normalize_mu, std=normalize_std, inplace=is_train))
 
         return transforms.Compose(transf_list)
-    
+
+    # NOTE: Both lists contain normalization at the end, applying normalization both for train and test sets
     train_transforms = form_transf(datagen_cfg, is_train=True)
     test_transforms = form_transf(datagen_cfg, is_train=False)
     

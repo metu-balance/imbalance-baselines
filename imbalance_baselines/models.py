@@ -12,10 +12,8 @@ class ResNet32(nn.Module):
         self.num_classes = num_classes
         self.filters = [16, 16, 32, 64]
         self.strides = [1, 2, 2]
-        
-        # TODO [5]: (3, 16, (3, 1), padding=..., ...) instead?
-        #   Is 1 supposed to be the stride? Is it evaluated as the stride size, or as the kernel's 2nd dim?
-        self.conv = nn.Conv2d(3, 16, 3, 1, padding='same', bias=False)
+
+        self.conv = nn.Conv2d(in_channels=3, out_channels=16, kernel_size=3, stride=1, padding='same', bias=False)
         self.norm = nn.BatchNorm2d(16)
         self.relu = nn.ReLU()
         
@@ -121,14 +119,14 @@ class ResNet32ManifoldMixup(nn.Module):
 class ResBlock(nn.Module):
     def __init__(self, in_filter, out_filter, stride):
         super(ResBlock, self).__init__()
-        
-        # TODO [5]: See line 15 TODO
-        self.conv1 = nn.Conv2d(in_filter, out_filter, 3, stride, padding=1, bias=False)
+
+        self.conv1 = nn.Conv2d(in_channels=in_filter, out_channels=out_filter, kernel_size=3, stride=stride, padding=1,
+                               bias=False)
         self.norm1 = nn.BatchNorm2d(out_filter)
         self.relu = nn.ReLU()
 
-        # TODO [5]: See line 15 TODO
-        self.conv2 = nn.Conv2d(out_filter, out_filter, 3, 1, padding='same', bias=False)
+        self.conv2 = nn.Conv2d(in_channels=out_filter, out_channels=out_filter, kernel_size=3, stride=1, padding='same',
+                               bias=False)
         self.norm2 = nn.BatchNorm2d(out_filter)
         
         self.avg_pool = None
