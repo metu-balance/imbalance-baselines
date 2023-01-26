@@ -70,8 +70,6 @@ class FocalLoss:
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
             """
     
-        z = z.double()
-    
         batch_size = z.shape[0]  # Not BATCH_SIZE: The last batch might be smaller
         lbl_cnt = z.shape[1]
     

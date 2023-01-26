@@ -1,5 +1,6 @@
 global_seed: 42
 logging_level: INFO
+data_type: torch.float32
 Dataset:
   datasets_path: ???  # Mandatory field
   dataset_name: ???  # Mandatory field

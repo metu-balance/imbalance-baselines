@@ -29,7 +29,7 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
         avg_acc = float(0)
         
         for num_batch, (inp, target) in enumerate(test_data):
-            inp = inp.double().to(device)
+            inp = inp.to(device)
             target = target.to(device)
             output = model(inp).to(device)
             

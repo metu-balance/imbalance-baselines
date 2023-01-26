@@ -58,7 +58,7 @@ class TrainTask:
             self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
 
-            logger.info("Got class-balancing weights:", self.cb_weights)
+            logger.info(f"Got class-balancing weights: {self.cb_weights}")
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -100,7 +100,6 @@ def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_
     return model
 
 
-# TODO [2]: Detect all tensors casted to double explicitly. Pass precision preference through cfg.
 def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.device = torch.device("cpu")):
     # Parse configuration
     dataset = cfg.Dataset.dataset_name
@@ -156,7 +155,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     # Initialize models & losses of the tasks
     for t in training_tasks:
         # Initialize models
-        model = t.model(num_classes=dataset_info["class_count"]).double().to(device)
+        model = t.model(num_classes=dataset_info["class_count"]).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
         
@@ -168,7 +167,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             states[t.model_name] = model.state_dict()
         
         t.model_obj = model
-        
+
         # Initialize losses
         if t.loss == FocalLoss:
             t.loss_obj = t.loss(device=device)
@@ -241,7 +240,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         pass
     else:  # Train the models from scratch
         # Initialize FC biases
-        b_pi = torch.tensor(0.1, dtype=torch.double)
+        b_pi = torch.tensor(0.1)
         b = -torch.log((1 - b_pi) / b_pi)
         for t in training_tasks:
             if t["init_fc_bias"]:
@@ -320,7 +319,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                         g["lr"] *= lr_decay_rate
                 
                 for i, (inp, target) in enumerate(train_dl):
-                    inp = inp.double().to(device)
+                    inp = inp.to(device)
                     target = target.to(device)
                     
                     optimizer.zero_grad()

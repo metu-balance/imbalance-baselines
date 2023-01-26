@@ -1,5 +1,7 @@
 import logging
 
+import torch
+
 # TODO: May just use transformation classes themselves rather than their names in TRANSFORM_NAMES
 # from torchvision import transforms as tr
 
@@ -56,7 +58,7 @@ TRANSFORM_NAMES = {  # Names for data transformations / augmentations
 
 _global_seed = None
 _logging_level = logging.WARNING
-
+_dtype = None  # Data type to be used in tensors
 
 logging.basicConfig(
     format="[%(asctime)s - %(levelname)s] %(message)s",
@@ -100,3 +102,25 @@ def set_logging_level(level_name: str):
         level = logging.INFO
 
     logger.setLevel(level)
+
+
+def set_data_type(dtype_name):
+    global _dtype
+
+    if dtype_name in ["float", "float16", "torch.float16"]:
+        _dtype = torch.float16
+        logger.warning(f"torch.set_default_dtype does not officially support the given data type {dtype_name}."
+                       f" Some operations may not work as expected.")
+    elif dtype_name in ["bfloat", "bfloat16", "torch.bfloat16"]:
+        _dtype = torch.bfloat16
+        logger.warning(f"torch.set_default_dtype does not officially support the given data type {dtype_name}."
+                       f" Some operations may not work as expected.")
+    elif dtype_name in ["float", "float32", "torch.float32"]:
+        _dtype = torch.float32
+    elif dtype_name in ["double", "float64", "torch.float64"]:
+        _dtype = torch.float64
+    else:
+        logger.warning(f"Unrecognized data type name: {dtype_name} -- Setting data type as torch.float32.")
+        _dtype = torch.float32
+
+    torch.set_default_dtype(_dtype)
