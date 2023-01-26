@@ -77,7 +77,11 @@ def print_progress(task_list, epoch, batch, print_padding=64):
             LOSS_NAMES[t.loss_name].rjust(print_padding),
             t.epoch_total_loss / batch
         )
-    
+
+    # TODO: Add option for evaluating the model on train / validation / test sets & printing the accuracy
+    #   May use the first metric given in the configuration (or a "default metric") and inform the user about the
+    #   used metric.
+
     print()  # Print empty line
 
 
