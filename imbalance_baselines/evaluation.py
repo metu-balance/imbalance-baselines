@@ -23,6 +23,8 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
     total_size = 0
     
     with torch.no_grad():
+        model.eval()
+
         num_labels = len(class_sizes)
         
         per_class_acc = torch.zeros(num_labels, dtype=torch.float32, device=device)
@@ -54,7 +56,9 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
                     per_class_acc[target[i]] += result[i]
             
             total_size += batch_len
-        
+
+        model.train()  # Revert model.eval()
+
         # Average accuracy of the whole test dataset
         if calc_avg:
             avg_acc /= total_size
@@ -63,7 +67,7 @@ def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
             for i in range(num_labels):
                 # Average accuracy of every class separately
                 per_class_acc[i] /= class_sizes[i]
-        
+
         return avg_acc, per_class_acc.tolist()
 
 
