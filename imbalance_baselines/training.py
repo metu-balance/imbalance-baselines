@@ -110,6 +110,9 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     train_cfg = cfg.Training
     epoch_cnt = parse_cfg_str(train_cfg.epoch_count, int)
 
+    opt_name = train_cfg.optimizer.name
+    opt_cfg = train_cfg.optimizer.params
+
     multi_gpu = train_cfg.multi_gpu
 
     print_training = train_cfg.printing.print_training
@@ -150,6 +153,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     for model_name in MODEL_NAMES.keys():
         states[model_name] = None
     param_list = []
+    weight_decay_value = parse_cfg_str(opt_cfg.weight_decay, casttype=float)
     
     # Create training tasks
     training_tasks = []
@@ -162,9 +166,23 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         model = t.model(num_classes=dataset_info["class_count"]).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
-        
-        param_list.append({'params': model.parameters()})
-        
+
+        # Initialize the list of model parameters to be optimized
+        if opt_cfg.disable_bias_weight_decay:
+            nonbias_params = list()
+            bias_params = list()
+
+            for np in model.named_parameters():
+                if np[0].endswith("bias"):
+                    bias_params.append(np[1])
+                else:
+                    nonbias_params.append(np[1])
+
+            param_list.append({'params': nonbias_params, 'weight_decay': weight_decay_value})
+            param_list.append({'params': bias_params, 'weight_decay': 0.0})
+        else:
+            param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
+
         if states[t.model_name]:
             model.load_state_dict(states[t.model_name])
         else:
@@ -262,26 +280,18 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                     else:
                         t.model_obj.fc.bias.data.fill_(0)
 
-        # TODO [3]: Add option to disable optimizer's weight decay for the biases.
-        #  (is simply turning grad. off correct?)
-        #rn_focal.fc.bias.requires_grad_(False)
-        #rn_sigmoid_ce.fc.bias.requires_grad_(False)
-        #rn_cb_focal.fc.bias.requires_grad_(False)
-        #rn_cb_sigmoid_ce.fc.bias.requires_grad_(False)
+        # TODO: Add option to disable optimizer's weight decay for the biases.
         
         # Initialize optimizer
-        opt_name = train_cfg.optimizer.name
-        opt_params = train_cfg.optimizer.params
         if opt_name == "sgd":
             optimizer = torch.optim.SGD(
                 param_list,
-                lr=parse_cfg_str(opt_params.lr, casttype=float),
-                momentum=parse_cfg_str(opt_params.momentum, casttype=float),
-                weight_decay=parse_cfg_str(opt_params.weight_decay, casttype=float)
+                lr=parse_cfg_str(opt_cfg.lr, casttype=float),
+                momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
             )
             
-            lr_decay_epochs = opt_params.lr_decay_epochs
-            lr_decay_rate = parse_cfg_str(opt_params.lr_decay_rate, casttype=float)
+            lr_decay_epochs = opt_cfg.lr_decay_epochs
+            lr_decay_rate = parse_cfg_str(opt_cfg.lr_decay_rate, casttype=float)
             
             # Unused param.s. Initialize nonetheless
             warmup_epochs = 0
@@ -290,17 +300,16 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             optimizer = torch.optim.SGD(
                 param_list,
                 lr=0,  # Will be graudally increased during training
-                momentum=parse_cfg_str(opt_params.momentum, casttype=float),
-                weight_decay=parse_cfg_str(opt_params.weight_decay, casttype=float)
+                momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
             )
             
-            warmup_epochs = parse_cfg_str(opt_params.warmup_epochs, int)
-            lr_warmup_step = parse_cfg_str(opt_params.lr, casttype=float) / warmup_epochs
+            warmup_epochs = parse_cfg_str(opt_cfg.warmup_epochs, int)
+            lr_warmup_step = parse_cfg_str(opt_cfg.lr, casttype=float) / warmup_epochs
 
-            lr_decay_epochs = opt_params.lr_decay_epochs
-            lr_decay_rate = opt_params.lr_decay_rate
+            lr_decay_epochs = opt_cfg.lr_decay_epochs
+            lr_decay_rate = opt_cfg.lr_decay_rate
         else:
-            raise Exception("Optimizer name is not recognized: " + opt_name)
+            raise ValueError("Optimizer name is not recognized: " + opt_name)
         
         logger.info("Starting training.")
         logger.info(f"Dataset: {DSET_NAMES[dataset]}")

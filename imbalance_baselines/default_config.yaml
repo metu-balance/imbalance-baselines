@@ -63,6 +63,7 @@ Training:
       lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
+      disable_bias_weight_decay: True  # Disable weight decay regularization for biases
   tasks:
     -
       model: "resnet32"
@@ -71,7 +72,7 @@ Training:
   printing:
     print_training: True
     print_epoch_frequency: 1
-    print_batch_frequency: 50
+    print_batch_frequency: 200
   plotting:
     draw_loss_plots: False
     plot_size:
