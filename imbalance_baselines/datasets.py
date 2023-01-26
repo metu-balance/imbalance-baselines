@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES, DSET_CLASS_CNTS
+from . import DSET_NAMES, DSET_CLASS_CNTS, logger
 from .utils import parse_cfg_str
 
 
@@ -374,8 +374,8 @@ def generate_data(cfg):
     else:
         raise ValueError("The given dataset name is not recognized.")
     
-    print("Number of training samples:")
-    print(np.array(train_class_sizes))  # Numpy array for cleaner output
+    logger.info("Number of training samples:")
+    logger.info(np.array(train_class_sizes))  # Numpy array for cleaner output
     
     if draw_dataset_plots:
         x = np.arange(class_count)

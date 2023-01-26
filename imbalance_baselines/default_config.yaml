@@ -1,4 +1,5 @@
 global_seed: 42
+logging_level: INFO
 Dataset:
   datasets_path: ???  # Mandatory field
   dataset_name: ???  # Mandatory field

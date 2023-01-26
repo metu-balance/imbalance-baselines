@@ -1,5 +1,8 @@
+import logging
+
 # TODO: May just use transformation classes themselves rather than their names in TRANSFORM_NAMES
 # from torchvision import transforms as tr
+
 from .utils import seed_everything
 
 
@@ -52,6 +55,14 @@ TRANSFORM_NAMES = {  # Names for data transformations / augmentations
 }
 
 _global_seed = None
+_logging_level = logging.WARNING
+
+
+logging.basicConfig(
+    format="[%(asctime)s - %(levelname)s] %(message)s",
+    level=_logging_level
+)
+logger = logging.getLogger(__name__)
 
 
 def set_global_seed(seed):
@@ -65,7 +76,27 @@ def get_global_seed():
     global _global_seed
 
     if _global_seed is None:
-        print("Global seed is accessed but not initialized. Setting 42 as the global seed.")  # TODO [4]: Use logging warning instead
+        logger.warning("Global seed is accessed but not initialized. Setting 42 as the global seed.")
         _global_seed = 42
 
     return _global_seed
+
+
+def set_logging_level(level_name: str):
+    level_name_lower = level_name.lower()
+
+    if level_name_lower == "critical":
+        level = logging.CRITICAL
+    elif level_name_lower == "error":
+        level = logging.ERROR
+    elif level_name_lower == "warning":
+        level = logging.WARNING
+    elif level_name_lower == "info":
+        level = logging.INFO
+    elif level_name_lower == "debug":
+        level = logging.DEBUG
+    else:
+        logger.warning(f"Unrecognized logging level name: {level_name} -- Setting logging level to INFO.")
+        level = logging.INFO
+
+    logger.setLevel(level)

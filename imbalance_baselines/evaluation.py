@@ -2,7 +2,7 @@ import torch
 import numpy as np
 
 from torch.utils.data import DataLoader
-from . import LOSS_NAMES, MODEL_NAMES, EVAL_NAMES
+from . import LOSS_NAMES, MODEL_NAMES, EVAL_NAMES, logger
 from .utils import parse_cfg_str
 
 
@@ -79,10 +79,10 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
         top = parse_cfg_str(method_params.top, int)
         
         if not (calc_avg or calc_perclass):
-            print("Both average and per-class accuracy calculation options were disabled, returning.")
+            logger.info("Both average and per-class accuracy calculation options were disabled, returning.")
             return
         
-        print("Starting evaluation with method:", EVAL_NAMES[method_name])
+        logger.info("Starting evaluation with method:", EVAL_NAMES[method_name])
         
         if method_name == "get_accuracy":
             for r in train_results:
@@ -90,7 +90,7 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
                                                      calc_avg=calc_avg, calc_perclass=calc_perclass, top=top,
                                                      device=device)
                 
-                print(
+                logger.info(
                     MODEL_NAMES[r["model_name"]]
                     + " trained with "
                     + LOSS_NAMES[r["loss_name"]]

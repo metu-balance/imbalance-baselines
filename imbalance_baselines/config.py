@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, EVAL_NAMES
+from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, EVAL_NAMES, logger
 
 import omegaconf.errors
 from omegaconf import OmegaConf
@@ -28,16 +28,16 @@ class Config:
         if self.config.Training.backup.save_models or self.config.Training.backup.load_models:
             os.makedirs(self.config.Training.backup.models_path, exist_ok=True)
 
-        print("Got configuration:")
-        print(OmegaConf.to_yaml(self.config))
+        logger.info("Got configuration:")
+        logger.info(OmegaConf.to_yaml(self.config))
 
     def __getitem__(self, item):
         try:
             return self.config[item]
         except omegaconf.errors.ConfigKeyError:  # Also captures errors arising from subsequent key accesses
-            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO [4]: Use logging warning instead
+            logger.warning(f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
             retval = self._defaults[item]
-            print(f'Got default value: {retval}')
+            logger.warning(f'Got default value for {item}: {retval}')
 
             return retval
 
@@ -45,8 +45,8 @@ class Config:
         try:
             return getattr(self.config, item)
         except omegaconf.errors.ConfigAttributeError:  # Also captures errors arising from subsequent attribute accesses
-            print(f'Value "{item}" is incomplete in configuration. Trying to use the default value...', end=" ")  # TODO [4]: Use logging warning instead
+            logger.warning(f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
             retval = getattr(self._defaults, item)
-            print(f'Got default value: {retval}')
+            logger.warning(f'Got default value for {item}: {retval}')
 
             return retval
