@@ -86,7 +86,7 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
             logger.info("Both average and per-class accuracy calculation options were disabled, returning.")
             return
         
-        logger.info("Starting evaluation with method:", EVAL_NAMES[method_name])
+        logger.info(f"Starting evaluation with method: {EVAL_NAMES[method_name]}")
         
         if method_name == "get_accuracy":
             for r in train_results:
@@ -103,9 +103,9 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
                 )
 
                 if calc_avg:
-                    print(f"  Average top-{top} accuracy:", str(avg_acc) + "%")
+                    logger.info(f"  Average top-{top} accuracy: " + str(avg_acc) + "%")
                 if calc_perclass:
-                    print(f"Top-{top} accuracy per class:", perclass_acc)
+                    logger.info(f"Top-{top} accuracy per class: {perclass_acc}")
                 
                 print()  # Print empty line
         else:
