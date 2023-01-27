@@ -31,7 +31,6 @@ class TrainTask:
 
         self.model_obj = None
         self.loss_obj = None
-        self.cb_weights = None
 
         self.loss_history = []
         self.epoch_total_loss = 0
@@ -56,8 +55,8 @@ class TrainTask:
         else:
             raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
 
-        # Get class balancing weights if loss is a class balancing loss
-        if self.cb_weights is None and self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
+        # Get class balancing weights & define attribute if loss is a class balancing loss
+        if self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
             self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
 
@@ -108,8 +107,8 @@ def save_all_models(training_tasks: list[TrainTask], models_path, dataset_name, 
 
         save_path = join(models_path, file_name)
         torch.save(t.model_obj.state_dict(), save_path)
-        logger.info(f"Saved model {MODEL_NAMES(t.model_name)}, {LOSS_NAMES[t.loss_name]}"
-                    f" on {DSET_NAMES(dataset_name)} to {save_path}")
+        logger.info(f"Saved model {MODEL_NAMES[t.model_name]}, {LOSS_NAMES[t.loss_name]}"
+                    f" on {DSET_NAMES[dataset_name]} to {save_path}")
 
 
 def finetune_mixup(model: models.ResNet32ManifoldMixup, dataloader, optim, loss_fn: MixupLoss, epoch_cnt=10,
@@ -190,7 +189,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     
     # Initialize models & losses of the tasks
     for t in training_tasks:
-        # Initialize models
+        # Create models, will be initialized later
         model = t.model(num_classes=dataset_info["class_count"]).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
@@ -211,6 +210,18 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         else:
             param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
 
+        # Initialize losses
+        if t.loss == FocalLoss:
+            t.loss_obj = t.loss(device=device)
+        elif t.loss == nn.CrossEntropyLoss:
+            if t.loss_name == "ce_softmax":
+                t.loss_obj = t.loss()
+            elif t.loss_name == "cb_ce_softmax":
+                t.loss_obj = t.loss(weight=t.cb_weights, reduction="sum")
+        else:
+            raise Exception("Unhandled loss type in task: " + str(t.loss))
+
+        # Initialize models
         if load_models:  # Initialize model using existing state dict
             model_state_prefix = t.model_name + "_" + t.loss_name
 
@@ -237,30 +248,19 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
 
                     if t.loss == FocalLoss:  # Used for focal loss and CE with sigmoid
                         if multi_gpu:
-                            t.model_obj.module.fc.bias.data.fill_(b)
+                            model.module.fc.bias.data.fill_(b)
                         else:
-                            t.model_obj.fc.bias.data.fill_(b)
+                            model.fc.bias.data.fill_(b)
                     # Initialize cross entropy loss models' FC biases with 0
                     elif t.loss == nn.CrossEntropyLoss:
                         if multi_gpu:
-                            t.model_obj.module.fc.bias.data.fill_(0)
+                            model.module.fc.bias.data.fill_(0)
                         else:
-                            t.model_obj.fc.bias.data.fill_(0)
+                            model.fc.bias.data.fill_(0)
 
                 states[t.model_name] = model.state_dict()
         
         t.model_obj = model
-
-        # Initialize losses
-        if t.loss == FocalLoss:
-            t.loss_obj = t.loss(device=device)
-        elif t.loss == nn.CrossEntropyLoss:
-            if t.loss_name == "ce_softmax":
-                t.loss_obj = t.loss()
-            elif t.loss_name == "cb_ce_softmax":
-                t.loss_obj = t.loss(weight=t.cb_weights, reduction="sum")
-        else:
-            raise Exception("Unhandled loss type in task: " + str(t.loss))
 
         if t.model_name == "resnet32_manif_mu":
             # Pass loss through MixupLoss
@@ -315,6 +315,9 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                 g["lr"] *= lr_decay_rate
 
         for i, (inp, target) in enumerate(train_dl):
+            # TEMP!!
+            if i > 20: continue
+
             inp = inp.to(device)
             target = target.to(device)
 
@@ -359,7 +362,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                 if first_batch or print_freq:
                     print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
         else:  # At the end of epochs
-            if save_models and save_epoch_interval > 0 and save_epoch_interval % epoch == 0:
+            if save_models and save_epoch_interval > 0 and save_epoch_interval % (epoch + 1) == 0:
                 save_all_models(training_tasks, models_path, dataset_name, epoch=epoch+1)
 
             if draw_loss_plots:
