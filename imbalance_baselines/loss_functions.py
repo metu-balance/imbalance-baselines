@@ -119,7 +119,7 @@ class MixupLoss:
     def __call__(self, logits, labels):
         if self.mixup:
             lamb = self.random_gen.beta(self.alpha, self.alpha)
-            # TODO [5]: Check whether numpy generator (instead of torch generator) works
+            # TODO: Check whether numpy generator (instead of torch generator) works
             idx = torch.randperm(labels.size(0), generator=self.random_gen)
             
             label_a, label_b = labels, labels[idx]

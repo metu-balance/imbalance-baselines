@@ -388,11 +388,13 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                     + ":"
                 )
 
+                t.epoch_total_loss = 0
+
+                # TODO: Adapt from above, consider the plots and print logs
+                ...
+
                 t.model_obj.close_mixup()
                 t.loss_obj.close_mixup()
-
-                # TODO [5]: Adapt from above, consider the plots and print logs
-                ...
 
     # Training is now done for all training tasks.
 
