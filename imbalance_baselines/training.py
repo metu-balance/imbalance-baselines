@@ -226,7 +226,10 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             model_state_prefix = t.model_name + "_" + t.loss_name
 
             # Find latest saved model, according to the timestamp
-            state_file_list = [f for f in listdir(".") if (isfile(join(".", f)) and f.startswith(model_state_prefix))]
+            state_file_list = [f for f in listdir(models_path) if (
+                isfile(join(models_path, f)) and f.startswith(model_state_prefix)
+            )]
+
             if not state_file_list:  # No mathces
                 raise FileNotFoundError(f"No matching model state has been found in {models_path} for"
                                         f" {MODEL_NAMES[t.model_name]}, {LOSS_NAMES[t.loss_name]}.")
@@ -299,7 +302,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     logger.info(f"Dataset: {DSET_NAMES[dataset_name]}")
     logger.info(f"Optimizer: {OPTIMIZER_NAMES[opt_name]}")
 
-    for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
+    for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). n in code refers to epoch no. n+1.
         for t in training_tasks:
             t.epoch_total_loss = 0
 
@@ -315,9 +318,6 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                 g["lr"] *= lr_decay_rate
 
         for i, (inp, target) in enumerate(train_dl):
-            # TEMP!!
-            if i > 20: continue
-
             inp = inp.to(device)
             target = target.to(device)
 
@@ -354,7 +354,8 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             optimizer.step()
 
             if print_training:
-                first_batch = (epoch == 0 and i == 0)
+                #first_batch = (epoch == 0 and i == 0)
+                first_batch = False  # Enable the comment above to print the first batch of training
                 print_freq = (
                         (i % print_batch_freq == (print_batch_freq - 1))
                         and (epoch % print_epoch_freq == (print_epoch_freq - 1))
@@ -362,7 +363,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                 if first_batch or print_freq:
                     print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
         else:  # At the end of epochs
-            if save_models and save_epoch_interval > 0 and save_epoch_interval % (epoch + 1) == 0:
+            if save_models and save_epoch_interval > 0 and (epoch + 1) % save_epoch_interval == 0:
                 save_all_models(training_tasks, models_path, dataset_name, epoch=epoch+1)
 
             if draw_loss_plots:
