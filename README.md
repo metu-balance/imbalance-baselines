@@ -21,16 +21,19 @@ different imbalance mitigation methods.
    6. [Adding a new sampling method](#adding-a-new-sampling-method)
 8. [Features Considered for Addition](#features-considered-for-addition)
 9. [License](#license)
+10. [Credits & Contact](#credits--contact)
 
 ## About imbalance-baselines
 
 TODO
 
-developed for... as...
+`imbalance_baselines` began development as a workbench for . Later, the project was repurposed into a more general
+... adaptable? for other projects as well
 
-aims to fill the gap / need for... quickly changing methods, new ones emerge. need a common evaluation basis
+aims to fill the gap / need for... quickly changing methods, new ones emerge. need a common evaluation basis. thus,
+provides a modular, customizable structure
 
-not initial aim, but also provides a sample training code. adopts a "single-loop -- multiple models" approach
+not initial aim, but also provides a training code, which adopts a "single-loop -- multiple models" approach
 
 ## Requirements
 
@@ -219,17 +222,12 @@ Evaluation:
 <details>
 <summary>The training script</summary>
 
-```python
-# TODO: Copy from cb. example
-```
-</details>
-
-The script can be run with the command:
+[The script](examples/class-balance/ex-cb-pipeline.py) under `examples/class_balance/ex_cb_pipeline.py` can be run with the command:
 
 ```$ ...```
 
 producing the output: 
-
+</details>
 <details>
 <summary>Output</summary>
 TODO update output
@@ -497,4 +495,13 @@ the class should also receive the sampler object as a parameter and use it to mo
 # License
 This program is licensed under Apache License 2.0. See the `LICENSE` file for details.
 
-TODO credits - authors and advisors 
+# Credits & Contact
+This project was developed by:
+* Berkin Kerim Konar (berkinkerimkonar@gmail.com)
+  * Implementatation of the class-balancing loss, sampling and manifold mix-up methods 
+* Kıvanç Tezören (kivanctezoren@gmail.com)
+  * Implementation of class-balancing loss methods, the training pipeline and the library structure 
+
+The project was advised by:
+* [Emre Akbaş, Ph.D.](https://user.ceng.metu.edu.tr/~emre/)
+* [Sinan Kalkan, Ph.D.](https://user.ceng.metu.edu.tr/~skalkan/)
