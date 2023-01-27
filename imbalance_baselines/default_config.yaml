@@ -52,7 +52,8 @@ Training:
   epoch_count: 100
   multi_gpu: False
   backup:
-    save_models: False
+    save_models: False  # If True, save models' states after training is finished.
+    save_epoch_interval: 10  # If save_models is true, save models also every X epochs. No save during training if X < 0.
     models_path: "output/models/"  # Mandatory field only if save_models or load_models is True
     load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   optimizer:
