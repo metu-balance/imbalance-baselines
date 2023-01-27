@@ -3,6 +3,7 @@ import os
 import sys
 from os import listdir
 from os.path import isfile, join
+from typing import List
 
 import matplotlib.pyplot as plt
 import torch
@@ -92,7 +93,7 @@ def print_progress(task_list, epoch, batch, print_padding=64):
     print()  # Print empty line
 
 
-def save_all_models(training_tasks: list[TrainTask], models_path, dataset_name, epoch):
+def save_all_models(training_tasks: List[TrainTask], models_path, dataset_name, epoch):
     """
     :param epoch: Training epoch count, assuming epochs are counted starting from 1 rather than 0.
     """
