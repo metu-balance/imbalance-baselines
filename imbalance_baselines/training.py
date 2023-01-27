@@ -1,18 +1,21 @@
 import datetime as dt
-import logging
-
-import matplotlib.pyplot as plt
 import os
 import sys
+from os import listdir
+from os.path import isfile, join
+
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-
 from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
+
 from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str, get_cb_weights
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, get_global_seed, logger
+
+TIMESTAMP_FORMAT = "%Y-%m-%d-%H:%M:%S"
 
 
 class TrainTask:
@@ -183,10 +186,42 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         else:
             param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
 
-        if states[t.model_name]:
-            model.load_state_dict(states[t.model_name])
-        else:
-            states[t.model_name] = model.state_dict()
+        if load_models:  # Initialize model using existing state dict
+            model_state_prefix = t.model_name + "_" + t.loss_name
+
+            # Find latest saved model, according to the timestamp
+            state_file_list = [f for f in listdir(".") if (isfile(join(".", f)) and f.startswith(model_state_prefix))]
+            if not state_file_list:  # No mathces
+                raise FileNotFoundError(f"No matching model state has been found in {models_path} for"
+                                        f" {MODEL_NAMES[t.model_name]}, {LOSS_NAMES[t.loss_name]}.")
+
+            state_file = sorted(state_file_list, key=lambda x: x[-len(TIMESTAMP_FORMAT):])[-1]
+            model.load_state_dict(torch.load(join(models_path, state_file), map_location=device))
+
+            logger.info(f"Loaded model state for {MODEL_NAMES[t.model_name]}, {LOSS_NAMES[t.loss_name]}: {state_file}")
+        else:  # Train the models from scratch
+            if states[t.model_name]:  # Load existing model state if it is defined for the model type
+                model.load_state_dict(states[t.model_name])
+            else:  # Create new state for the model type
+                if t["init_fc_bias"]:
+                    # Initialize FC biases of models using sigmoid CE and focal losses
+                    #   to avoid instability at the beginning of the training
+                    b_pi = torch.tensor(0.1)
+                    b = -torch.log((1 - b_pi) / b_pi)
+
+                    if t.loss == FocalLoss:  # Used for focal loss and CE with sigmoid
+                        if multi_gpu:
+                            t.model_obj.module.fc.bias.data.fill_(b)
+                        else:
+                            t.model_obj.fc.bias.data.fill_(b)
+                    # Initialize cross entropy loss models' FC biases with 0
+                    elif t.loss == nn.CrossEntropyLoss:
+                        if multi_gpu:
+                            t.model_obj.module.fc.bias.data.fill_(0)
+                        else:
+                            t.model_obj.fc.bias.data.fill_(0)
+
+                states[t.model_name] = model.state_dict()
         
         t.model_obj = model
 
@@ -204,407 +239,330 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         if t.model_name == "resnet32_manif_mu":
             # Pass loss through MixupLoss
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
-    
-    # TODO [1]: Loading models may be handled by a different func. or with different parameters
-    if load_models:
-        # Assuming the file exists for each model that will be tested:
-        # TODO [1]: Catch loading errors in try-except blocks
-        # TODO [1]: Reach saved models using task objects' loss_name, model_name, ... fields
-        """
-        if train_focal:
-            rn_focal.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_focal_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_focal_{dataset}.pth")
-        
-        if train_sigmoid_ce:
-            rn_sigmoid_ce.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}.pth")
-        
-        if train_softmax_ce:
-            rn_softmax_ce.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_softmax_ce_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_softmax_ce_{dataset}.pth")
-        
-        if train_cb_focal:
-            rn_cb_focal.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_cb_focal_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_cb_focal_{dataset}.pth")
-        
-        if train_cb_sigmoid_ce:
-            rn_cb_sigmoid_ce.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}.pth")
-        
-        if train_cb_softmax_ce:
-            rn_cb_softmax_ce.load_state_dict(
-                torch.load(models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}.pth",
-                           map_location=device)
-            )
-            logger.info(f"Loaded model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
-                  models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}.pth")
-        """
-        pass
-    else:  # Train the models from scratch
-        # Initialize FC biases
-        b_pi = torch.tensor(0.1)
-        b = -torch.log((1 - b_pi) / b_pi)
-        for t in training_tasks:
-            if t["init_fc_bias"]:
-                # Initialize FC biases of models using sigmoid CE and focal losses
-                #   to avoid instability at the beginning of the training
-                if t.loss == FocalLoss:  # Used for focal loss and CE with sigmoid
-                    if multi_gpu:
-                        t.model_obj.module.fc.bias.data.fill_(b)
-                    else:
-                        t.model_obj.fc.bias.data.fill_(b)
-                # Initialize cross entropy loss models' FC biases with 0
-                elif t.loss == nn.CrossEntropyLoss:
-                    if multi_gpu:
-                        t.model_obj.module.fc.bias.data.fill_(0)
-                    else:
-                        t.model_obj.fc.bias.data.fill_(0)
 
-        # TODO: Add option to disable optimizer's weight decay for the biases.
-        
-        # Initialize optimizer
-        if opt_name == "sgd":
-            optimizer = torch.optim.SGD(
-                param_list,
-                lr=parse_cfg_str(opt_cfg.lr, casttype=float),
-                momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
-            )
-            
-            lr_decay_epochs = opt_cfg.lr_decay_epochs
-            lr_decay_rate = parse_cfg_str(opt_cfg.lr_decay_rate, casttype=float)
-            
-            # Unused param.s. Initialize nonetheless
-            warmup_epochs = 0
-            lr_warmup_step = 0
-        elif opt_name == "sgd_linwarmup":
-            optimizer = torch.optim.SGD(
-                param_list,
-                lr=0,  # Will be graudally increased during training
-                momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
-            )
-            
-            warmup_epochs = parse_cfg_str(opt_cfg.warmup_epochs, int)
-            lr_warmup_step = parse_cfg_str(opt_cfg.lr, casttype=float) / warmup_epochs
+    # Initialize optimizer
+    if opt_name == "sgd":
+        optimizer = torch.optim.SGD(
+            param_list,
+            lr=parse_cfg_str(opt_cfg.lr, casttype=float),
+            momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
+        )
 
-            lr_decay_epochs = opt_cfg.lr_decay_epochs
-            lr_decay_rate = opt_cfg.lr_decay_rate
-        else:
-            raise ValueError("Optimizer name is not recognized: " + opt_name)
-        
-        logger.info("Starting training.")
-        logger.info(f"Dataset: {DSET_NAMES[dataset]}")
-        logger.info(f"Optimizer: {OPTIMIZER_NAMES[opt_name]}")
-        
-        try:
-            for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
-                for t in training_tasks:
-                    t.epoch_total_loss = 0
-                
-                if opt_name == "sgd_linwarmup":
-                    # Linear warm-up of learning rate from 0 to given LR in first warmup_epochs epochs
-                    if epoch < warmup_epochs:
-                        for g in optimizer.param_groups:
-                            g["lr"] += lr_warmup_step
+        lr_decay_epochs = opt_cfg.lr_decay_epochs
+        lr_decay_rate = parse_cfg_str(opt_cfg.lr_decay_rate, casttype=float)
 
-                # Decay learning rate at certain epochs
-                if epoch + 1 in lr_decay_epochs:
-                    for g in optimizer.param_groups:
-                        g["lr"] *= lr_decay_rate
-                
-                for i, (inp, target) in enumerate(train_dl):
-                    inp = inp.to(device)
-                    target = target.to(device)
-                    
-                    optimizer.zero_grad()
-                    
-                    for t in training_tasks:
-                        # NOTE: Using startswith & endswith only once the loss name is detected. Should never assume
-                        #   the name of a loss, model, etc. otherwise.
-                        if t.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
-                            if t.loss_name.endswith("focal"):
-                                g = parse_cfg_str(t["focal_loss_gamma"], float)
-                            else:
-                                g = 0
-                                
-                            loss = t.loss_obj(
-                                t.model_obj(inp),
-                                target,
-                                alpha=t.cb_weights if t.loss_name.startswith("cb") else None,
-                                gamma=g
-                            )
-                        elif t.loss_name in ["ce_softmax", "cb_ce_softmax"]:
-                            loss = t.loss_obj(
-                                t.model_obj(inp),
-                                target
-                            ) / (target.shape[0] if t.loss_name.startswith("cb") else 1)
-                            # If class-balancing, only normalization is needed since cb_weights are passed in loss
-                            #   initialization.
-                        else:
-                            raise Exception("Invalid loss name encountered during training: " + t.loss_name)
-                        
-                        loss.backward()
-                        t.epoch_total_loss += loss.item()
-                    
-                    optimizer.step()
-                    
-                    if print_training:
-                        first_batch = (epoch == 0 and i == 0)
-                        print_freq = (
-                                (i % print_batch_freq == (print_batch_freq - 1))
-                                and (epoch % print_epoch_freq == (print_epoch_freq - 1))
-                        )
-                        if first_batch or print_freq:
-                            print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
-                else:  # The end of each epoch
-                    if save_models:  # Temporary backup for each epoch
-                        # Delete all temporary files under temp/epoch_end/
-                        tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-                        
-                        for f in os.listdir(models_path + "temp/epoch_end/"):
-                            fpath = models_path + "temp/epoch_end/" + f
-                            os.remove(fpath)
-                            #print("Removed:", fpath)
-                        
-                        """
-                        if train_focal:
-                            torch.save(
-                                rn_focal.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        
-                        if train_sigmoid_ce:
-                            torch.save(
-                                rn_sigmoid_ce.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        
-                        if train_softmax_ce:
-                            torch.save(
-                                rn_softmax_ce.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        
-                        if train_cb_focal:
-                            torch.save(
-                                rn_cb_focal.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        
-                        if train_cb_sigmoid_ce:
-                            torch.save(
-                                rn_cb_sigmoid_ce.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        
-                        if train_cb_softmax_ce:
-                            torch.save(
-                                rn_cb_softmax_ce.state_dict(),
-                                models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                            )
-                            #logger.info(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
-                            #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                        """
-                        
-                    if draw_loss_plots:
-                        for t in training_tasks:
-                            t.loss_history.append(t.epoch_total_loss / (i + 1))
-                    
-                    if print_training:
-                        print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
+        # Unused param.s. Initialize nonetheless
+        warmup_epochs = 0
+        lr_warmup_step = 0
+    elif opt_name == "sgd_linwarmup":
+        optimizer = torch.optim.SGD(
+            param_list,
+            lr=0,  # Will be graudally increased during training
+            momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
+        )
 
-            # Mix-up fine-tuning phase, executed in separate loops for each model:
+        warmup_epochs = parse_cfg_str(opt_cfg.warmup_epochs, int)
+        lr_warmup_step = parse_cfg_str(opt_cfg.lr, casttype=float) / warmup_epochs
+
+        lr_decay_epochs = opt_cfg.lr_decay_epochs
+        lr_decay_rate = opt_cfg.lr_decay_rate
+    else:
+        raise ValueError("Optimizer name is not recognized: " + opt_name)
+
+    logger.info("Starting training.")
+    logger.info(f"Dataset: {DSET_NAMES[dataset]}")
+    logger.info(f"Optimizer: {OPTIMIZER_NAMES[opt_name]}")
+
+    try:
+        for epoch in range(epoch_cnt):  # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
             for t in training_tasks:
-                if t.model_name in ["resnet32_manif_mu"]:
-                    for epoch in range(t["finetune_mixup_epochs"]):
-                        # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
+                t.epoch_total_loss = 0
 
-                        logger.info(
-                            "Starting mix-up finetuning for "
-                            + MODEL_NAMES[t.model_name]
-                            + " trained with "
-                            + LOSS_NAMES[t.loss_name]
-                            + (" using training parameters " + str(t.options) if t.options else "")
-                            + ":"
+            if opt_name == "sgd_linwarmup":
+                # Linear warm-up of learning rate from 0 to given LR in first warmup_epochs epochs
+                if epoch < warmup_epochs:
+                    for g in optimizer.param_groups:
+                        g["lr"] += lr_warmup_step
+
+            # Decay learning rate at certain epochs
+            if epoch + 1 in lr_decay_epochs:
+                for g in optimizer.param_groups:
+                    g["lr"] *= lr_decay_rate
+
+            for i, (inp, target) in enumerate(train_dl):
+                inp = inp.to(device)
+                target = target.to(device)
+
+                optimizer.zero_grad()
+
+                for t in training_tasks:
+                    # NOTE: Using startswith & endswith only once the loss name is detected. Should never assume
+                    #   the name of a loss, model, etc. otherwise.
+                    if t.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
+                        if t.loss_name.endswith("focal"):
+                            g = parse_cfg_str(t["focal_loss_gamma"], float)
+                        else:
+                            g = 0
+
+                        loss = t.loss_obj(
+                            t.model_obj(inp),
+                            target,
+                            alpha=t.cb_weights if t.loss_name.startswith("cb") else None,
+                            gamma=g
                         )
+                    elif t.loss_name in ["ce_softmax", "cb_ce_softmax"]:
+                        loss = t.loss_obj(
+                            t.model_obj(inp),
+                            target
+                        ) / (target.shape[0] if t.loss_name.startswith("cb") else 1)
+                        # If class-balancing, only normalization is needed since cb_weights are passed in loss
+                        #   initialization.
+                    else:
+                        raise Exception("Invalid loss name encountered during training: " + t.loss_name)
 
-                        t.model_obj.close_mixup()
-                        t.loss_obj.close_mixup()
+                    loss.backward()
+                    t.epoch_total_loss += loss.item()
 
-                        # TODO [5]: Adapt from above, consider the plots and print logs
-                        ...
+                optimizer.step()
 
-        except KeyboardInterrupt:
-            logger.info("Got KeyboardInterrupt.")
-            
-            if save_models:
-                logger.info("Backing up the models.")
-
-                tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-                
-                """
-                if train_focal:
-                    torch.save(
-                        rn_focal.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                if print_training:
+                    first_batch = (epoch == 0 and i == 0)
+                    print_freq = (
+                            (i % print_batch_freq == (print_batch_freq - 1))
+                            and (epoch % print_epoch_freq == (print_epoch_freq - 1))
                     )
-                    logger.info(f"Saved model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                
-                if train_sigmoid_ce:
-                    torch.save(
-                        rn_sigmoid_ce.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                    )
-                    logger.info(f"Saved model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                
-                if train_softmax_ce:
-                    torch.save(
-                        rn_softmax_ce.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                    )
-                    logger.info(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                
-                if train_cb_focal:
-                    torch.save(
-                        rn_cb_focal.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                    )
-                    logger.info(f"Saved model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                
-                if train_cb_sigmoid_ce:
-                    torch.save(
-                        rn_cb_sigmoid_ce.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                    )
-                    logger.info(f"Saved model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                
-                if train_cb_softmax_ce:
-                    torch.save(
-                        rn_cb_softmax_ce.state_dict(),
-                        models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
-                    )
-                    logger.info(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
-                          models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
-                """
+                    if first_batch or print_freq:
+                        print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
+            else:  # The end of each epoch
+                if save_models:  # Temporary backup for each epoch
+                    # Delete all temporary files under temp/epoch_end/
+                    tstamp = dt.datetime.now().strftime(TIMESTAMP_FORMAT)
 
-            logger.info("Deleting previous backups.")
-            # Delete all OLD temporary files under temp/interrupted/
-            # FIXME [1]: delete only old files! create a list of old files before backing up.
-            for f in os.listdir(models_path + "temp/interrupted/"):
-                fpath = models_path + "temp/interrupted/" + f
-                os.remove(fpath)
-                logger.info("Removed:", fpath)
+                    for f in os.listdir(models_path + "temp/epoch_end/"):
+                        fpath = models_path + "temp/epoch_end/" + f
+                        os.remove(fpath)
+                        #print("Removed:", fpath)
 
-            logger.info("Terminating.")
-            sys.exit(1)
+                    """
+                    if train_focal:
+                        torch.save(
+                            rn_focal.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    
+                    if train_sigmoid_ce:
+                        torch.save(
+                            rn_sigmoid_ce.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    
+                    if train_softmax_ce:
+                        torch.save(
+                            rn_softmax_ce.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    
+                    if train_cb_focal:
+                        torch.save(
+                            rn_cb_focal.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    
+                    if train_cb_sigmoid_ce:
+                        torch.save(
+                            rn_cb_sigmoid_ce.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    
+                    if train_cb_softmax_ce:
+                        torch.save(
+                            rn_cb_softmax_ce.state_dict(),
+                            models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
+                        )
+                        #logger.info(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                        #      models_path + f"temp/epoch_end/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
+                    """
 
-        # Save the trained models
+                if draw_loss_plots:
+                    for t in training_tasks:
+                        t.loss_history.append(t.epoch_total_loss / (i + 1))
+
+                if print_training:
+                    print_progress(task_list=training_tasks, epoch=epoch+1, batch=i+1)
+
+        # Mix-up fine-tuning phase, executed in separate loops for each model:
+        for t in training_tasks:
+            if t.model_name in ["resnet32_manif_mu"]:
+                for epoch in range(t["finetune_mixup_epochs"]):
+                    # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
+
+                    logger.info(
+                        "Starting mix-up finetuning for "
+                        + MODEL_NAMES[t.model_name]
+                        + " trained with "
+                        + LOSS_NAMES[t.loss_name]
+                        + (" using training parameters " + str(t.options) if t.options else "")
+                        + ":"
+                    )
+
+                    t.model_obj.close_mixup()
+                    t.loss_obj.close_mixup()
+
+                    # TODO [5]: Adapt from above, consider the plots and print logs
+                    ...
+
+    except KeyboardInterrupt:
+        logger.info("Got KeyboardInterrupt.")
+
         if save_models:
-            tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-            
+            logger.info("Backing up the models.")
+
+            tstamp = dt.datetime.now().strftime(TIMESTAMP_FORMAT)
+
             """
             if train_focal:
                 torch.save(
                     rn_focal.state_dict(),
-                    models_path + f"rn{resnet_type}_focal_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_focal_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             
             if train_sigmoid_ce:
                 torch.save(
                     rn_sigmoid_ce.state_dict(),
-                    models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             
             if train_softmax_ce:
                 torch.save(
                     rn_softmax_ce.state_dict(),
-                    models_path + f"rn{resnet_type}_softmax_ce_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_softmax_ce_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             
             if train_cb_focal:
                 torch.save(
                     rn_cb_focal.state_dict(),
-                    models_path + f"rn{resnet_type}_cb_focal_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_cb_focal_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_cb_focal_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             
             if train_cb_sigmoid_ce:
                 torch.save(
                     rn_cb_sigmoid_ce.state_dict(),
-                    models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_cb_sigmoid_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             
             if train_cb_softmax_ce:
                 torch.save(
                     rn_cb_softmax_ce.state_dict(),
-                    models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}_{tstamp}.pth"
+                    models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth"
                 )
                 logger.info(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
-                      models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}_{tstamp}.pth")
+                      models_path + f"temp/interrupted/rn{resnet_type}_cb_softmax_ce_{dataset}_epoch{epoch}_batch{i+1}_{tstamp}.pth")
             """
-        
-        if draw_loss_plots:
-            legend = []
-            plt.figure(figsize=plot_size)
 
-            for t in training_tasks:
-                plt.plot(t.loss_history, "-")  # TODO: Plot with a sampled color
-                legend.append(LOSS_NAMES[t.loss_name] + " with " + MODEL_NAMES[t.model_name])
- 
-            plt.xlabel("Epoch")
-            plt.ylabel("Loss")
-            plt.legend(legend)
-            plt.title(
-                f"Loss vs. Epochs on {DSET_NAMES[dataset]}"
+        logger.info("Deleting previous backups.")
+        # Delete all OLD temporary files under temp/interrupted/
+        # FIXME [1]: delete only old files! create a list of old files before backing up.
+        for f in os.listdir(models_path + "temp/interrupted/"):
+            fpath = models_path + "temp/interrupted/" + f
+            os.remove(fpath)
+            logger.info("Removed:", fpath)
+
+        logger.info("Terminating.")
+        sys.exit(1)
+
+    # Save the trained models
+    if save_models:
+        tstamp = dt.datetime.now().strftime(TIMESTAMP_FORMAT)
+
+        """
+        if train_focal:
+            torch.save(
+                rn_focal.state_dict(),
+                models_path + f"rn{resnet_type}_focal_{dataset}_{tstamp}.pth"
             )
-            
-            tstamp = dt.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-            plt.savefig(plot_path + f"{dataset.lower()}-losses-" + tstamp + ".png")
-            
-            # plt.show()
+            logger.info(f"Saved model (ResNet-{resnet_type} focal, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_focal_{dataset}_{tstamp}.pth")
+        
+        if train_sigmoid_ce:
+            torch.save(
+                rn_sigmoid_ce.state_dict(),
+                models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}_{tstamp}.pth"
+            )
+            logger.info(f"Saved model (ResNet-{resnet_type} sigmoid_ce, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_sigmoid_ce_{dataset}_{tstamp}.pth")
+        
+        if train_softmax_ce:
+            torch.save(
+                rn_softmax_ce.state_dict(),
+                models_path + f"rn{resnet_type}_softmax_ce_{dataset}_{tstamp}.pth"
+            )
+            logger.info(f"Saved model (ResNet-{resnet_type} cross entropy, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_softmax_ce_{dataset}_{tstamp}.pth")
+        
+        if train_cb_focal:
+            torch.save(
+                rn_cb_focal.state_dict(),
+                models_path + f"rn{resnet_type}_cb_focal_{dataset}_{tstamp}.pth"
+            )
+            logger.info(f"Saved model (ResNet-{resnet_type} cb. focal, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_cb_focal_{dataset}_{tstamp}.pth")
+        
+        if train_cb_sigmoid_ce:
+            torch.save(
+                rn_cb_sigmoid_ce.state_dict(),
+                models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}_{tstamp}.pth"
+            )
+            logger.info(f"Saved model (ResNet-{resnet_type} cb. sigmoid_ce, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_cb_sigmoid_ce_{dataset}_{tstamp}.pth")
+        
+        if train_cb_softmax_ce:
+            torch.save(
+                rn_cb_softmax_ce.state_dict(),
+                models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}_{tstamp}.pth"
+            )
+            logger.info(f"Saved model (ResNet-{resnet_type} cb. cross entropy, {DSET_NAMES[dataset]}):",
+                  models_path + f"rn{resnet_type}_cb_softmax_ce_{dataset}_{tstamp}.pth")
+        """
+
+    if draw_loss_plots:
+        legend = []
+        plt.figure(figsize=plot_size)
+
+        for t in training_tasks:
+            plt.plot(t.loss_history, "-")  # TODO: Plot with a sampled color
+            legend.append(LOSS_NAMES[t.loss_name] + " with " + MODEL_NAMES[t.model_name])
+
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.legend(legend)
+        plt.title(
+            f"Loss vs. Epochs on {DSET_NAMES[dataset]}"
+        )
+
+        tstamp = dt.datetime.now().strftime(TIMESTAMP_FORMAT)
+        plt.savefig(plot_path + f"{dataset.lower()}-losses-" + tstamp + ".png")
+
+        # plt.show()
    
     # Return trained models along with loss and model names
     return [{"model": t.model_obj, "loss_name": t.loss_name, "model_name": t.model_name, "options": t.options}

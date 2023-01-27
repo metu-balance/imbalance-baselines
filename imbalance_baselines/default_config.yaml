@@ -53,8 +53,8 @@ Training:
   multi_gpu: False
   backup:
     save_models: False
-    models_path: "output/models/"  # Mandatory field (only if save_models or load_models is True)
-    load_models: False
+    models_path: "output/models/"  # Mandatory field only if save_models or load_models is True
+    load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   optimizer:
     name: "sgd"
     params:
