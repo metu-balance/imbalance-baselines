@@ -94,7 +94,7 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
                                                      calc_avg=calc_avg, calc_perclass=calc_perclass, top=top,
                                                      device=device)
                 
-                logger.info(
+                print(
                     MODEL_NAMES[r["model_name"]]
                     + " trained with "
                     + LOSS_NAMES[r["loss_name"]]
@@ -103,9 +103,9 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
                 )
 
                 if calc_avg:
-                    logger.info(f"  Average top-{top} accuracy: " + str(avg_acc) + "%")
+                    print(f"  Average top-{top} accuracy: " + str(avg_acc) + "%")
                 if calc_perclass:
-                    logger.info(f"Top-{top} accuracy per class: {perclass_acc}")
+                    print(f"Top-{top} accuracy per class: {perclass_acc}")
                 
                 print()  # Print empty line
         else:
