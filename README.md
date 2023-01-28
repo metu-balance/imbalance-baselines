@@ -108,7 +108,7 @@ Assuming that the script can import the library from the working directory:
 This example trains two models of the same type, using the regular and class balancing versions of the focal loss, and
 evaluates them:
 
-```$ python3 ex_training_pipeline.py examples/class_balance/ex-cbfocal.yaml```
+```$ python3 ex_training_pipeline.py examples/class_balance/ex-cbfocal-pipeline.yaml```
 
 The output of the example above is:
 
@@ -185,7 +185,7 @@ Top-1 accuracy per class: [0.8300000429153442, 0.9190000295639038, 0.29200002551
 ```
 </details>
 
-```$ python3 ex_training_pipeline.py examples/class_balance/ex-all-losses.yaml```
+```$ python3 ex_training_pipeline.py examples/class_balance/ex-all-losses-pipeline.yaml```
 
 This example, on the other hand, trains more models with more loss function configurations for a longer time. At the end
 of training, the progress of the training loss of each model is plotted. 
@@ -200,15 +200,18 @@ All of the components are organized into files and simply are stored in a single
 Any Python script that can access the library directory can use the desired classes as well as the training pipeline as
 in the given examples.
 
+Additionally, `__init__.py`  helps Python recognize the directory as a library.
+It holds variables and functions that concern the whole library, as well as dictionaries that match
+internal configuration names with more descriptive strings.
+
 # Implemented Components & Imbalance Mitigation Methods
 ## Focal Loss
 Implemented under: `imbalance_baselines/loss_functions.py`, in `FocalLoss` class.
-...
-TODO should also provide pytorch version
+This class features our own implementation of Focal Loss.
 
 ## Class-balancing Weights Based on Effective Number of Samples
 Implemented under: `imbalance_baselines/loss_functions.py` in `FocalLoss` class and
-`imbalance_baselines/utils.py` in `get_cb_weights` function.
+`imbalance_baselines/datasets.py` in `get_cb_weights` function.
 ...
 
 ## Input Mix-up
@@ -241,13 +244,8 @@ Implemented under: `imbalance_baselines/sampling.py`, in `ProgressivelyBalancedS
 
 
 # Adding New Components
-...
-* Each added dataset/loss/model/... must have ... fields...
-  * e.g. Each model needs num_classes field to determine output size
-  * each added dataset should consider offline sampling support
-* For each added dataset/loss/model/..., ... must be added in config.py, dataset.py/loss.py/(...).py,
-\_\_init__.py...
-  * Task field initializations are done in training.py -- may need to add string checks for field names
+Adding new components may require some additional steps other than defining the desired class in the corresponding
+`.py` file:
 
 ## Adding a new dataset
 * Any dataset class deriving `torch.utils.data.Datasets` is supported. If offline sampler support is desired,
@@ -260,10 +258,15 @@ the class should also receive the sampler object as a parameter and use it to mo
 ## Adding a new model (backbone)
 * The string chosen to be used in configuration and a more descriptive name pair must be added to
 `MODEL_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+* If using the training pipeline is desired, the model object has to be defined in the `TrainTask` class'
+`__init__` method. If needed, correct initialization must be done while training tasks are being initialized at the
+start of the `train_models` function.
 
 ## Adding a new optimizer
 * The string chosen to be used in configuration and a more descriptive name pair must be added to
 `OPT_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+* If using the training pipeline is desired, the internal name of the optimizer has to be correctly recognized
+in the `train_models` function, after the initialization of the training tasks are completed.
 
 ## Adding a new evaluation method
 * The string chosen to be used in configuration and a more descriptive name pair must be added to
@@ -272,9 +275,12 @@ the class should also receive the sampler object as a parameter and use it to mo
 ## Adding a new loss function
 * The string chosen to be used in configuration and a more descriptive name pair must be added to
 `LOSS_NAMES` dictionary in `imbalance_baselines/__init__.py`.
+* If using the training pipeline is desired, the loss object has to be defined in the `TrainTask` class'
+`__init__` method. If needed, correct initialization must be done while training tasks are being initialized at the
+start of the `train_models` function.
 
 ## Adding a new sampling method
-...
+Currently, no extra steps are required other than making any necessary modifications in the existing dataset classes.
 
 # Features Considered for Addition
 * wandb support may be implemented.
