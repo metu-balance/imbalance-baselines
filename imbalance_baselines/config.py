@@ -13,13 +13,28 @@ class Config:
         self._defaults = OmegaConf.load(defaults_path)
 
         # Sanitize configuration
-        assert self.config.Dataset.dataset_name in DSET_NAMES.keys()
-        assert self.config.Training.optimizer.name in OPTIMIZER_NAMES.keys()
-        for task in self.config.Training.tasks:
-            assert task.model in MODEL_NAMES.keys()
-            assert task.loss in LOSS_NAMES.keys()
-        for eval_method in self.config.Evaluation:
-            assert eval_method.method_name in EVAL_NAMES.keys()
+        try:
+            assert self.config.Dataset.dataset_name in DSET_NAMES.keys()
+        except omegaconf.errors.ConfigAttributeError:
+            pass
+
+        try:
+            assert self.config.Training.optimizer.name in OPTIMIZER_NAMES.keys()
+        except omegaconf.errors.ConfigAttributeError:
+            pass
+
+        try:
+            for task in self.config.Training.tasks:
+                assert task.model in MODEL_NAMES.keys()
+                assert task.loss in LOSS_NAMES.keys()
+        except omegaconf.errors.ConfigAttributeError:
+            pass
+
+        try:
+            for eval_method in self.config.Evaluation:
+                assert eval_method.method_name in EVAL_NAMES.keys()
+        except omegaconf.errors.ConfigAttributeError:
+            pass
 
         # Create directories if they do not exist
         if self.config.DataGeneration.plotting.draw_dataset_plots:
