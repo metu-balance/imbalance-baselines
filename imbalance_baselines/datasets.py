@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 
 from numpy.random import Generator, PCG64
 from PIL import Image
@@ -404,3 +405,29 @@ def generate_data(cfg):
         {"class_count": class_count, "train_class_sizes": train_class_sizes, "test_class_sizes": test_class_sizes}
 
 
+def get_cb_weights(class_sizes, beta=0, device: torch.device = torch.device("cpu")) -> torch.Tensor:
+    """Get normalized weight (inverse of effective number of samples) per class."""
+
+    class_sizes = torch.as_tensor(
+        class_sizes,
+        #dtype=torch.long,
+        device=device
+    )
+
+    class_cnt = class_sizes.shape[0]
+
+    weights = torch.as_tensor(
+        [1 - beta] * class_cnt,
+        device=device
+    )
+
+    weights = torch.div(
+        weights, 1 - torch.pow(beta, class_sizes)
+    ).to(device)
+
+    # Normalize the cb_weights
+    weights = torch.mul(weights, class_cnt / torch.sum(weights))
+
+    weights.requires_grad = False
+
+    return weights.to(device)

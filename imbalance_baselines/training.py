@@ -10,7 +10,8 @@ from torch.utils.data import DataLoader
 from torchvision import models as torchmodels
 
 from .loss_functions import FocalLoss, MixupLoss
-from .utils import parse_cfg_str, get_cb_weights
+from .utils import parse_cfg_str
+from .datasets import get_cb_weights
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, get_global_seed, logger
 
