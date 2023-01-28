@@ -92,7 +92,7 @@ for j in range(FINETUNE_EPOCH):  # Fine-tuning after mix-up
 train_results = [{
     "model": model,
     "loss_name": "ce_softmax",
-    "model_name": "resnet32-manif-mu",
+    "model_name": "resnet32_manif_mu",
     "options": {}
 }]
 
