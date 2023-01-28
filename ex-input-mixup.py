@@ -3,7 +3,7 @@ import sys
 import torch
 
 from imbalance_baselines import datasets
-from imbalance_baselines import set_global_seed, set_logging_level, set_data_type
+from imbalance_baselines import set_global_seed, get_global_seed, set_logging_level, set_data_type
 from imbalance_baselines.config import Config
 from imbalance_baselines.models import ResNet32ManifoldMixup
 from imbalance_baselines.loss_functions import MixupLoss
@@ -32,7 +32,8 @@ FINETUNE_EPOCH = cfg.Training.resnet32_mixup_params.finetune_mixup_epochs
 # Prepare dataset
 train_dl, test_dl, dataset_info = datasets.generate_data(cfg)
 
-model = ResNet32ManifoldMixup(num_layers=32, num_classes=dataset_info["class_count"], alpha=ALPHA).to(device)
+model = ResNet32ManifoldMixup(num_layers=32, num_classes=dataset_info["class_count"], alpha=ALPHA,
+                              seed=get_global_seed()).to(device)
 criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 optimizer = torch.optim.SGD(model.parameters(), lr=0, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY_VALUE)
 

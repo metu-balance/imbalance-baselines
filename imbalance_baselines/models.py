@@ -58,7 +58,6 @@ class ResNet32ManifoldMixup(nn.Module):
         
         self.alpha = alpha
         self.mixup = True
-        # self.random_gen = torch.Generator().manual_seed(seed)
         self.random_gen = np.random.default_rng(seed)
         
         self.n = (num_layers - 2) // 6
@@ -101,8 +100,7 @@ class ResNet32ManifoldMixup(nn.Module):
         
         if self.mixup:
             lamb = self.random_gen.beta(self.alpha, self.alpha)
-            # TODO: Check whether numpy generator (instead of torch generator) works
-            idx = torch.randperm(x.size(0), generator=self.random_gen)
+            idx = torch.randperm(x.size(0))
             x_a, x_b = x, x[idx]
             x = lamb * x_a + (1 - lamb) * x_b
         

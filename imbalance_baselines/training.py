@@ -45,7 +45,7 @@ class TrainTask:
         elif self.model_name == "resnet152":
             self.model = torchmodels.resnet152
         elif self.model_name == "resnet32_manif_mu":
-            self.model = models.ResNet32ManifoldMixup(alpha=self.options.beta_dist_alpha, seed=self.seed)
+            self.model = models.ResNet32ManifoldMixup(seed=self.seed, alpha=self.options.beta_dist_alpha)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
