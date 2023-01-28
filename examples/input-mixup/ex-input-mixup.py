@@ -56,6 +56,9 @@ for j in range(EPOCH):
     for i, (inp, target) in enumerate(train_dl):
         optimizer.zero_grad()
 
+        inp = inp.to(device)
+        target = target.to(device)
+
         loss = loss_fn(model(inp), target)  # Using with mix-up enabled
         loss.backward()
         optimizer.step()
