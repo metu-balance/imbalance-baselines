@@ -1,12 +1,13 @@
 import sys
 
+import torch
+
 from imbalance_baselines import evaluation
 from imbalance_baselines import datasets
 from imbalance_baselines import training
 from imbalance_baselines import set_global_seed, set_logging_level, set_data_type
 from imbalance_baselines.config import Config
 
-import torch.cuda
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
