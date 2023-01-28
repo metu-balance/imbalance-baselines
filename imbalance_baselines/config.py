@@ -37,11 +37,17 @@ class Config:
             pass
 
         # Create directories if they do not exist
-        if self.config.DataGeneration.plotting.draw_dataset_plots:
-            os.makedirs(self.config.DataGeneration.plotting.plot_path, exist_ok=True)
+        try:
+            if self.config.DataGeneration.plotting.draw_dataset_plots:
+                os.makedirs(self.config.DataGeneration.plotting.plot_path, exist_ok=True)
+        except omegaconf.errors.ConfigAttributeError:
+            pass
 
-        if self.config.Training.backup.save_models or self.config.Training.backup.load_models:
-            os.makedirs(self.config.Training.backup.models_path, exist_ok=True)
+        try:
+            if self.config.Training.backup.save_models or self.config.Training.backup.load_models:
+                os.makedirs(self.config.Training.backup.models_path, exist_ok=True)
+        except omegaconf.errors.ConfigAttributeError:
+            pass
 
         logger.info("Got configuration:")
         logger.info(OmegaConf.to_yaml(self.config))

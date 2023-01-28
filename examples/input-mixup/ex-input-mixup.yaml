@@ -19,8 +19,6 @@ DataGeneration:
     width: 32
     height: 32
   train_shuffle: True
-  plotting:
-    draw_dataset_plots: False
   train_transform:
     -
       transform_name: "pad"
