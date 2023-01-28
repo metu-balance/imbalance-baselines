@@ -19,6 +19,7 @@ DataGeneration:
     width: 32
     height: 32
   train_shuffle: True
+  sampler: None
   plotting:
     draw_dataset_plots: False
   train_transform:
