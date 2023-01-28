@@ -1,6 +1,4 @@
 import datetime as dt
-import os
-import sys
 from os import listdir
 from os.path import isfile, join
 from typing import List
@@ -397,6 +395,8 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
                 t.epoch_total_loss = 0
 
                 # TODO: Adapt from above, consider the plots and print logs
+                # TODO: Input mix-up (thru. MixupLoss) should be able to used independently of manifold mix-up
+                #  Adjust config.s, loss definitions & training code accordingly.
                 ...
 
     # Training is now done for all training tasks.
