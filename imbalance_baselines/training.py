@@ -377,11 +377,14 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     # Mix-up fine-tuning phase, executed in separate loops for each model:
     for t in training_tasks:
         if t.model_name in ["resnet32_manif_mu"]:
+            t.model_obj.close_mixup()
+            t.loss_obj.close_mixup()
+
             for epoch in range(t["finetune_mixup_epochs"]):
                 # NOTE: epoch ranges from 0 to (epoch_cnt - 1). Use n-1 for the nth epoch.
 
                 logger.info(
-                    "Starting mix-up finetuning for "
+                    "Starting finetuning without mix-up for "
                     + MODEL_NAMES[t.model_name]
                     + " trained with "
                     + LOSS_NAMES[t.loss_name]
@@ -393,9 +396,6 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
 
                 # TODO: Adapt from above, consider the plots and print logs
                 ...
-
-                t.model_obj.close_mixup()
-                t.loss_obj.close_mixup()
 
     # Training is now done for all training tasks.
 
