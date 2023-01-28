@@ -53,6 +53,9 @@ class ResNet32(nn.Module):
 
 
 class ResNet32ManifoldMixup(nn.Module):
+    """ResNet32 with Manifold Mix-Up applied to the second conv. layer."""
+    # TODO: Should support mix-up at other layers, pooling or FC layer.
+
     def __init__(self, num_layers=32, num_classes=10, alpha=1, seed=12649):
         super(ResNet32ManifoldMixup, self).__init__()
         
