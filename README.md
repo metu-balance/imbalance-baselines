@@ -207,41 +207,58 @@ internal configuration names with more descriptive strings.
 # Implemented Components & Imbalance Mitigation Methods
 ## Focal Loss
 Implemented under: `imbalance_baselines/loss_functions.py`, in `FocalLoss` class.
+
 This class features our own implementation of Focal Loss.
 
 ## Class-balancing Weights Based on Effective Number of Samples
 Implemented under: `imbalance_baselines/loss_functions.py` in `FocalLoss` class and
 `imbalance_baselines/datasets.py` in `get_cb_weights` function.
-...
+
+This imbalance mitigation method is developed as described in the original paper[^1]. 
 
 ## Input Mix-up
 Implemented under: `imbalance_baselines/loss_functions.py`, in `InputMixup` class.
-... Adapted from bag-of-tricks...
+
+Input Mix-up works by creating a new data by interpolating two randomly chosen dataset samples.
+This method was adapted from the Bag of Tricks code repository[^2].
 
 ## Manifold Mix-up with ResNet-32 
 Implemented under: `imbalance_baselines/models.py`, in `ResNet32ManifoldMixup` class.
-... Adapted from Bag of Tricks...
+
+Similar to Input Mix-up, Manifold Mix-up works by creating new examples by interpolating the output of an intermediate
+layer of the model on two random dataset samples.
+This method was also adapted from the Bag of Tricks code repository[^2].
 
 ## Fine-tuning with Mix-up
 Implemented under: `imbalance_baselines/training.py`, in `finetune_mixup` function.
-... Continuation of Bag of Tricks...
 
-## Under-sampling
+He et al.[^3] shows that for models trained using mix-up methods, finetuning without mix-up for a number of epochs can
+increase performance. This fine-tuning step is implemented as a continuation of the mix-up method adapted from Bag of
+Tricks[^2].
+
+## Sampling methods
+These dataset augmentation methods were adapted from the Bag of Tricks code repository[^2].
+
+### Under-sampling
 Implemented under: `imbalance_baselines/sampling.py`, in `UnderSampler` class.
-...
 
-## Over-sampling
+Tries balancing an imbalanced dataset by dropping examples from over-represented classes.
+
+### Over-sampling
 Implemented under: `imbalance_baselines/sampling.py`, in `OverSampler` class.
-...
 
-## Class-balanced sampling
+Tries balancing an imbalanced dataset by copying examples in under-represented classes.
+
+### Class-balanced sampling
 Implemented under: `imbalance_baselines/sampling.py`, in `ClassBalancedSampling` class.
-...
 
-## Progressively-balanced sampling
+Samples from the imbalanced dataset such that each class has an equal probablility of being chosen.
+
+### Progressively-balanced sampling
 Implemented under: `imbalance_baselines/sampling.py`, in `ProgressivelyBalancedSampling` class.
-...
 
+Applies class-balanced sampling gradually, changing linearly from totally imbalanced sampling at the start to
+class-balanced sampling. Similar to the learning rate warm-up policy that can be applied at the start of training. 
 
 # Adding New Components
 Adding new components may require some additional steps other than defining the desired class in the corresponding
@@ -304,3 +321,16 @@ The project was advised by:
 
 We also gratefully acknowledge the computational resources kindly provided by [METU-ROMER (Center for Robotics and
 Artificial Intelligence)](http://romer.metu.edu.tr/) and [METU ImageLab](https://image.ceng.metu.edu.tr/).
+
+
+## References:
+[^1]: Cui, Y., Jia, M., Lin, T.-Y., Song, Y., & Belongie, S. (2019). Class-Balanced Loss
+Based on Effective Number of Samples. 2019 IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR). https://doi.org/10.1109/cvpr.2019.00949
+
+[^2]: Zhang, Y., Wei, X. S., Zhou, B., & Wu, J. (2021). Bag of Tricks for Long-Tailed Visual
+Recognition with Deep Convolutional Neural Networks. In Proceedings of the AAAI Conference
+on Artificial Intelligence (Vol. 35, No. 4, pp. 3447-3455). Repository: https://github.com/zhangyongshun/BagofTricks-LT
+
+[^3]: He, Z.; Xie, L.; Chen, X.; Zhang, Y.; Wang, Y.; and Tian, Q. 2019b. Data augmentation revisited: Rethinking the
+distribution gap between clean and augmented data. arXiv preprint arXiv:1909.09148.
