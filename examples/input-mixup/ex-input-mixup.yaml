@@ -1,5 +1,6 @@
 Dataset:
   datasets_path: "datasets/"
+  dataset_name: "IMB_CIFAR10"
   dataset_params:
     imb_factor: 50
     normalize_mu:
