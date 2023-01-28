@@ -402,7 +402,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     # Training is now done for all training tasks.
 
     # Save the trained models
-    if save_models and epoch_cnt % save_epoch_interval != 0:  # Ensure models were not saved at the end of last epoch
+    if save_models and (save_epoch_interval < 0 or epoch_cnt % save_epoch_interval != 0):  # Ensure models were not saved at the end of last epoch
         save_all_models(training_tasks, models_path, dataset_name, epoch=epoch_cnt)
 
     if draw_loss_plots:
