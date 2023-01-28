@@ -204,11 +204,12 @@ def generate_data(cfg):
     
     plot_cfg = datagen_cfg.plotting
     draw_dataset_plots = plot_cfg.draw_dataset_plots
-    plot_size = (
-        parse_cfg_str(plot_cfg.plot_size.width, int),
-        parse_cfg_str(plot_cfg.plot_size.height, int)
-    )
-    plot_path = plot_cfg.plot_path
+    if draw_dataset_plots:
+        plot_size = (
+            parse_cfg_str(plot_cfg.plot_size.width, int),
+            parse_cfg_str(plot_cfg.plot_size.height, int)
+        )
+        plot_path = plot_cfg.plot_path
     
     class_count = DSET_CLASS_CNTS[dataset_name]
     sampler = parse_cfg_str(datagen_cfg.sampler, None)

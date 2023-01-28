@@ -144,15 +144,17 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     multi_gpu = train_cfg.multi_gpu
 
     print_training = train_cfg.printing.print_training
-    print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
-    print_epoch_freq = parse_cfg_str(train_cfg.printing.print_epoch_frequency, int)
+    if print_training:
+        print_batch_freq = parse_cfg_str(train_cfg.printing.print_batch_frequency, int)
+        print_epoch_freq = parse_cfg_str(train_cfg.printing.print_epoch_frequency, int)
 
     draw_loss_plots = train_cfg.plotting.draw_loss_plots
-    plot_size = (
-        parse_cfg_str(train_cfg.plotting.plot_size.width, int),
-        parse_cfg_str(train_cfg.plotting.plot_size.height, int)
-    )
-    plot_path = train_cfg.plotting.plot_path
+    if draw_loss_plots:
+        plot_size = (
+            parse_cfg_str(train_cfg.plotting.plot_size.width, int),
+            parse_cfg_str(train_cfg.plotting.plot_size.height, int)
+        )
+        plot_path = train_cfg.plotting.plot_path
 
     save_models = train_cfg.backup.save_models
     load_models = train_cfg.backup.load_models
