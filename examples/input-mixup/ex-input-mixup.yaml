@@ -41,6 +41,7 @@ Training:
     beta_dist_alpha: 1
     finetune_mixup_epochs: 20
   optimizer:
+    name: "sgd_linwarmup"
     params:
       lr: 0.1
       lr_decay_epochs: [150, 180]
