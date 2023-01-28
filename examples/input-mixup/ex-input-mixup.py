@@ -66,7 +66,7 @@ for j in range(EPOCH):
 
         total_loss += loss.data.detach()
 
-    print(f"Epoch: {j}, Manifold Mix-up Loss: {total_loss / (i + 1)}, Num. of batches: {i}")
+    print(f"Epoch: {j}, Input & Manifold Mix-up Loss: {total_loss / (i + 1)}, Num. of batches: {i}")
 
 model.close_mixup()
 loss_fn.close_mixup()
@@ -86,7 +86,7 @@ for j in range(FINETUNE_EPOCH):  # Fine-tuning after mix-up
 
         total_loss += loss.data.detach()
 
-    print(f"Epoch: {j}, Manifold Mix-up Loss: {total_loss / (i + 1)}, Num. of batches: {i}")
+    print(f"Epoch: {j}, Input & Manifold Mix-up Loss: {total_loss / (i + 1)}, Num. of batches: {i}")
 
 # Convert model to library's format to use the standardized evaluation
 train_results = [{
