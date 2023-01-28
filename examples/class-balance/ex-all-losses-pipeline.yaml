@@ -47,7 +47,7 @@ DataGeneration:
       transform_name: "center_crop"
       transform_params: None
 Training:
-  epoch_count: 20
+  epoch_count: 200
   multi_gpu: True
   backup:
     save_models: True  # If True, save models' states after training is finished.
