@@ -15,7 +15,7 @@ from .datasets import get_cb_weights
 from . import models
 from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, get_global_seed, logger
 
-TIMESTAMP_FORMAT = "%Y-%m-%d-%H:%M:%S"
+TIMESTAMP_FORMAT = "%Y-%m-%d-%H.%M.%S"
 
 
 class TrainTask:
