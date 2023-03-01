@@ -235,11 +235,18 @@ def generate_data(cfg):
         datasets_path += "/"
     
     def form_transf(dg_cfg, is_train):
-        """Form a sequence of data transformations to be applied."""
+        """Form a sequence of data transformations to be applied.
+
+        :param dg_cfg: Data generation configuration
+        """
 
         transf_list = []
-        
-        for transf in dg_cfg["train_transform" if is_train else "test_transform"]:
+
+        transf_cfg_list = dg_cfg["train_transform" if is_train else "test_transform"]
+        if transf_cfg_list is None:
+            transf_cfg_list = []
+
+        for transf in transf_cfg_list:
             tr_name = transf.transform_name
             tr_params = transf.transform_params
     
