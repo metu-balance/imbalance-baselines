@@ -1,7 +1,9 @@
 import torch
+import numpy as np
 
 from torch.utils.data import Sampler
-from numpy.random import shuffle, choice
+#from numpy.random import choice
+from . import get_global_seed
 
 
 class OfflineSampler:
@@ -28,6 +30,7 @@ class OverSampler(OfflineSampler):
     def __init__(self, num_classes: int, ratio: float = 1.0):
         OfflineSampler.__init__(self, num_classes)
         self.ratio = ratio
+        self.rng = np.random.default_rng(seed=get_global_seed())
     
     def __call__(self, dataset):
         ratio = self.ratio
@@ -38,7 +41,7 @@ class OverSampler(OfflineSampler):
         lower_limit = int(max(size) * ratio)  # MIN_SIZE / MAX_SIZE = RATIO
         
         for (num, group) in enumerate(groups):
-            shuffle(group)
+            self.rng.shuffle(group)
             size_sample = size[num]
             
             if size_sample < lower_limit:
@@ -58,6 +61,7 @@ class UnderSampler(OfflineSampler):
     def __init__(self, num_classes: int, ratio: float = 1.0):
         OfflineSampler.__init__(self, num_classes)
         self.ratio = ratio
+        self.rng = np.random.default_rng(seed=get_global_seed())
     
     def __call__(self, dataset):
         ratio = self.ratio
@@ -68,8 +72,7 @@ class UnderSampler(OfflineSampler):
         upper_limit = int(min(size) / ratio)  # MIN_SIZE / MAX_SIZE = RATIO -> MAX_SIZE = MIN_SIZE/RATIO
         
         for (num, group) in enumerate(groups):
-            
-            shuffle(group)
+            self.rng.shuffle(group)
             sample_size = size[num]
             
             if sample_size > upper_limit: sample_size = upper_limit
@@ -81,11 +84,13 @@ class UnderSampler(OfflineSampler):
 
 class OnlineSampler(Sampler[int]):
     def __init__(self, dataset, num_classes: int):
+        # TODO: Call to super class init needed or not?
         self.num_classes = num_classes
         
         self.index_groups = self.get_index_groups(dataset)
         self.sizes = torch.tensor([len(group) for group in self.index_groups], dtype=torch.int64)
         self.length = self.sizes.sum()
+        self.rng = np.random.default_rng(seed=get_global_seed())
     
     def __len__(self):
         return self.length
@@ -119,7 +124,7 @@ class ClassBalancedSampling(OnlineSampler):
         for i in range(self.length):
             random_class = self.classes[i]
             curr_group = self.index_groups[random_class]
-            sample = choice(curr_group)
+            sample = self.rng.choice(curr_group)
             
             yield sample
 
@@ -141,6 +146,6 @@ class ProgressivelyBalancedSampling(OnlineSampler):
         for i in range(self.length):
             random_class = self.classes[i]
             curr_group = self.index_groups[random_class]
-            sample = choice(curr_group)
+            sample = self.rng.choice(curr_group)
             
             yield sample
