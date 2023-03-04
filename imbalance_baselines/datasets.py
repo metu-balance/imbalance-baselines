@@ -4,14 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from numpy.random import Generator, PCG64
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES, DSET_CLASS_CNTS, logger
-from .utils import parse_cfg_str
+from . import DSET_NAMES, DSET_CLASS_CNTS, logger, get_global_seed
+from .utils import parse_cfg_str, seed_everything
 
 
 class CIFAR10LT(datasets.CIFAR10):
@@ -37,7 +36,7 @@ class CIFAR10LT(datasets.CIFAR10):
         )
         
         self.cnt_per_cls_dict = dict()
-        self.rng = Generator(PCG64())
+        self.rng = np.random.default_rng(seed=get_global_seed())
         self.sampler = sampler
         
         img_num_list = self.get_img_cnt_per_cls(self.cls_cnt, imb_factor)
@@ -75,10 +74,10 @@ class CIFAR10LT(datasets.CIFAR10):
             for cls, img_cnt in zip(classes, img_cnt_per_cls):
                 self.cnt_per_cls_dict[cls] = img_cnt
                 i = np.where(targets_np == cls)[0]
-                
+
                 self.rng.shuffle(i)
                 selected_i = i[:img_cnt]
-                
+
                 new_data.append(self.data[selected_i, ...])
                 new_targets.extend([cls] * img_cnt)
         elif isinstance(self.sampler, sampling.OnlineSampler):
@@ -173,6 +172,10 @@ class INaturalist(Dataset):
             cls_cnt_list[i] += 1
         
         return cls_cnt_list
+
+
+def seed_worker(worker_id):
+    seed_everything(get_global_seed())
 
 
 def generate_data(cfg):
@@ -355,19 +358,26 @@ def generate_data(cfg):
             sampler = sampling.ProgressivelyBalancedSampling(train_ds, class_count, sampler_params.total_epochs)
         else:
             raise ValueError("Invalid sampler name encountered: " + sampler_name)
-    
+
+    generator = torch.Generator()
+    generator.manual_seed(get_global_seed())
+
     train_dl = DataLoader(
         train_ds,
         batch_size=batch_size,
         num_workers=worker_count,
         shuffle=False if sampler_is_online or not train_shuffle else True,
-        sampler=sampler if sampler_is_online else None
+        sampler=sampler if sampler_is_online else None,
+        worker_init_fn=seed_worker,
+        generator=generator
     )
     
     test_dl = DataLoader(
         test_ds,
         batch_size=batch_size,
-        num_workers=worker_count
+        num_workers=worker_count,
+        worker_init_fn=seed_worker,
+        generator=generator
     )
     
     if dataset_name == "CIFAR10":
