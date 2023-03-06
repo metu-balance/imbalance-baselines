@@ -75,9 +75,6 @@ class FocalLoss:
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
             """
         if self.custom_implementation:
-            if reduction != "sum":
-                raise ValueError("Currently, only sum reduction is implemented in the custom focal loss.")  # TODO
-
             batch_size = z.shape[0]  # Not BATCH_SIZE: The last batch might be smaller
             lbl_cnt = z.shape[1]
 
@@ -113,7 +110,14 @@ class FocalLoss:
             # Normalize by the positive sample count:
             weighted_focal_loss /= torch.sum(lbl)
 
-            return torch.sum(weighted_focal_loss)  # TODO: Implement other reduction methods as well
+            if reduction == "sum":
+                return torch.sum(weighted_focal_loss)
+            elif reduction == "mean":
+                return torch.mean(weighted_focal_loss)
+            elif reduction == "none":
+                return weighted_focal_loss
+            else:
+                raise ValueError(f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'.")
         else:
             return sigmoid_focal_loss(inputs=z, targets=lbl, alpha=alpha, gamma=gamma, reduction=reduction)
 
