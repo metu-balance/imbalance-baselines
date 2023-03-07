@@ -1,14 +1,7 @@
 import importlib
-from config import Config
-
-# Name of the dataset class and the file 
-# it resides in must have the same name
-# For Now...
 
 
-
-def read_config(cfg):
-    
+def read_config(cfg):  # TODO temp reference func, may remove later
     dataset_class = find_class('dataset', cfg.Dataset.dataset_name)
     dataset = dataset_class(**cfg.Dataset.dataset_parameters)
     
@@ -27,10 +20,11 @@ def read_config(cfg):
     loss_class = find_class('loss', cfg.Loss.loss_name)
     loss = loss_class(**cfg.Loss.loss_parameters)   
 
-def find_class(module_name, class_name):
 
-    dir = module_name + '.' + class_name
-    module_lib = importlib.import_module(dir)
+# Name of the dataset class and the file it resides in must have the same name (For Now...)
+def find_class(module_name, class_name):  # TODO: may move to utils
+    module_dir = module_name + '.' + class_name
+    module_lib = importlib.import_module(module_dir)
     cl = getattr(module_lib, class_name)
 
     return cl
