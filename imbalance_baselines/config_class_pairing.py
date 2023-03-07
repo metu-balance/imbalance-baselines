@@ -23,7 +23,7 @@ def read_config(cfg):  # TODO temp reference func, may remove later
 
 # Name of the dataset class and the file it resides in must have the same name (For Now...)
 def find_class(module_name, class_name):  # TODO: may move to utils
-    module_dir = module_name + '.' + class_name
+    module_dir = "imbalance_baselines." + module_name + "." + class_name
     module_lib = importlib.import_module(module_dir)
     cl = getattr(module_lib, class_name)
 
