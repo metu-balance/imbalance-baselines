@@ -20,6 +20,8 @@ from .model import MODEL_NAMES
 from .optimizer import OPTIMIZER_NAMES
 from . import get_global_seed, logger
 
+from .config_class_pairing import find_class
+
 TIMESTAMP_FORMAT = "%Y-%m-%d-%H.%M.%S"
 
 
@@ -142,8 +144,8 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     epoch_cnt = parse_cfg_str(train_cfg.epoch_count, int)
 
     opt_name = train_cfg.optimizer.name
-    opt_cfg = train_cfg.optimizer.params
-    weight_decay_value = parse_cfg_str(opt_cfg.weight_decay, float)
+    opt_params = train_cfg.optimizer.params
+    weight_decay_value = parse_cfg_str(opt_params.weight_decay, float)
 
     multi_gpu = train_cfg.multi_gpu
 
@@ -202,7 +204,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             model = nn.DataParallel(model)
 
         # Initialize the list of model parameters to be optimized
-        if opt_cfg.disable_bias_weight_decay:
+        if False and opt_params.disable_bias_weight_decay:  # FIXME: temporarily disabled, remove False in condition
             nonbias_params = list()
             bias_params = list()
 
@@ -277,34 +279,38 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
 
     # Initialize optimizer
-    # TODO / FIXME: Linear warm-up choice should be a configuration rather than an optimizer type
+    # TODO & FIXME: Linear warm-up choice should be a configuration rather than an optimizer type
+    """
     if opt_name == "sgd":
         optimizer = torch.optim.SGD(
             param_list,
-            lr=parse_cfg_str(opt_cfg.lr, casttype=float),
-            momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
+            lr=parse_cfg_str(opt_params.lr, casttype=float),
+            momentum=parse_cfg_str(opt_params.momentum, casttype=float)
         )
 
-        lr_decay_epochs = opt_cfg.lr_decay_epochs
-        lr_decay_rate = parse_cfg_str(opt_cfg.lr_decay_rate, casttype=float)
+        lr_decay_epochs = opt_params.lr_decay_epochs
+        lr_decay_rate = parse_cfg_str(opt_params.lr_decay_rate, casttype=float)
 
         # Unused param.s. Initialize nonetheless
         warmup_epochs = 0
         lr_warmup_step = 0
-    elif opt_name == "sgd_linwarmup":
+    elif opt_name == "sgd_linear_warmup":
         optimizer = torch.optim.SGD(
             param_list,
             lr=0,  # Will be graudally increased during training
-            momentum=parse_cfg_str(opt_cfg.momentum, casttype=float)
+            momentum=parse_cfg_str(opt_params.momentum, casttype=float)
         )
 
-        warmup_epochs = parse_cfg_str(opt_cfg.warmup_epochs, int)
-        lr_warmup_step = parse_cfg_str(opt_cfg.lr, casttype=float) / warmup_epochs
+        warmup_epochs = parse_cfg_str(opt_params.warmup_epochs, int)
+        lr_warmup_step = parse_cfg_str(opt_params.lr, casttype=float) / warmup_epochs
 
-        lr_decay_epochs = opt_cfg.lr_decay_epochs
-        lr_decay_rate = opt_cfg.lr_decay_rate
+        lr_decay_epochs = opt_params.lr_decay_epochs
+        lr_decay_rate = opt_params.lr_decay_rate
     else:
         raise ValueError("Optimizer name is not recognized: " + opt_name)
+    """
+    optimizer_class = find_class("optimizer", opt_name)
+    optimizer = optimizer_class(params=param_list, **opt_params)
 
     logger.info("Starting training.")
     logger.info(f"Dataset: {DSET_NAMES[dataset_name]}")
@@ -314,11 +320,14 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         for t in training_tasks:
             t.epoch_total_loss = 0
 
-        if opt_name == "sgd_linwarmup":
+        if opt_name == "sgd_linear_warmup":
             # Linear warm-up of learning rate from 0 to given LR in first warmup_epochs epochs
+            """
             if epoch < warmup_epochs:
                 for g in optimizer.param_groups:
                     g["lr"] += lr_warmup_step
+            """
+            pass
 
         # Decay learning rate at certain epochs
         if epoch + 1 in lr_decay_epochs:

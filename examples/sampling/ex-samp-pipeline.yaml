@@ -72,7 +72,7 @@ Training:
         focal_loss_gamma: 0.5
         cb_beta: 0.999
   optimizer:
-    name: "sgd_linwarmup"
+    name: "sgd_linear_warmup"
     params:
       lr: 0.1
       lr_decay_epochs: [160, 180]

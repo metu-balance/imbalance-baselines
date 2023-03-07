@@ -70,15 +70,16 @@ Training:
         focal_loss_gamma: 0.5
         cb_beta: 0.999
   optimizer:
-    name: "sgd_linwarmup"
+    # name: "sgd_linear_warmup" # TODO
+    name: "sgd"
     params:
       lr: 0.1
-      lr_decay_epochs: [160, 180]
-      lr_decay_rate: 0.1
+      #lr_decay_epochs: [160, 180]
+      #lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
-      disable_bias_weight_decay: True  # Disable weight decay regularization for biases
-      warmup_epochs: 5
+      #disable_bias_weight_decay: True  # Disable weight decay regularization for biases
+      #warmup_epochs: 5
   printing:
     print_training: True
     print_epoch_frequency: 1
