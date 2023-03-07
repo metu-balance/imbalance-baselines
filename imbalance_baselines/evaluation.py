@@ -91,7 +91,8 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
             return
         
         logger.info(f"Starting evaluation with method: {EVAL_NAMES[method_name]}")
-        
+
+        # TODO: Generalize
         if method_name == "get_accuracy":
             for r in train_results:
                 avg_acc, perclass_acc = get_accuracy(test_dl, r["model"], dataset_info["test_class_sizes"],

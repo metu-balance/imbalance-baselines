@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+# TODO: Add option to use torch's own resnet32, if it exists
 class ResNet32(nn.Module):
     def __init__(self, num_layers=32, num_classes=10):
         super(ResNet32, self).__init__()
@@ -50,6 +51,7 @@ class ResNet32(nn.Module):
         x = self.fc(x)
         
         return x
+
 
 class ResBlock(nn.Module):
     def __init__(self, in_filter, out_filter, stride):

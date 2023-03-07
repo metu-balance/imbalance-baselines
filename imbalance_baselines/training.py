@@ -20,7 +20,7 @@ from .model import MODEL_NAMES
 from .optimizer import OPTIMIZER_NAMES
 from . import get_global_seed, logger
 
-from .config_class_pairing import find_class
+from .config_class_pairing import find_module_component
 
 TIMESTAMP_FORMAT = "%Y-%m-%d-%H.%M.%S"
 
@@ -41,7 +41,8 @@ class TrainTask:
 
         self.loss_history = []
         self.epoch_total_loss = 0
-        
+
+        # TODO: Generalize
         if self.model_name == "resnet32":
             self.model = models.ResNet32
         elif self.model_name == "resnet50":
@@ -55,6 +56,7 @@ class TrainTask:
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
 
+        # TODO: Generalize
         if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
             self.loss = FocalLoss
         elif self.loss_name in ["ce_softmax", "cb_ce_softmax"]:
@@ -63,6 +65,7 @@ class TrainTask:
             raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
 
         # Get class balancing weights & define attribute if loss is a class balancing loss
+        # TODO: Generalize
         if self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
             self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
@@ -220,6 +223,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
 
         # Initialize losses
+        # TODO: Generalize
         if t.loss == FocalLoss:
             t.loss_obj = t.loss(device=device)
         elif t.loss == nn.CrossEntropyLoss:
@@ -274,6 +278,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         
         t.model_obj = model
 
+        # TODO: Generalize
         if t.model_name == "resnet32_manif_mu":
             # Pass loss through MixupLoss
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
@@ -309,7 +314,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     else:
         raise ValueError("Optimizer name is not recognized: " + opt_name)
     """
-    optimizer_class = find_class("optimizer", opt_name)
+    optimizer_class = find_module_component("optimizer", opt_name)
     optimizer = optimizer_class(params=param_list, **opt_params)
 
     logger.info("Starting training.")
@@ -346,6 +351,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             for t in training_tasks:
                 # NOTE: Using startswith & endswith only once the loss name is detected. Should never assume
                 #   the name of a loss, model, etc. otherwise.
+                # TODO: Generalize
                 if t.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
                     if t.loss_name.endswith("focal"):
                         g = parse_cfg_str(t["focal_loss_gamma"], float)

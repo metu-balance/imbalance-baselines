@@ -223,7 +223,8 @@ def generate_data(cfg):
         # Initialize sampler if offline
         sampler_name = datagen_cfg.sampler.sampler_name
         sampler_params = datagen_cfg.sampler.sampler_params
-        
+
+        # TODO: Generalize / deprecate
         if sampler_name == "oversampler":
             sampler = sampling.OverSampler(class_count, sampler_params.ratio)
             sampler_is_online = False
@@ -253,7 +254,8 @@ def generate_data(cfg):
         for transf in transf_cfg_list:
             tr_name = transf.transform_name
             tr_params = transf.transform_params
-    
+
+            # TODO: Generalize
             if tr_name == "pad":
                 transf_list.append(
                     transforms.Pad(
@@ -284,7 +286,8 @@ def generate_data(cfg):
     # NOTE: Both lists contain normalization at the end, applying normalization both for train and test sets
     train_transforms = form_transf(datagen_cfg, is_train=True)
     test_transforms = form_transf(datagen_cfg, is_train=False)
-    
+
+    # TODO: Generalize
     if dataset_name == "CIFAR10":
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
@@ -352,7 +355,8 @@ def generate_data(cfg):
         # Initialize online sampler
         sampler_name = datagen_cfg.sampler.sampler_name
         sampler_params = datagen_cfg.sampler.sampler_params
-        
+
+        # TODO: Generalize / deprecate
         if sampler_name == "cb_sampler":
             sampler = sampling.ClassBalancedSampling(train_ds, class_count, sampler_params.q_value)
         elif sampler_name == "progb_sampler":
@@ -380,7 +384,8 @@ def generate_data(cfg):
         worker_init_fn=seed_worker,
         generator=generator
     )
-    
+
+    # TODO: Generalize
     if dataset_name == "CIFAR10":
         train_class_sizes = [5000] * class_count
         test_class_sizes = [1000] * class_count
