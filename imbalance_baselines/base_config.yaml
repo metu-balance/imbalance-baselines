@@ -1,3 +1,5 @@
+# TODO: This will replace default_config.yaml when complete, and will be renamed as default_config
+
 Dataset:
   dataset_name: 'CIFAR10LT'
   dataset_parameters:
