@@ -24,14 +24,17 @@ Loss:
     param1: '...'
     paramN: '...'
 Transform:
-  transform_name1:
-    transform_params1:
-      param11: '...'
-      param1N: '...'
-  transform_nameN:
-    transform_paramsN:
-      paramN1: '...'
-      paramNN: '...'
+  transform_list:
+    -
+      transform_name:
+        transform_params:
+          param11: '...'
+          param1N: '...',
+    -
+      transform_name:
+        transform_params:
+          paramN1: '...'
+          paramNN: '...'
 #Eval & Benchmark can be different from the other bases,
 #Their structures are to be decided...
 Eval:
