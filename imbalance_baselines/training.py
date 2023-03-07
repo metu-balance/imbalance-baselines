@@ -330,9 +330,12 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             pass
 
         # Decay learning rate at certain epochs
+        # FIXME: re-enable warm-up
+        """
         if epoch + 1 in lr_decay_epochs:
             for g in optimizer.param_groups:
                 g["lr"] *= lr_decay_rate
+        """
 
         for i, (inp, target) in enumerate(train_dl):
             inp = inp.to(device)
