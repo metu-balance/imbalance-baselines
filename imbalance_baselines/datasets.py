@@ -9,7 +9,8 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 from typing import Callable, Optional
 from . import sampling
-from . import DSET_NAMES, DSET_CLASS_CNTS, logger, get_global_seed
+from .dataset import DSET_NAMES, DSET_CLASS_CNTS
+from . import logger, get_global_seed
 from .utils import parse_cfg_str, seed_everything
 
 

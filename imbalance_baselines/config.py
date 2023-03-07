@@ -1,7 +1,12 @@
 import os
 from pathlib import Path
 
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, EVAL_NAMES, logger
+from .dataset import DSET_NAMES
+from .loss import LOSS_NAMES
+from .model import MODEL_NAMES
+from .optimizer import OPTIMIZER_NAMES
+from .eval import EVAL_NAMES
+from . import logger
 
 import omegaconf.errors
 from omegaconf import OmegaConf

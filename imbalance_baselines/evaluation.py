@@ -2,7 +2,11 @@ import torch
 import numpy as np
 
 from torch.utils.data import DataLoader
-from . import LOSS_NAMES, MODEL_NAMES, EVAL_NAMES, logger
+from .loss import LOSS_NAMES
+from .model import MODEL_NAMES
+from .eval import EVAL_NAMES
+
+from . import logger
 from .utils import parse_cfg_str
 
 
