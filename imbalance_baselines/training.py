@@ -13,7 +13,12 @@ from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str
 from .datasets import get_cb_weights
 from . import models
-from . import DSET_NAMES, LOSS_NAMES, MODEL_NAMES, OPTIMIZER_NAMES, get_global_seed, logger
+
+from .dataset import DSET_NAMES
+from .loss import LOSS_NAMES
+from .model import MODEL_NAMES
+from .optimizer import OPTIMIZER_NAMES
+from . import get_global_seed, logger
 
 TIMESTAMP_FORMAT = "%Y-%m-%d-%H.%M.%S"
 
@@ -272,6 +277,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
 
     # Initialize optimizer
+    # TODO / FIXME: Linear warm-up choice should be a configuration rather than an optimizer type
     if opt_name == "sgd":
         optimizer = torch.optim.SGD(
             param_list,
