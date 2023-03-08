@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class ResNet32ManifoldMixup(nn.Module):
     """ResNet32 with Manifold Mix-Up applied to the second conv. layer."""
     # TODO: Should support mix-up at other layers, pooling or FC layer.

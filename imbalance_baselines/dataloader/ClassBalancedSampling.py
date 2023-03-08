@@ -2,8 +2,8 @@ import torch
 import numpy as np
 
 from torch.utils.data import Sampler
-#from numpy.random import choice
-from . import get_global_seed
+from .. import get_global_seed
+
 
 class OnlineSampler(Sampler[int]):
     def __init__(self, dataset, num_classes: int):
