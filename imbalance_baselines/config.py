@@ -12,6 +12,9 @@ import omegaconf.errors
 from omegaconf import OmegaConf
 
 
+# TODO: Default checking for unspecified values work only when values are accessed through the base configuration.
+#   The subconfigurations are of type omegacong.dictconfig.Dictconfig and do not use this class' __getitem__ or
+#   __getattr__. Therefore, they do not check for defaults. May need to derive and overload DictConfig's methods.
 class Config:
     def __init__(self, yaml_path, defaults_path=(Path(__file__).parent / "./default_config.yaml").resolve()):
         self.config = OmegaConf.load(yaml_path)

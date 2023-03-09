@@ -1,6 +1,6 @@
 Dataset:
   datasets_path: "datasets/"
-  dataset_name: "IMB_CIFAR10"
+  dataset_name: "CIFAR10LT"
   dataset_params:
     imb_factor: 100
     normalize_mu:
@@ -60,16 +60,20 @@ Training:
   tasks:
     -
       model: "resnet32"
+      model_args: None
       loss: "focal"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
-        focal_loss_gamma: 0.5
     -
       model: "resnet32"
+      model_args: None
       loss: "cb_focal"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
-        focal_loss_gamma: 0.5
         cb_beta: 0.999
   optimizer:
     name: "sgd_linear_warmup"

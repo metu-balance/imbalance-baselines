@@ -1,7 +1,7 @@
 data_type: float64
 Dataset:
   datasets_path: "datasets/"
-  dataset_name: "IMB_CIFAR10"
+  dataset_name: "CIFAR10LT"
   dataset_params:
     imb_factor: 100
     normalize_mu:
@@ -60,6 +60,7 @@ Training:
     #   Besides, class balancing weights are computed under a datasets.py function...
     -  # Without class balancing
       model_name: "ResNet32"
+      model_args: None
       loss_name: "FocalLoss"
       loss_args:
         gamma: 0.5
@@ -67,6 +68,7 @@ Training:
         init_fc_bias: True
     -  # With class balancing
       model_name: "ResNet32"
+      model_args: None
       loss_name: "FocalLoss"
       loss_args:
         gamma: 0.5

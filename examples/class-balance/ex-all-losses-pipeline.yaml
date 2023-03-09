@@ -1,6 +1,6 @@
 Dataset:
   datasets_path: "datasets/"
-  dataset_name: "IMB_CIFAR10"
+  dataset_name: "CIFAR10LT"
   dataset_params:
     imb_factor: 100
     normalize_mu:
@@ -59,6 +59,7 @@ Training:
     #   Besides, class balancing weights are computed under a datasets.py function...
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "FocalLoss"
       loss_args:
         gamma: 0.5
@@ -66,6 +67,7 @@ Training:
         init_fc_bias: True
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "FocalLoss"
       loss_args:
         gamma: 0.5
@@ -74,28 +76,38 @@ Training:
         cb_beta: 0.999
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "CrossEntropySigmoid"
+      loss_args: None
       task_options:
         init_fc_bias: True
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "CrossEntropySigmoid"
+      loss_args: None
       task_options:
         init_fc_bias: True
         cb_beta: 0.999
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "CrossEntropySoftmax"
+      loss_args: None
       task_options:
         init_fc_bias: True
     -
       model_name: "ResNet50"
+      model_args: None
       loss_name: "CrossEntropySoftmax"
+      loss_args: None
       task_options:
         init_fc_bias: True
     -
       model_name: "ResNet32"
+      model_args: None
       loss_name: "CrossEntropySoftmax"
+      loss_args: None
       task_options:
         init_fc_bias: True
         cb_beta: 0.999
