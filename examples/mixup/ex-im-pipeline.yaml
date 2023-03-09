@@ -56,7 +56,7 @@ Training:
     load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   tasks:
     -
-      model: "resnet32_manif_mu"
+      model: "resnet32_manifold_mixup"
       loss: "ce_sigmoid"
       task_options:
         init_fc_bias: True

@@ -3,5 +3,5 @@ MODEL_NAMES = {
     "resnet50": "ResNet-50",
     "resnet101": "ResNet-101",
     "resnet152": "ResNet-152",
-    "resnet32_manif_mu": "Resnet-32 w/ Manifold Mix-up"
+    "resnet32_manifold_mixup": "Resnet-32 w/ Manifold Mix-up"
 }
