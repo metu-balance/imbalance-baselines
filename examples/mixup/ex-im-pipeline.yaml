@@ -56,22 +56,24 @@ Training:
     load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   tasks:
     -
-      model: "resnet32_manifold_mixup"
-      loss: "ce_sigmoid"
+      model: "Resnet32ManifoldMixup"
+      model_params:
+        beta_dist_alpha: 1
+      loss: "CrossEntropySigmoid"
       task_options:
         init_fc_bias: True
-        beta_dist_alpha: 1
         finetune_mixup_epochs: 20
   optimizer:
-    name: "sgd_linear_warmup"
+    # name: "sgd_linear_warmup" # TODO
+    name: "SGD"
     params:
       lr: 0.1
-      lr_decay_epochs: [160, 180]
-      lr_decay_rate: 0.1
+      #lr_decay_epochs: [160, 180]
+      #lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
-      disable_bias_weight_decay: True  # Disable weight decay regularization for biases
-      warmup_epochs: 5
+      #disable_bias_weight_decay: True  # Disable weight decay regularization for biases
+      #warmup_epochs: 5
   printing:
     print_training: True
     print_epoch_frequency: 1

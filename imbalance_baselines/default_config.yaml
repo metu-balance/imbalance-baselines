@@ -69,8 +69,10 @@ Training:
       disable_bias_weight_decay: True  # Disable weight decay regularization for biases
   tasks:
     -
-      model: "resnet32"
-      loss: "ce_softmax"
+      model_name: "ResNet32"
+      model_args: None
+      loss_name: "CrossEntropySoftmax"
+      loss_args: None
       task_options: None
   printing:
     print_training: True

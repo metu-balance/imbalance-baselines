@@ -29,12 +29,26 @@ class TrainTask:
     def __init__(self, task_cfg, dataset_info: dict, device: torch.device = torch.device("cpu")):
         # Additional task-specific configurations: None if not specified; else, a dict of config.s.
         self.options = task_cfg.task_options
-        
-        self.model_name = task_cfg.model
-        self.loss_name = task_cfg.loss
 
         # Set common seed for the model and loss objects
         self.seed = get_global_seed()
+
+        self.model_name = task_cfg.model_name
+        self.loss_name = task_cfg.loss_name
+
+        self.model_args = task_cfg.model_args
+        self.loss_args = task_cfg.loss_args
+
+        # TODO: Should parse arguments and perform None -> dict conversion with an util func.
+        if self.model_args is None:
+            self.model_args = dict()
+
+        # TODO: Assumes each model has a field named "num_classes". May need further generalization,
+        #  escpecially if every model is not guaranteed to have such a parameter.
+        self.model_args["num_classes"] = dataset_info["class_count"]
+
+        if self.loss_args is None:
+            self.loss_args = dict()
 
         self.model_obj = None
         self.loss_obj = None
@@ -43,18 +57,22 @@ class TrainTask:
         self.epoch_total_loss = 0
 
         # TODO: Generalize
+        """
         if self.model_name == "resnet32":
-            self.model = models.ResNet32
+            self.model_class = models.ResNet32
         elif self.model_name == "resnet50":
-            self.model = torchmodels.resnet50
+            self.model_class = torchmodels.resnet50
         elif self.model_name == "resnet101":
-            self.model = torchmodels.resnet101
+            self.model_class = torchmodels.resnet101
         elif self.model_name == "resnet152":
-            self.model = torchmodels.resnet152
-        elif self.model_name == "resnet32_manif_mu":
-            self.model = models.ResNet32ManifoldMixup(seed=self.seed, alpha=self.options.beta_dist_alpha)
+            self.model_class = torchmodels.resnet152
+        elif self.model_name == "resnet32_manifold_mixup":
+            model_class = models.ResNet32ManifoldMixup(seed=self.seed, alpha=self.options.beta_dist_alpha)
         else:
             raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
+        """
+        self.model_class = find_module_component("model", self.model_name)
+
 
         # TODO: Generalize
         if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
@@ -200,9 +218,13 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         training_tasks.append(TrainTask(task_cfg, dataset_info, device=device))
     
     # Initialize models & losses of the tasks
+    # TODO: Initialize in each task's __init__ instead?
     for t in training_tasks:
         # Create models, will be initialized later
-        model = t.model(num_classes=dataset_info["class_count"]).to(device)
+        # TODO: generalize
+        # TODO: Find a way to pass the seed paramter of rn32manif_mu
+        # model = t.model_class(num_classes=dataset_info["class_count"]).to(device)
+        model = t.model_class(**t.model_args).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
 
@@ -279,7 +301,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         t.model_obj = model
 
         # TODO: Generalize
-        if t.model_name == "resnet32_manif_mu":
+        if t.model_name == "resnet32_manifold_mixup":
             # Pass loss through MixupLoss
             t.loss_obj = MixupLoss(t.loss_obj, alpha=t["beta_dist_alpha"], seed=t.seed)
 
@@ -401,7 +423,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
 
     # Mix-up fine-tuning phase, executed in separate loops for each model:
     for t in training_tasks:
-        if t.model_name in ["resnet32_manif_mu"]:
+        if t.model_name in ["resnet32_manifold_mixup"]:
             t.model_obj.close_mixup()
             t.loss_obj.close_mixup()
 

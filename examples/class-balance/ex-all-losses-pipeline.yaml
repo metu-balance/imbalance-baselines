@@ -55,56 +55,61 @@ Training:
     models_path: "output/models/"  # Mandatory field only if save_models or load_models is True
     load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   tasks:
+    # TODO: How to handle class balancing? old cb_focal and focal now redirect to the same class.
+    #   Besides, class balancing weights are computed under a datasets.py function...
     -
-      model: "resnet32"
-      loss: "focal"
-      task_options:
-        init_fc_bias: True
-        focal_loss_gamma: 0.5
-    -
-      model: "resnet32"
-      loss: "cb_focal"
-      task_options:
-        init_fc_bias: True
-        focal_loss_gamma: 0.5
-        cb_beta: 0.999
-    -
-      model: "resnet32"
-      loss: "ce_sigmoid"
+      model_name: "ResNet32"
+      loss_name: "FocalLoss"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
     -
-      model: "resnet32"
-      loss: "cb_ce_sigmoid"
+      model_name: "ResNet32"
+      loss_name: "FocalLoss"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
         cb_beta: 0.999
     -
-      model: "resnet32"
-      loss: "ce_softmax"
+      model_name: "ResNet32"
+      loss_name: "CrossEntropySigmoid"
       task_options:
         init_fc_bias: True
     -
-      model: "resnet50"
-      loss: "ce_softmax"
+      model_name: "ResNet32"
+      loss_name: "CrossEntropySigmoid"
+      task_options:
+        init_fc_bias: True
+        cb_beta: 0.999
+    -
+      model_name: "ResNet32"
+      loss_name: "CrossEntropySoftmax"
       task_options:
         init_fc_bias: True
     -
-      model: "resnet32"
-      loss: "cb_ce_softmax"
+      model_name: "ResNet50"
+      loss_name: "CrossEntropySoftmax"
+      task_options:
+        init_fc_bias: True
+    -
+      model_name: "ResNet32"
+      loss_name: "CrossEntropySoftmax"
       task_options:
         init_fc_bias: True
         cb_beta: 0.999
   optimizer:
-    name: "sgd_linear_warmup"
+    # name: "sgd_linear_warmup" # TODO
+    name: "SGD"
     params:
       lr: 0.1
-      lr_decay_epochs: [160, 180]
-      lr_decay_rate: 0.1
+      #lr_decay_epochs: [160, 180]
+      #lr_decay_rate: 0.1
       momentum: 0.9
       weight_decay: 2e-4
-      disable_bias_weight_decay: True  # Disable weight decay regularization for biases
-      warmup_epochs: 5
+      #disable_bias_weight_decay: True  # Disable weight decay regularization for biases
+      #warmup_epochs: 5
   printing:
     print_training: True
     print_epoch_frequency: 1

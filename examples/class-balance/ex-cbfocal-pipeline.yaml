@@ -56,22 +56,26 @@ Training:
     models_path: "output/models/"  # Mandatory field only if save_models or load_models is True
     load_models: False  # If True, initialize each model configuration by loading the latest saved model state in models_path
   tasks:
-    -
-      model: "resnet32"
-      loss: "focal"
+    # TODO: How to handle class balancing? old cb_focal and focal now redirect to the same class.
+    #   Besides, class balancing weights are computed under a datasets.py function...
+    -  # Without class balancing
+      model_name: "ResNet32"
+      loss_name: "FocalLoss"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
-        focal_loss_gamma: 0.5
-    -
-      model: "resnet32"
-      loss: "cb_focal"
+    -  # With class balancing
+      model_name: "ResNet32"
+      loss_name: "FocalLoss"
+      loss_args:
+        gamma: 0.5
       task_options:
         init_fc_bias: True
-        focal_loss_gamma: 0.5
         cb_beta: 0.999
   optimizer:
     # name: "sgd_linear_warmup" # TODO
-    name: "sgd"
+    name: "SGD"
     params:
       lr: 0.1
       #lr_decay_epochs: [160, 180]
