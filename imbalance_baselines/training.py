@@ -40,14 +40,14 @@ class TrainTask:
         self.loss_args = task_cfg.loss_args
 
         # TODO: Should parse arguments and perform None -> dict conversion with an util func.
-        if self.model_args is None:
+        if self.model_args == "None":
             self.model_args = dict()
 
         # TODO: Assumes each model has a field named "num_classes". May need further generalization,
         #  escpecially if every model is not guaranteed to have such a parameter.
         self.model_args["num_classes"] = dataset_info["class_count"]
 
-        if self.loss_args is None:
+        if self.loss_args is "None":
             self.loss_args = dict()
 
         self.model_obj = None
@@ -56,23 +56,7 @@ class TrainTask:
         self.loss_history = []
         self.epoch_total_loss = 0
 
-        # TODO: Generalize
-        """
-        if self.model_name == "resnet32":
-            self.model_class = models.ResNet32
-        elif self.model_name == "resnet50":
-            self.model_class = torchmodels.resnet50
-        elif self.model_name == "resnet101":
-            self.model_class = torchmodels.resnet101
-        elif self.model_name == "resnet152":
-            self.model_class = torchmodels.resnet152
-        elif self.model_name == "resnet32_manifold_mixup":
-            model_class = models.ResNet32ManifoldMixup(seed=self.seed, alpha=self.options.beta_dist_alpha)
-        else:
-            raise ValueError("Invalid model name received in TrainTask object: " + self.model_name)
-        """
         self.model_class = find_module_component("model", self.model_name)
-
 
         # TODO: Generalize
         if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
@@ -221,9 +205,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
     # TODO: Initialize in each task's __init__ instead?
     for t in training_tasks:
         # Create models, will be initialized later
-        # TODO: generalize
         # TODO: Find a way to pass the seed paramter of rn32manif_mu
-        # model = t.model_class(num_classes=dataset_info["class_count"]).to(device)
         model = t.model_class(**t.model_args).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
