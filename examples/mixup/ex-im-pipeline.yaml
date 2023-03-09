@@ -59,6 +59,10 @@ Training:
       model: "Resnet32ManifoldMixup"
       model_params:
         beta_dist_alpha: 1
+        # TODO: Find a way to dynamically pass the seed paramter of rn32manif_mu.
+        #   Need to use library's get_seed rather than a static value from config.
+        #   Use Berkin's registry? If not, should eventually implement a similar system...
+        #   Simple suggestion: Ability to use variable names in config with a secured eval-like function?
       loss: "CrossEntropySigmoid"
       loss_args: None
       task_options:
