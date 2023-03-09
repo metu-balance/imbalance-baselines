@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision import models as torchmodels
 
 from .loss_functions import FocalLoss, MixupLoss
 from .utils import parse_cfg_str
@@ -57,22 +56,21 @@ class TrainTask:
         self.epoch_total_loss = 0
 
         self.model_class = find_module_component("model", self.model_name)
-
-        # TODO: Generalize
-        if self.loss_name in ["focal", "ce_sigmoid", "cb_focal", "cb_ce_sigmoid"]:
-            self.loss = FocalLoss
-        elif self.loss_name in ["ce_softmax", "cb_ce_softmax"]:
-            self.loss = nn.CrossEntropyLoss
-        else:
-            raise ValueError("Invalid loss function name received in TrainTask object: " + self.loss_name)
+        self.loss_class = find_module_component("loss", self.loss_name)
 
         # Get class balancing weights & define attribute if loss is a class balancing loss
-        # TODO: Generalize
+        # FIXME: This should be done if task contains class balancing as an imbalance mitigation method (rather than
+        #  being bound to the loss type). Add necessary parameters to loss_args after calculating.
+        #  Commented out for now.
+        self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], 0.01, device=device)
+
+        """
         if self.loss_name in ["cb_focal", "cb_ce_sigmoid", "cb_ce_softmax"]:
             self.cb_weights = get_cb_weights(dataset_info["train_class_sizes"], self.options.cb_beta, device=device)
             self.cb_weights.requires_grad = False
 
             logger.info(f"Got class-balancing weights: {self.cb_weights}")
+        """
     
     def __getitem__(self, item):
         """Get an option of the task. If it does not exist, simply return False."""
@@ -202,16 +200,18 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
         training_tasks.append(TrainTask(task_cfg, dataset_info, device=device))
     
     # Initialize models & losses of the tasks
-    # TODO: Initialize in each task's __init__ instead?
+    # TODO: Initialize losses & models in each task's __init__ instead?
     for t in training_tasks:
         # Create models, will be initialized later
-        # TODO: Find a way to pass the seed paramter of rn32manif_mu
         model = t.model_class(**t.model_args).to(device)
         if multi_gpu:
             model = nn.DataParallel(model)
 
         # Initialize the list of model parameters to be optimized
-        if False and opt_params.disable_bias_weight_decay:  # FIXME: temporarily disabled, remove False in condition
+        # FIXME: Temporarily disabled, delete below line and uncomment block later
+        param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
+        """
+        if False and opt_params.disable_bias_weight_decay:
             nonbias_params = list()
             bias_params = list()
 
@@ -225,6 +225,7 @@ def train_models(cfg, train_dl: DataLoader, dataset_info: dict, device: torch.de
             param_list.append({'params': bias_params, 'weight_decay': 0.0})
         else:
             param_list.append({'params': model.parameters(), 'weight_decay': weight_decay_value})
+        """
 
         # Initialize losses
         # TODO: Generalize
