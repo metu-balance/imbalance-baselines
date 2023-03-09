@@ -1,13 +1,6 @@
 import os
 from pathlib import Path
 
-from .dataset import DSET_NAMES
-from .loss import LOSS_NAMES
-from .model import MODEL_NAMES
-from .optimizer import OPTIMIZER_NAMES
-from .eval import EVAL_NAMES
-from . import logger
-
 import omegaconf.errors
 from omegaconf import OmegaConf
 
@@ -16,46 +9,6 @@ class Config:
     def __init__(self, yaml_path, defaults_path=(Path(__file__).parent / "./default_config.yaml").resolve()):
         self.config = OmegaConf.load(yaml_path)
         self._defaults = OmegaConf.load(defaults_path)
-
-        # Sanitize configuration
-        try:
-            assert self.config.Dataset.dataset_name in DSET_NAMES.keys()
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        try:
-            assert self.config.Training.optimizer.name in OPTIMIZER_NAMES.keys()
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        try:
-            for task in self.config.Training.tasks:
-                assert task.model in MODEL_NAMES.keys()
-                assert task.loss in LOSS_NAMES.keys()
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        try:
-            for eval_method in self.config.Evaluation:
-                assert eval_method.method_name in EVAL_NAMES.keys()
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        # Create directories if they do not exist
-        try:
-            if self.config.DataGeneration.plotting.draw_dataset_plots:
-                os.makedirs(self.config.DataGeneration.plotting.plot_path, exist_ok=True)
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        try:
-            if self.config.Training.backup.save_models or self.config.Training.backup.load_models:
-                os.makedirs(self.config.Training.backup.models_path, exist_ok=True)
-        except omegaconf.errors.ConfigAttributeError:
-            pass
-
-        logger.info("Got configuration:")
-        logger.info(OmegaConf.to_yaml(self.config))
 
     def __getitem__(self, item):
         try:
