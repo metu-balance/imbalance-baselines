@@ -1,7 +1,7 @@
 MODEL_NAMES = {
-    "resnet32": "ResNet-32",
-    "resnet50": "ResNet-50",
-    "resnet101": "ResNet-101",
-    "resnet152": "ResNet-152",
-    "resnet32_manifold_mixup": "Resnet-32 w/ Manifold Mix-up"
+    "ResNet32": "ResNet-32",
+    "ResNet50": "ResNet-50",
+    "ResNet101": "ResNet-101",
+    "ResNet152": "ResNet-152",
+    "ResNet32ManifoldMixup": "Resnet-32 w/ Manifold Mix-up"
 }

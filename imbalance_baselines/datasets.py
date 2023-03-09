@@ -304,7 +304,7 @@ def generate_data(cfg):
             download=True,
             transform=test_transforms
         )
-    elif dataset_name == "IMB_CIFAR10":  # Long-Tailed CIFAR10
+    elif dataset_name == "CIFAR10LT":  # Long-Tailed CIFAR10
         train_ds = CIFAR10LT(
             datasets_path + "cifar10",
             imb_factor=parse_cfg_str(dataset_params.imb_factor, int),
@@ -389,7 +389,7 @@ def generate_data(cfg):
     if dataset_name == "CIFAR10":
         train_class_sizes = [5000] * class_count
         test_class_sizes = [1000] * class_count
-    elif dataset_name == "IMB_CIFAR10":
+    elif dataset_name == "CIFAR10LT":
         train_class_sizes = train_ds.get_cls_cnt_list()
         test_class_sizes = [1000] * class_count
     elif dataset_name == "INATURALIST_2017":
