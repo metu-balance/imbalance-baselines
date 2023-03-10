@@ -1,18 +1,14 @@
 import sys
+import torch
 
 from imbalance_baselines.config import Config
 from imbalance_baselines.ConfigRegistry import Registry
 
+# TODO: Use utils' parse config?
 
-def class_balance_cal(dataset):
-    class_weights = [31, 31, 31, 31]
-    return class_weights
-
-path = "./config-abstract.yaml"
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
 registar = Registry(cfg)
-
-registar.read_config()
 
 partial_dataset = registar.partial_dataset_module
 partial_dataloader = registar.partial_dataloader_module
@@ -20,18 +16,26 @@ partial_optimizer = registar.partial_optimizer_module
 partial_model = registar.partial_model_module
 partial_loss = registar.partial_loss_module
 
-dataset = partial_dataset()
-dataloader = partial_dataloader(dataset = dataset)
-model = partial_model()
-optimizer = partial_optimizer(params = model.parameters())
-criterion = partial_loss(weights = class_balance_cal(dataset))
+full_train_transform = registar.full_training_transform_module
+full_test_transform = registar.full_testing_transform_module
 
+train_dataset = partial_dataset(train=True, transform=full_train_transform)
+test_dataset = partial_dataset(train=False, transform=full_test_transform)
+train_dataloader = partial_dataloader(dataset=train_dataset)
+model = partial_model()
+optimizer = partial_optimizer(params=model.parameters())
+criterion = partial_loss(device=device)
+
+# Intentionally simple training for test purposes only...
 for epoch in range(5):
-    for (x, y) in enumerate(dataloader):
-        
+    print("EPOCH:", epoch)
+
+    for i, (x, y) in enumerate(train_dataloader):
         optimizer.zero_grad()
         out = model(x)
         loss = criterion(out, y)
         loss.backward()
         optimizer.step()
-        
+
+        print("BATCH:", i)
+        # exit()

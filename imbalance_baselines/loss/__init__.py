@@ -3,3 +3,6 @@ LOSS_NAMES = {
     "CrossEntropySigmoid": "Cross Entropy Loss w/ Sigmoid",
     "CrossEntropySoftmax": "Cross Entropy Loss w/ Softmax",
 }
+
+# TODO: Form necessary files for these losses
+

@@ -1,36 +1,29 @@
-# TODO: This will replace default_config.yaml when complete, and will be renamed as default_config
-
-#Dataset Configuration.
 Dataset:
   dataset_name: 'CIFAR10LT'
   dataset_parameters:
-    param1: '...'
-    paramN: '...'
-#Dataloader Configuration.
+    root: "datasets/cifar10/"
+    imb_factor: 50
+    download: True
 Dataloader:
-  dataloader_name: '...'
+  # dataloader_name: '...'
   dataloader_parameters:
     param1: '...'
     paramN: '...'
-#Optimizer Configuration.
 Optim:
-  optimizer_name: '...'
+  optimizer_name: 'SGD'
   optimizer_parameters:
     param1: '...'
     paramN: '...'
-#Model Configuration.
 Model:
-  model_name: '...'
+  model_name: 'ResNet32'
   model_parameters:
     param1: '...'
     paramN: '...'
-#Loss Configuration.
 Loss:
-  loss_name: '...'
+  loss_name: 'FocalLoss'
   loss_parameters:
-    param1: '...'
-    paramN: '...'
-#Transform Configuration.
+    custom_implementation: True  # TODO: Test also with false
+    gamma: 0.5
 Transform:
   train_transform: #Transforms that is used for training.
     -

@@ -6,13 +6,14 @@ from torchvision.ops import sigmoid_focal_loss
 
 
 class FocalLoss:
-    def __init__(self, device: torch.device = torch.device("cpu"), custom_implementation=False):
+    def __init__(self, gamma=0, device: torch.device = torch.device("cpu"), custom_implementation=False):
+        self.gamma = gamma
         self.custom_implementation = custom_implementation
 
         if not custom_implementation:
             self.device = device
     
-    def __call__(self, z, lbl, alpha=None, gamma=0, reduction="sum"):
+    def __call__(self, z, lbl, alpha=None, gamma=None, reduction="sum"):
         """Return the focal loss tensor of shape [BATCH_SIZE] for given model & lbl.s.
 
             Args:
@@ -41,12 +42,15 @@ class FocalLoss:
 
             cross_entpy = logsig(z_t).to(self.device)
 
-            if gamma:
+            if gamma is None:
+                gamma = self.gamma
+
+            if gamma == 0:
+                modulator = 1
+            else:
                 modulator = torch.exp(
                     -gamma * torch.mul(lbl, z).to(self.device) - gamma * torch.log1p(torch.exp(-1.0 * z)).to(self.device)
                 )
-            else:
-                modulator = 1
 
             # Sum the value of each class in each batch. The shape is reduced from
             #  [BATCH_SIZE, label_count] to [BATCH_SIZE].
