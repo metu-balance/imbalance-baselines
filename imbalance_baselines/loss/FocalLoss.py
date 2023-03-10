@@ -67,4 +67,5 @@ class FocalLoss:
             else:
                 raise ValueError(f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'.")
         else:
+            # FIXME: I/O shapes are inconsistent. Pass through torch.sum before returning?
             return sigmoid_focal_loss(inputs=z, targets=lbl, alpha=alpha, gamma=gamma, reduction=reduction)
