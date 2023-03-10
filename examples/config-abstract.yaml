@@ -1,0 +1,65 @@
+# TODO: This will replace default_config.yaml when complete, and will be renamed as default_config
+
+#Dataset Configuration.
+Dataset:
+  dataset_name: 'CIFAR10LT'
+  dataset_parameters:
+    param1: '...'
+    paramN: '...'
+#Dataloader Configuration.
+Dataloader:
+  dataloader_name: '...'
+  dataloader_parameters:
+    param1: '...'
+    paramN: '...'
+#Optimizer Configuration.
+Optim:
+  optimizer_name: '...'
+  optimizer_parameters:
+    param1: '...'
+    paramN: '...'
+#Model Configuration.
+Model:
+  model_name: '...'
+  model_parameters:
+    param1: '...'
+    paramN: '...'
+#Loss Configuration.
+Loss:
+  loss_name: '...'
+  loss_parameters:
+    param1: '...'
+    paramN: '...'
+#Transform Configuration.
+Transform:
+  train_transform: #Transforms that is used for training.
+    -
+      transform_name: 'name1'
+      transform_params:
+        param11: '...'
+        param1N: '...',
+    -
+      transform_name: 'nameN'
+      transform_params:
+        paramN1: '...'
+        paramNN: '...'
+  test_transform: #Transforms that is used for testing.
+    -
+      transform_name: 'name1'
+      transform_params:
+        param11: '...'
+        param1N: '...',
+    -
+      transform_name: 'nameN'
+      transform_params:
+        paramN1: '...'
+        paramNN: '...'
+
+#Eval & Benchmark can be different from the other bases,
+#Their structures are to be decided...
+Eval:
+  eval_name:
+  eval_parameters:
+Benchmark:
+  benchmark_name:
+  benchmark_type:
