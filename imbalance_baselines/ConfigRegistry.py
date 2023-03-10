@@ -1,14 +1,12 @@
 import importlib
 import functools
-import config
 from torchvision import transforms
+
 
 class Registry:
     def __init__(self, cfg):
         self.cfg = cfg
 
-    def read_config(self, cfg):  # TODO temp reference func, may remove later
-        
         self.full_training_transform_module = self.get_full_transforms(cfg.Transform.train_transform)
         self.full_testing_transform_module = self.get_full_transforms(cfg.Transform.test_transforms)
 
@@ -42,7 +40,7 @@ class Registry:
             as the .py script in which it is defined.
         :return: The variable, function, or the class name. Note that returned functions are not called and classes are not
             instantiated.
-         """
+        """
 
         module_dir = "imbalance_baselines." + module_name + "." + component_name
         module_lib = importlib.import_module(module_dir)

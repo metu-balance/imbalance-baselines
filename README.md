@@ -1,3 +1,5 @@
+# TODO: OUTDATED README, TO BE REWRITTEN!
+
 # imbalance-baselines
 
 **imbalance-baselines** is a modular Python deep learning library, providing a common measure for the performance of
@@ -310,10 +312,10 @@ This program is licensed under Apache License 2.0. See the `LICENSE` file for de
 
 # Credits & Contact
 This project was developed by:
-* Berkin Kerim Konar (berkinkerimkonar@gmail.com)
-  * Implementatation of the class-balancing loss, sampling and manifold mix-up methods 
+* Berkin Kerim Konar (berkinkerimkonar@gmail.com) 
 * Kıvanç Tezören (kivanctezoren@gmail.com)
-  * Implementation of class-balancing loss methods, the training pipeline and the library structure 
+
+(Equal contributors in the library's architecture, method implementations and testing.) 
 
 The project was advised by:
 * [Emre Akbaş, Ph.D.](https://user.ceng.metu.edu.tr/~emre/)
