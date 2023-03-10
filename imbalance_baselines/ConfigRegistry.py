@@ -1,6 +1,7 @@
 import importlib
 import functools
 import config
+from torchvision import transforms
 
 class Registry:
     def __init__(self, cfg):
@@ -8,11 +9,8 @@ class Registry:
 
     def read_config(self, cfg):  # TODO temp reference func, may remove later
         
-        transform_list = []
-        transform_dict = cfg.Transform.transform_list
-
-        transform_class = find_module_component('transform', cfg.Transform.transform_name)
-        transform = transform_class(**cfg.Transform.transform_parameters)
+        self.full_training_transform_module = get_full_transforms(cfg.Transform.train_transform)
+        self.full_testing_transform_module = get_full_transforms(cfg.Transform.test_transforms)
 
         dataset_class = find_module_component('dataset', cfg.Dataset.dataset_name)
         self.partial_dataset_module = get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
@@ -37,7 +35,7 @@ class Registry:
         return functools.partial(class_func, module = module, cfg_parameters = cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
-    def find_module_component(module_name, component_name):  # TODO: may move to utils
+    def find_module_component(self, module_name, component_name):  # TODO: may move to utils
         """Finds a specified field (variable, class or function) of a given sub-module of the library.
 
         :param module_name: Name of the sub-module, same as the name of the folder specifying it
@@ -53,8 +51,14 @@ class Registry:
 
         return cl
 
-def scratch(cfg_path):
+    def get_full_transforms(self, transform_cfg_list):
+        transform_list = []
 
-    cfg = config(yaml_path=cfg_path)
-    transform_dict = cfg.Transform.transform_list
-    transform_list = []
+        for transform_config in transform_cfg_list:
+            transform_name = transform_config.transform_name
+            transform_parameters = transform_config.transform_params
+
+            transform_class = find_module_component('transform', transform_name)
+            transform_module = transform_class(**transform_parameters)
+
+        return transforms.Compose(transform_list)
