@@ -1,5 +1,7 @@
+import sys
+
 from imbalance_baselines.config import Config
-from imbalance_baselines import ConfigRegistry
+from imbalance_baselines.ConfigRegistry import Registry
 
 
 def class_balance_cal(dataset):
@@ -7,8 +9,8 @@ def class_balance_cal(dataset):
     return class_weights
 
 path = "./config-abstract.yaml"
-cfg = Config(yaml_path = path)
-registar = ConfigRegistry(cfg)
+cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
+registar = Registry(cfg)
 
 registar.read_config()
 

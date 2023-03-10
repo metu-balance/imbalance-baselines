@@ -9,30 +9,29 @@ class Registry:
 
     def read_config(self, cfg):  # TODO temp reference func, may remove later
         
-        self.full_training_transform_module = get_full_transforms(cfg.Transform.train_transform)
-        self.full_testing_transform_module = get_full_transforms(cfg.Transform.test_transforms)
+        self.full_training_transform_module = self.get_full_transforms(cfg.Transform.train_transform)
+        self.full_testing_transform_module = self.get_full_transforms(cfg.Transform.test_transforms)
 
-        dataset_class = find_module_component('dataset', cfg.Dataset.dataset_name)
-        self.partial_dataset_module = get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
+        dataset_class = self.find_module_component('dataset', cfg.Dataset.dataset_name)
+        self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
 
-        dataloader_class = find_module_component('dataloader', cfg.Dataloader.dataloader_name)
-        self.partial_dataloader_module = get_partial_module(dataloader_class, cfg.Dataloader.dataloader_parameters)
+        dataloader_class = self.find_module_component('dataloader', cfg.Dataloader.dataloader_name)
+        self.partial_dataloader_module = self.get_partial_module(dataloader_class, cfg.Dataloader.dataloader_parameters)
 
-        optimizer_class = find_module_component('optimizer', cfg.Optimizer.optimizer_name)
-        self.partial_optimizer_module = get_partial_module(optimizer_class, cfg.Optimizer.optimizer_parameters)
+        optimizer_class = self.find_module_component('optimizer', cfg.Optimizer.optimizer_name)
+        self.partial_optimizer_module = self.get_partial_module(optimizer_class, cfg.Optimizer.optimizer_parameters)
 
-        model_class = find_module_component('model', cfg.Model.model_name)
-        self.partial_model_module = get_partial_module(model_class, cfg.Model.model_parameters)
+        model_class = self.find_module_component('model', cfg.Model.model_name)
+        self.partial_model_module = self.get_partial_module(model_class, cfg.Model.model_parameters)
         
-        loss_class = find_module_component('loss', cfg.Loss.loss_name)
-        self.partial_loss_module = get_partial_module(loss_class, cfg.Loss.loss_parameters)   
+        loss_class = self.find_module_component('loss', cfg.Loss.loss_name)
+        self.partial_loss_module = self.get_partial_module(loss_class, cfg.Loss.loss_parameters)
 
     def get_partial_module(self, module, cfg_parameters):
-        
         def class_func(module, cfg_parameters, **kwargs):
             return module(**{**cfg_parameters, **kwargs})
 
-        return functools.partial(class_func, module = module, cfg_parameters = cfg_parameters)
+        return functools.partial(class_func, module=module, cfg_parameters=cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
     def find_module_component(self, module_name, component_name):  # TODO: may move to utils
@@ -58,7 +57,9 @@ class Registry:
             transform_name = transform_config.transform_name
             transform_parameters = transform_config.transform_params
 
-            transform_class = find_module_component('transform', transform_name)
+            transform_class = self.find_module_component('transform', transform_name)
             transform_module = transform_class(**transform_parameters)
+
+            transform_list.append(transform_module)
 
         return transforms.Compose(transform_list)
