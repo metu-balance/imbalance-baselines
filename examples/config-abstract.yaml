@@ -28,7 +28,7 @@ Transform:
     -
       transform_name: 'Normalize'
       transform_params:
-        mu: [0.4914, 0.4822, 0.4465]
+        mean: [0.4914, 0.4822, 0.4465]
         std: [0.2023, 0.1994, 0.2010]
     -
       transform_name: 'ColorJitter'
@@ -39,9 +39,10 @@ Transform:
         hue: 0.25
     -
       transform_name: 'Pad'
-      transform_params: 
+      transform_params:
+        padding: 4
         fill: 0
-        mode: "constant"
+        padding_mode: "constant"
     -
       transform_name: 'RandomResizedCrop'
       transform_params: None

@@ -3,12 +3,13 @@ from pathlib import Path
 
 import omegaconf.errors
 from omegaconf import OmegaConf
-
+from . import logger
 
 class Config:
     def __init__(self, yaml_path, defaults_path=(Path(__file__).parent / "./default_config.yaml").resolve()):
         self.config = OmegaConf.load(yaml_path)
-        self._defaults = OmegaConf.load(defaults_path)
+        # TODO: handle defaults...
+        #self._defaults = OmegaConf.load(defaults_path)
 
     def __getitem__(self, item):
         try:
