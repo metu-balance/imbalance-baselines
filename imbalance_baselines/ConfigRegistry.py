@@ -3,6 +3,7 @@ import functools
 from torchvision import transforms
 
 
+# FIXME: Handle None parameters. Use explosion (*list, **dict) through a controller function
 class Registry:
     def __init__(self, cfg, static_transofrmations=True):
         """Partially initialize and store pipeline components."""
