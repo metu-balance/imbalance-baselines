@@ -8,7 +8,7 @@ from imbalance_baselines.ConfigRegistry import Registry
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
-registry = Registry(cfg)
+registry = Registry(cfg, static_transofrmations=True)
 
 partial_dataset = registry.partial_dataset_module
 partial_dataloader = registry.partial_dataloader_module
@@ -16,11 +16,14 @@ partial_optimizer = registry.partial_optimizer_module
 partial_model = registry.partial_model_module
 partial_loss = registry.partial_loss_module
 
-full_train_transform = registry.full_training_transform_module
-full_test_transform = registry.full_testing_transform_module
+# Transformations are fully initialized from static parameters:
+train_transform = registry.training_transform_module
+test_transform = registry.testing_transform_module
 
-train_dataset = partial_dataset(train=True, transform=full_train_transform)
-test_dataset = partial_dataset(train=False, transform=full_test_transform)
+train_dataset = partial_dataset(train=True, transform=train_transform)
+test_dataset = partial_dataset(train=False, transform=test_transform)
+
+# TODO: Check dataloder config-registry format & usage...
 train_dataloader = partial_dataloader(dataset=train_dataset)
 model = partial_model()
 optimizer = partial_optimizer(params=model.parameters())

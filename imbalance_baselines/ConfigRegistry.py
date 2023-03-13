@@ -4,11 +4,23 @@ from torchvision import transforms
 
 
 class Registry:
-    def __init__(self, cfg):
+    def __init__(self, cfg, static_transofrmations=True):
+        """Partially initialize and store pipeline components."""
+        # TODO: Leave partial / full initializations to the pipeline usage? Pipelines should be able to define multiple
+        #  types of components (losses, models... etc.) together. Maybe registry should store the initialized objects
+        #  types in lists...
+        #  Let's consider this later, if we revive the idea of training tasks from v1.0.
+
         self.cfg = cfg
 
-        self.full_training_transform_module = self._get_full_transforms(cfg.Transform.train_transform)
-        self.full_testing_transform_module = self._get_full_transforms(cfg.Transform.test_transforms)
+        if static_transofrmations:
+            # Fully initialize transformations from the static parameters, return Compose
+            self.training_transform_module = self.get_full_transforms(cfg.Transform.train_transform)
+            self.testing_transform_module = self.get_full_transforms(cfg.Transform.test_transforms)
+        else:
+            # Partially initialize transformations, return a list
+            self.training_transform_list = self.get_partial_transforms(cfg.Transform.train_transforms)
+            self.testing_transform_list = self.get_partial_transforms(cfg.Transform.test_transforms)
 
         dataset_class = self.find_module_component('dataset', cfg.Dataset.dataset_name)
         self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
@@ -59,7 +71,29 @@ class Registry:
 
         return cl
 
-    def _get_full_transforms(self, transform_cfg_list):
+    def get_partial_transforms(self, transform_cfg_list):
+        """Partially initialize the list of transformations described in the configuration, using the static parameters
+        also given in the configuration.
+
+        Complete initialization and composition into a single transforms.Compose object is the responsibility of
+        the user.
+        """
+
+        transform_list = []
+
+        for transform_config in transform_cfg_list:
+            transform_name = transform_config.transform_name
+            transform_parameters = transform_config.transform_params
+            transform_class = self.find_module_component('transform', transform_name)
+            partial_transform_module = self.get_partial_module(transform_class, transform_parameters)
+
+            transform_list.append(partial_transform_module)
+
+        return transform_list
+
+    def get_full_transforms(self, transform_cfg_list):
+        """Compose and return a list of partially initialized transformations."""
+
         transform_list = []
 
         for transform_config in transform_cfg_list:
