@@ -2,7 +2,7 @@ import numpy as np
 
 from torchvision import datasets
 from typing import Callable, Optional
-import dataset_utils as sampling  # TODO rename?
+#import dataset_utils as sampling  # TODO rename? #Yes, rename.
 from .. import get_global_seed
 
 
@@ -56,6 +56,7 @@ class CIFAR10LT(datasets.CIFAR10):
 
         return img_cnt_per_cls
 
+    """
     def generate_imb_data(self, img_cnt_per_cls):
         new_data = []
         new_targets = []
@@ -90,6 +91,7 @@ class CIFAR10LT(datasets.CIFAR10):
 
         self.data = new_data
         self.targets = new_targets
+    """
 
     def get_cls_cnt_list(self):
         """Return the current (imbalanced) image count per class."""

@@ -24,7 +24,7 @@ class Registry:
             self.testing_transform_list = self.get_partial_transforms(cfg.Transform.test_transforms)
 
         dataset_class = self.find_module_component('dataset', cfg.Dataset.dataset_name)
-        self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
+        self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataset_parameters)
 
         dataloader_class = self.find_module_component('dataloader', cfg.Dataloader.dataloader_name)
         self.partial_dataloader_module = self.get_partial_module(dataloader_class, cfg.Dataloader.dataloader_parameters)
@@ -86,7 +86,9 @@ class Registry:
             transform_name = transform_config.transform_name
             transform_parameters = transform_config.transform_params
             transform_class = self.find_module_component('transform', transform_name)
-            partial_transform_module = self.get_partial_module(transform_class, transform_parameters)
+            
+            if transform_parameters != "None":
+                partial_transform_module = self.get_partial_module(transform_class, transform_parameters)
 
             transform_list.append(partial_transform_module)
 
@@ -100,9 +102,12 @@ class Registry:
         for transform_config in transform_cfg_list:
             transform_name = transform_config.transform_name
             transform_parameters = transform_config.transform_params
-
             transform_class = self.find_module_component('transform', transform_name)
-            transform_module = transform_class(**transform_parameters)
+            
+            if transform_parameters != "None":
+                transform_module = transform_class(**transform_parameters)
+            else:
+                transform_module = transform_class()
 
             transform_list.append(transform_module)
 

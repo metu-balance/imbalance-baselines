@@ -1,55 +1,52 @@
 Dataset:
-  dataset_name: 'CIFAR10LT'
+  dataset_name: "CIFAR10LT"
   dataset_parameters:
     root: "datasets/cifar10/"
     imb_factor: 50
     download: True
 Dataloader:
-  dataloader_name: 'StandartDataloader'
+  dataloader_name: "StandartDataloader"
   dataloader_parameters:
     batch_size: 128
     shuffle: True
 Optim:
-  optimizer_name: 'sgd'
+  optimizer_name: "sgd"
   optimizer_parameters:
     lr: 0.1
     momentum: 0.9
     weight_decay: 2e-4
 Model:
-  model_name: 'ResNet32'
+  model_name: "ResNet32"
   model_parameters: None
 Loss:
-  loss_name: 'FocalLoss'
+  loss_name: "FocalLoss"
   loss_parameters:
-    custom_implementation: True  # TODO: Test also with false
+    custom_implementation: True # TODO: Test also with false
     gamma: 0.5
 Transform:
-  train_transform:  # Transforms that is used for training.
-    -
-      transform_name: 'Normalize'
+  train_transform: # Transforms that is used for training.
+    - transform_name: "Normalize"
       transform_params:
         mean: [0.4914, 0.4822, 0.4465]
         std: [0.2023, 0.1994, 0.2010]
-    -
-      transform_name: 'ColorJitter'
+    - transform_name: "ColorJitter"
       transform_params:
         brightness: 0.4
         contrast: 0.4
-        saturation: 0.4 
+        saturation: 0.4
         hue: 0.25
-    -
-      transform_name: 'Pad'
+    - transform_name: "Pad"
       transform_params:
         padding: 4
         fill: 0
         padding_mode: "constant"
-    -
-      transform_name: 'RandomResizedCrop'
-      transform_params: None
-  test_transform:  # Transforms that are used for testing.
-    -
-      transform_name: 'CenterCrop'
-      transform_params: None
+    - transform_name: "RandomResizedCrop"
+      transform_params:
+        size: 32
+  test_transforms: # Transforms that are used for testing.
+    - transform_name: "CenterCrop"
+      transform_params:
+        size: 32
 
 # Eval & Benchmark can be different from the other bases,
 # Their structures are to be decided...

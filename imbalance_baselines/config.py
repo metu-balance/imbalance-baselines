@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 from . import logger
 
 class Config:
-    def __init__(self, yaml_path, defaults_path=(Path(__file__).parent / "./default_config.yaml").resolve()):
+    def __init__(self, yaml_path):
         self.config = OmegaConf.load(yaml_path)
         # TODO: handle defaults...
         #self._defaults = OmegaConf.load(defaults_path)
