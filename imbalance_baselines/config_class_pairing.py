@@ -1,5 +1,5 @@
+# TODO: Remove this script file?
 import importlib
-
 
 def read_config(cfg):  # TODO temp reference func, may remove later
     dataset_class = find_module_component('dataset', cfg.Dataset.dataset_name)

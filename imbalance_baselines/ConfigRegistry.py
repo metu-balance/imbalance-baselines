@@ -7,8 +7,8 @@ class Registry:
     def __init__(self, cfg):
         self.cfg = cfg
 
-        self.full_training_transform_module = self.get_full_transforms(cfg.Transform.train_transform)
-        self.full_testing_transform_module = self.get_full_transforms(cfg.Transform.test_transforms)
+        self.full_training_transform_module = self._get_full_transforms(cfg.Transform.train_transform)
+        self.full_testing_transform_module = self._get_full_transforms(cfg.Transform.test_transforms)
 
         dataset_class = self.find_module_component('dataset', cfg.Dataset.dataset_name)
         self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataloader_parameters)
@@ -25,14 +25,25 @@ class Registry:
         loss_class = self.find_module_component('loss', cfg.Loss.loss_name)
         self.partial_loss_module = self.get_partial_module(loss_class, cfg.Loss.loss_parameters)
 
-    def get_partial_module(self, module, cfg_parameters):
+    @staticmethod
+    def get_partial_module(module, cfg_parameters):
+        # TODO: Should keep previously created instances in a global sort of registry. For example,
+        #   we need to ensure the same model instance is used for every model type used in a pipeline
+        #   code.
+        #   This behavior may be limited with the model objects only. At the least, we have to ensure
+        #   that they are all initalized with the same model state.
+        #   Maybe add a condition:
+        #   if isinstance(module, nn.Module): <do state bookkeeping...>
+        #   etc...
+        # TODO: May also make the function static later
+
         def class_func(module, cfg_parameters, **kwargs):
             return module(**{**cfg_parameters, **kwargs})
 
         return functools.partial(class_func, module=module, cfg_parameters=cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
-    def find_module_component(self, module_name, component_name):  # TODO: may move to utils
+    def find_module_component(self, module_name, component_name):  # TODO: may move to utils or make static
         """Finds a specified field (variable, class or function) of a given sub-module of the library.
 
         :param module_name: Name of the sub-module, same as the name of the folder specifying it
@@ -48,7 +59,7 @@ class Registry:
 
         return cl
 
-    def get_full_transforms(self, transform_cfg_list):
+    def _get_full_transforms(self, transform_cfg_list):
         transform_list = []
 
         for transform_config in transform_cfg_list:
