@@ -6,6 +6,7 @@ from typing import Callable, Optional
 from .. import get_global_seed
 
 
+# TODO: Refactor: Separate DataloaderSampler aspects
 class CIFAR10LT(datasets.CIFAR10):
     cls_cnt = 10
 

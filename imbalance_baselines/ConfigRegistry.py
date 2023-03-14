@@ -3,7 +3,8 @@ import functools
 from torchvision import transforms
 
 
-# FIXME: Handle None parameters. Use explosion (*list, **dict) through a controller function
+# TODO: Handling None parameters is repetitive. Check if explosion (*list, **dict) can be used through a
+#  controller function. Use config. parsing func from utils? Just modify get_partial_module?
 class Registry:
     def __init__(self, cfg, static_transofrmations=True):
         """Partially initialize and store pipeline components."""
@@ -83,8 +84,7 @@ class Registry:
         return functools.partial(class_func, module=module, cfg_parameters=cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
-    # TODO: may move to utils or make static
-    def find_module_component(self, module_name, component_name):
+    def find_module_component(self, module_name, component_name):  # TODO: may move to utils or make static
         """Finds a specified field (variable, class or function) of a given sub-module of the library.
 
         :param module_name: Name of the sub-module, same as the name of the folder specifying it
@@ -112,7 +112,7 @@ class Registry:
 
         for transform_config in transform_cfg_list:
             transform_name = transform_config.transform_name
-            transform_parameters = transform_config.transform_params
+            transform_parameters = transform_config.transform_parameters
             transform_class = self.find_module_component(
                 'transform', transform_name)
 
@@ -131,7 +131,7 @@ class Registry:
 
         for transform_config in transform_cfg_list:
             transform_name = transform_config.transform_name
-            transform_parameters = transform_config.transform_params
+            transform_parameters = transform_config.transform_parameters
             transform_class = self.find_module_component(
                 'transform', transform_name)
 

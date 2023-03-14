@@ -6,8 +6,7 @@ from imbalance_baselines.ConfigRegistry import Registry
 
 # TODO: Use utils' parse config?
 
-device = torch.device(
-    "cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
 registry = Registry(cfg, static_transofrmations=True)
 

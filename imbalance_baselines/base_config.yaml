@@ -35,23 +35,23 @@ Transform:
   train_transform: #Transforms that is used for training.
     -
       transform_name: 'name1'
-      transform_params:
+      transform_parameters:
         param11: '...'
         param1N: '...',
     -
       transform_name: 'nameN'
-      transform_params:
+      transform_parameters:
         paramN1: '...'
         paramNN: '...'
   test_transform: #Transforms that is used for testing.
     -
       transform_name: 'name1'
-      transform_params:
+      transform_parameters:
         param11: '...'
         param1N: '...',
     -
       transform_name: 'nameN'
-      transform_params:
+      transform_parameters:
         paramN1: '...'
         paramNN: '...'
 

@@ -10,6 +10,7 @@ from . import logger
 from .utils import parse_cfg_str
 
 
+# TODO: Requires overhaul for V2...
 def get_accuracy(test_data: DataLoader, model, class_sizes: [int],
                  calc_avg=True, calc_perclass=True, top=1, device: torch.device = torch.device("cpu")):
     """Return a tuple containing the accuracy values of a given model.
@@ -80,7 +81,7 @@ def evaluate(cfg, train_results, test_dl, dataset_info: dict, device: torch.devi
     
     for e in eval_list:
         method_name = e.method_name
-        method_params = e.method_params
+        method_params = e.method_parameters
 
         calc_avg = method_params.calc_avg
         calc_perclass = method_params.calc_perclass

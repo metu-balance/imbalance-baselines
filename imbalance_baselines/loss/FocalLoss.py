@@ -13,17 +13,17 @@ class FocalLoss:
         self.device = device
 
     def __call__(self, z, lbl, alpha=None, gamma=None, reduction="sum"):
-        """Return the focal loss tensor of shape [BATCH_SIZE] for given model & lbl.s.
+        """Return the focal loss tensor of shape [BATCH_SIZE] for given model & labels.
 
             Args:
-              z: Predictions tensor of shape [BATCH_SIZE, label_count], output of ResNet
+              z: Predictions tensor of shape [BATCH_SIZE, label_count], output of a model such as a ResNet
               lbl: Labels tensor of shape [BATCH_SIZE]
               alpha: Class balance cb_weights tensor of shape [lable_count]. Taken 1 for all classes
                 if None is given.
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
             """
         if self.custom_implementation:
-            # Not BATCH_SIZE: The last batch might be smaller
+            # Not using a constant batch size, the last batch might be smaller than others
             batch_size = z.shape[0]
             lbl_cnt = z.shape[1]
 
@@ -49,17 +49,14 @@ class FocalLoss:
                 modulator = 1
             else:
                 modulator = torch.exp(
-                    -gamma * torch.mul(lbl, z).to(self.device) - gamma *
-                    torch.log1p(torch.exp(-1.0 * z)).to(self.device)
+                    -gamma * torch.mul(lbl, z).to(self.device)
+                    - gamma * torch.log1p(torch.exp(-1.0 * z)).to(self.device)
                 )
 
             # Sum the value of each class in each batch. The shape is reduced from
             #  [BATCH_SIZE, label_count] to [BATCH_SIZE].
-            unweighted_focal_loss = -torch.sum(torch.mul(modulator, cross_entpy), 1).to(
-                self.device
-            )
-            weighted_focal_loss = torch.mul(
-                alpha, unweighted_focal_loss).to(self.device)
+            unweighted_focal_loss = -torch.sum(torch.mul(modulator, cross_entpy), 1).to(self.device)
+            weighted_focal_loss = torch.mul(alpha, unweighted_focal_loss).to(self.device)
 
             # Normalize by the positive sample count:
             weighted_focal_loss /= torch.sum(lbl)
@@ -72,7 +69,8 @@ class FocalLoss:
                 return weighted_focal_loss
             else:
                 raise ValueError(
-                    f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'.")
+                    f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'."
+                )
         else:
             # FIXME: I/O shapes are inconsistent. Pass through torch.sum before returning?
             return sigmoid_focal_loss(inputs=z, targets=lbl, alpha=alpha, gamma=gamma, reduction=reduction)

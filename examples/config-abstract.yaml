@@ -11,7 +11,7 @@ Dataloader:
     num_classes: 10
     q_value: 1.0
 Optimizer:
-  optimizer_name: "sgd"
+  optimizer_name: "SGD"
   optimizer_parameters:
     lr: 0.1
     momentum: 0.9
@@ -27,33 +27,33 @@ Loss:
 Transform:
   train_transform: # Transforms that is used for training.
     - transform_name: "ToTensor"
-      transform_params: "None"
+      transform_parameters: "None"
 
     - transform_name: "Normalize"
-      transform_params:
+      transform_parameters:
         mean: [0.4914, 0.4822, 0.4465]
         std: [0.2023, 0.1994, 0.2010]
 
     - transform_name: "ColorJitter"
-      transform_params:
+      transform_parameters:
         brightness: 0.4
         contrast: 0.4
         saturation: 0.4
         hue: 0.25
 
     - transform_name: "Pad"
-      transform_params:
+      transform_parameters:
         padding: 4
         fill: 0
         padding_mode: "constant"
 
     - transform_name: "RandomResizedCrop"
-      transform_params:
+      transform_parameters:
         size: 32
 
   test_transforms: # Transforms that are used for testing.
     - transform_name: "CenterCrop"
-      transform_params:
+      transform_parameters:
         size: 32
 
 # Eval & Benchmark can be different from the other bases,
