@@ -5,10 +5,11 @@ Dataset:
     imb_factor: 50
     download: True
 Dataloader:
-  dataloader_name: "StandartDataloader"
+  dataloader_name: "ClassBalancedDataloader"
   dataloader_parameters:
     batch_size: 128
-    shuffle: True
+    num_classes: 10
+    q_value: 1.0
 Optimizer:
   optimizer_name: "sgd"
   optimizer_parameters:
