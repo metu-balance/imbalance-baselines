@@ -16,27 +16,54 @@ class Registry:
 
         if static_transofrmations:
             # Fully initialize transformations from the static parameters, return Compose
-            self.training_transform_module = self.get_full_transforms(cfg.Transform.train_transform)
-            self.testing_transform_module = self.get_full_transforms(cfg.Transform.test_transforms)
+            self.training_transform_module = self.get_full_transforms(
+                cfg.Transform.train_transform)
+            self.testing_transform_module = self.get_full_transforms(
+                cfg.Transform.test_transforms)
         else:
             # Partially initialize transformations, return a list
-            self.training_transform_list = self.get_partial_transforms(cfg.Transform.train_transforms)
-            self.testing_transform_list = self.get_partial_transforms(cfg.Transform.test_transforms)
+            self.training_transform_list = self.get_partial_transforms(
+                cfg.Transform.train_transforms)
+            self.testing_transform_list = self.get_partial_transforms(
+                cfg.Transform.test_transforms)
 
-        dataset_class = self.find_module_component('dataset', cfg.Dataset.dataset_name)
-        self.partial_dataset_module = self.get_partial_module(dataset_class, cfg.Dataset.dataset_parameters)
+        dataset_class = self.find_module_component(
+            'dataset', cfg.Dataset.dataset_name)
+        if cfg.Dataset.dataset_parameters != "None":
+            self.partial_dataset_module = self.get_partial_module(
+                dataset_class, cfg.Dataset.dataset_parameters)
+        else:
+            self.partial_dataset_module = dataset_class
 
-        dataloader_class = self.find_module_component('dataloader', cfg.Dataloader.dataloader_name)
-        self.partial_dataloader_module = self.get_partial_module(dataloader_class, cfg.Dataloader.dataloader_parameters)
+        dataloader_class = self.find_module_component(
+            'dataloader', cfg.Dataloader.dataloader_name)
+        if cfg.Dataloader.dataloader_parameters != "None":
+            self.partial_dataloader_module = self.get_partial_module(
+                dataloader_class, cfg.Dataloader.dataloader_parameters)
+        else:
+            self.partial_dataloader_module = dataloader_class
 
-        optimizer_class = self.find_module_component('optimizer', cfg.Optimizer.optimizer_name)
-        self.partial_optimizer_module = self.get_partial_module(optimizer_class, cfg.Optimizer.optimizer_parameters)
+        optimizer_class = self.find_module_component(
+            'optimizer', cfg.Optimizer.optimizer_name)
+        if cfg.Optimizer.optimizer_parameters != "None":
+            self.partial_optimizer_module = self.get_partial_module(
+                optimizer_class, cfg.Optimizer.optimizer_parameters)
+        else:
+            self.partial_optimizer_module = optimizer_class
 
         model_class = self.find_module_component('model', cfg.Model.model_name)
-        self.partial_model_module = self.get_partial_module(model_class, cfg.Model.model_parameters)
-        
+        if cfg.Model.model_parameters != "None":
+            self.partial_model_module = self.get_partial_module(
+                model_class, cfg.Model.model_parameters)
+        else:
+            self.partial_model_module = model_class
+
         loss_class = self.find_module_component('loss', cfg.Loss.loss_name)
-        self.partial_loss_module = self.get_partial_module(loss_class, cfg.Loss.loss_parameters)
+        if cfg.Loss.loss_parameters != "None":
+            self.partial_loss_module = self.get_partial_module(
+                loss_class, cfg.Loss.loss_parameters)
+        else:
+            self.partial_loss_module = loss_class
 
     @staticmethod
     def get_partial_module(module, cfg_parameters):
@@ -56,7 +83,8 @@ class Registry:
         return functools.partial(class_func, module=module, cfg_parameters=cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
-    def find_module_component(self, module_name, component_name):  # TODO: may move to utils or make static
+    # TODO: may move to utils or make static
+    def find_module_component(self, module_name, component_name):
         """Finds a specified field (variable, class or function) of a given sub-module of the library.
 
         :param module_name: Name of the sub-module, same as the name of the folder specifying it
@@ -85,10 +113,12 @@ class Registry:
         for transform_config in transform_cfg_list:
             transform_name = transform_config.transform_name
             transform_parameters = transform_config.transform_params
-            transform_class = self.find_module_component('transform', transform_name)
-            
+            transform_class = self.find_module_component(
+                'transform', transform_name)
+
             if transform_parameters != "None":
-                partial_transform_module = self.get_partial_module(transform_class, transform_parameters)
+                partial_transform_module = self.get_partial_module(
+                    transform_class, transform_parameters)
 
             transform_list.append(partial_transform_module)
 
@@ -102,8 +132,9 @@ class Registry:
         for transform_config in transform_cfg_list:
             transform_name = transform_config.transform_name
             transform_parameters = transform_config.transform_params
-            transform_class = self.find_module_component('transform', transform_name)
-            
+            transform_class = self.find_module_component(
+                'transform', transform_name)
+
             if transform_parameters != "None":
                 transform_module = transform_class(**transform_parameters)
             else:

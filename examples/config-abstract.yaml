@@ -25,24 +25,31 @@ Loss:
     gamma: 0.5
 Transform:
   train_transform: # Transforms that is used for training.
+    - transform_name: "ToTensor"
+      transform_params: "None"
+
     - transform_name: "Normalize"
       transform_params:
         mean: [0.4914, 0.4822, 0.4465]
         std: [0.2023, 0.1994, 0.2010]
+
     - transform_name: "ColorJitter"
       transform_params:
         brightness: 0.4
         contrast: 0.4
         saturation: 0.4
         hue: 0.25
+
     - transform_name: "Pad"
       transform_params:
         padding: 4
         fill: 0
         padding_mode: "constant"
+
     - transform_name: "RandomResizedCrop"
       transform_params:
         size: 32
+
   test_transforms: # Transforms that are used for testing.
     - transform_name: "CenterCrop"
       transform_params:

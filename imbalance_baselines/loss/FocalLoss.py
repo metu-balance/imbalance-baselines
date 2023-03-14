@@ -10,9 +10,8 @@ class FocalLoss:
         self.gamma = gamma
         self.custom_implementation = custom_implementation
 
-        if not custom_implementation:
-            self.device = device
-    
+        self.device = device
+
     def __call__(self, z, lbl, alpha=None, gamma=None, reduction="sum"):
         """Return the focal loss tensor of shape [BATCH_SIZE] for given model & lbl.s.
 
@@ -24,7 +23,8 @@ class FocalLoss:
               gamma: Focal loss parameter (if 0, loss is equivalent to sigmoid ce. loss)
             """
         if self.custom_implementation:
-            batch_size = z.shape[0]  # Not BATCH_SIZE: The last batch might be smaller
+            # Not BATCH_SIZE: The last batch might be smaller
+            batch_size = z.shape[0]
             lbl_cnt = z.shape[1]
 
             # "Decode" labels tensor to make its shape [BATCH_SIZE, label_count]:
@@ -49,7 +49,8 @@ class FocalLoss:
                 modulator = 1
             else:
                 modulator = torch.exp(
-                    -gamma * torch.mul(lbl, z).to(self.device) - gamma * torch.log1p(torch.exp(-1.0 * z)).to(self.device)
+                    -gamma * torch.mul(lbl, z).to(self.device) - gamma *
+                    torch.log1p(torch.exp(-1.0 * z)).to(self.device)
                 )
 
             # Sum the value of each class in each batch. The shape is reduced from
@@ -57,7 +58,8 @@ class FocalLoss:
             unweighted_focal_loss = -torch.sum(torch.mul(modulator, cross_entpy), 1).to(
                 self.device
             )
-            weighted_focal_loss = torch.mul(alpha, unweighted_focal_loss).to(self.device)
+            weighted_focal_loss = torch.mul(
+                alpha, unweighted_focal_loss).to(self.device)
 
             # Normalize by the positive sample count:
             weighted_focal_loss /= torch.sum(lbl)
@@ -69,7 +71,8 @@ class FocalLoss:
             elif reduction == "none":
                 return weighted_focal_loss
             else:
-                raise ValueError(f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'.")
+                raise ValueError(
+                    f"Unrecognized reduction type: {reduction}. Should be one of 'sum', 'mean', 'none'.")
         else:
             # FIXME: I/O shapes are inconsistent. Pass through torch.sum before returning?
             return sigmoid_focal_loss(inputs=z, targets=lbl, alpha=alpha, gamma=gamma, reduction=reduction)
