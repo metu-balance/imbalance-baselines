@@ -9,7 +9,7 @@ Dataloader:
   dataloader_parameters:
     batch_size: 128
     shuffle: True
-Optim:
+Optimizer:
   optimizer_name: "sgd"
   optimizer_parameters:
     lr: 0.1
