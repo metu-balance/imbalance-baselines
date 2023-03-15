@@ -5,11 +5,11 @@ Dataset:
     imb_factor: 50
     download: True
 Dataloader:
-  dataloader_name: "ClassBalancedDataloader"
+  dataloader_name: "ProgressivelyBalancedDataloader"
   dataloader_parameters:
     batch_size: 128
     num_classes: 10
-    q_value: 1.0
+    total_epochs: 10
 Optimizer:
   optimizer_name: "SGD"
   optimizer_parameters:

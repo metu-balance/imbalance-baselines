@@ -30,7 +30,19 @@ model = partial_model()
 optimizer = partial_optimizer(params=model.parameters())
 criterion = partial_loss(device=device)
 
+F = torch.nn.functional.one_hot
+
+for epoch in range(10):
+    print("EPOCH:", epoch)
+    num_samples = torch.zeros(10)
+    for i, (x, y) in enumerate(train_dataloader):
+
+        num_samples += F(y, num_classes=10).sum(axis=0)
+
+    print(num_samples / num_samples.sum())
+
 # Intentionally simple training for test purposes only...
+"""
 for epoch in range(5):
     print("EPOCH:", epoch)
 
@@ -43,3 +55,4 @@ for epoch in range(5):
 
         print("BATCH:", i)
         # exit()
+"""
