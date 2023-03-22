@@ -2,10 +2,11 @@
 
 ## TODO: Include methods table:
 
-| Method     | Required Changes         | Code Application                                                                             |
-|------------|--------------------------|----------------------------------------------------------------------------------------------|
-| Focal Loss | Special loss calculation | `partial_loss = registry.partial_loss_module`<br/> `criterion = partial_loss(device=device)` |
-| ...        | ...                      | ...                                                                                          |
+| Method              | Required Changes                                               | Code Application                                                                                      |
+|---------------------|----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| Focal Loss          | Special loss calculation                                       | `partial_loss = registry.partial_loss_module`<br/>`...`<br/>`criterion = partial_loss(device=device)` |
+| Class-Balanced Loss | Pass per-class weights calculated according to dataset choice  | TODO                                                                                                  |
+| ...                 | ...                                                            | ...                                                                                                   |
 
 
 # imbalance-baselines
