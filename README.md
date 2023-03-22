@@ -1,5 +1,13 @@
 # TODO: OUTDATED README, TO BE REWRITTEN!
 
+## TODO: Include methods table:
+
+| Method     | Required Changes         | Code Application                                                                             |
+|------------|--------------------------|----------------------------------------------------------------------------------------------|
+| Focal Loss | Special loss calculation | `partial_loss = registry.partial_loss_module`<br/> `criterion = partial_loss(device=device)` |
+| ...        | ...                      | ...                                                                                          |
+
+
 # imbalance-baselines
 
 **imbalance-baselines** is a modular Python deep learning library, providing a common measure for the performance of
