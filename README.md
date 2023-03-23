@@ -8,6 +8,7 @@
 | Class-Balanced Loss | Pass per-class weights<br/>calculated according<br/>to dataset choice | TODO                                                                                                  |
 | ...                 | ...                                                                   | ...                                                                                                   |
 
+* TODO: Compare method applications to how other popular repositories apply it?
 
 # imbalance-baselines
 
