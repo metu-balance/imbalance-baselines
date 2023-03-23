@@ -1,0 +1,68 @@
+Dataset:
+  dataset_name: "CIFAR10LT"
+  dataset_parameters:
+    root: "datasets/cifar10/"
+    imb_factor: 50
+    download: True
+Dataloader:  # TODO adjust... should either define multiple dataloaders here, or leave empty 
+  dataloader_name: "ProgressivelyBalancedDataloader"
+  dataloader_parameters:
+    batch_size: 128
+    num_classes: 10
+    total_epochs: 10
+Optimizer:
+  optimizer_name: "SGD"
+  optimizer_parameters:
+    lr: 0.1
+    momentum: 0.9
+    weight_decay: 2e-4
+Model:
+  model_name: "ResNet32"
+  model_parameters: None
+Loss:
+  loss_name: "FocalLoss"
+  loss_parameters:
+    custom_implementation: True # TODO: Test also with false
+    gamma: 0.5
+Transform:
+  train_transform: # Transforms that is used for training.
+    - transform_name: "ToTensor"
+      transform_parameters: "None"
+
+    - transform_name: "Normalize"
+      transform_parameters:
+        mean: [0.4914, 0.4822, 0.4465]
+        std: [0.2023, 0.1994, 0.2010]
+
+    - transform_name: "ColorJitter"
+      transform_parameters:
+        brightness: 0.4
+        contrast: 0.4
+        saturation: 0.4
+        hue: 0.25
+
+    - transform_name: "Pad"
+      transform_parameters:
+        padding: 4
+        fill: 0
+        padding_mode: "constant"
+
+    - transform_name: "RandomResizedCrop"
+      transform_parameters:
+        size: 32
+
+  test_transforms: # Transforms that are used for testing.
+    - transform_name: "CenterCrop"
+      transform_parameters:
+        size: 32
+
+# Eval & Benchmark can be different from the other bases,
+# TODO Their structures are to be decided...
+Eval:
+  eval_name:
+  eval_parameters:
+Benchmark:  # Rename this component: visualization? data presentation?
+  benchmark_name:
+  benchmark_type:
+    # TODO List wandb, tensorflow etc...
+    # TODO plotting options should be used here

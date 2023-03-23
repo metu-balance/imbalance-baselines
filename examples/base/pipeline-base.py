@@ -1,3 +1,7 @@
+# A sample pipeline describing a base training procedure with no imbalance mitigation methods.
+# Note that some methods such as sampling-based ones could be described in the static .yaml configuration and be used
+#   with this pipeline code.
+
 import sys
 import torch
 
@@ -42,3 +46,5 @@ for epoch in range(5):
         optimizer.step()
 
         print("BATCH:", i)
+
+# TODO: Extend with model save/load, evaluation, visualization (supporting wandb etc.)
