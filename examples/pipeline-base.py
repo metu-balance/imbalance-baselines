@@ -42,4 +42,3 @@ for epoch in range(5):
         optimizer.step()
 
         print("BATCH:", i)
-        # exit()

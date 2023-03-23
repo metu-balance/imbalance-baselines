@@ -5,11 +5,14 @@ import omegaconf.errors
 from omegaconf import OmegaConf
 from . import logger
 
+
 class Config:
     def __init__(self, yaml_path):
         self.config = OmegaConf.load(yaml_path)
         # TODO: handle defaults...
         #self._defaults = OmegaConf.load(defaults_path)
+        print(self.config)
+        exit()
 
     def __getitem__(self, item):
         try:
