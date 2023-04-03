@@ -18,10 +18,9 @@ Model:
   model_name: "ResNet32"
   model_parameters: None
 Loss:
-  loss_name: "FocalLoss"
+  loss_name: "InputMixupLoss"
   loss_parameters:
-    custom_implementation: True # TODO: Test also with false
-    gamma: 0.5
+    alpha: 1.0
 Transform:
   train_transform: # Transforms that is used for training.
     - transform_name: "ToTensor"

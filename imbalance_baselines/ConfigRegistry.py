@@ -84,7 +84,8 @@ class Registry:
         return functools.partial(class_func, module=module, cfg_parameters=cfg_parameters)
 
     # Name of the searched field and the file it resides in must have the same name (For Now...)
-    def find_module_component(self, module_name, component_name):  # TODO: may move to utils or make static
+    # TODO: may move to utils or make static
+    def find_module_component(self, module_name, component_name):
         """Finds a specified field (variable, class or function) of a given sub-module of the library.
 
         :param module_name: Name of the sub-module, same as the name of the folder specifying it

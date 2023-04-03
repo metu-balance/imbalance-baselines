@@ -51,8 +51,6 @@ class ProgressivelyBalancedSampling(OnlineSampler):
             self.probs, self.length, replacement=True)
         self.curr_epoch = (self.curr_epoch + 1) % self.total_epochs
 
-        print("Probs: ", self.probs)
-
         for i in range(self.length):
             random_class = self.classes[i]
             curr_group = self.index_groups[random_class]

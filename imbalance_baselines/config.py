@@ -10,15 +10,16 @@ class Config:
     def __init__(self, yaml_path):
         self.config = OmegaConf.load(yaml_path)
         # TODO: handle defaults...
-        #self._defaults = OmegaConf.load(defaults_path)
-        print(self.config)
-        exit()
+        # self._defaults = OmegaConf.load(defaults_path)
+        # print(self.config)
+        # exit()
 
     def __getitem__(self, item):
         try:
             return self.config[item]
         except omegaconf.errors.ConfigKeyError:  # Also captures errors arising from subsequent key accesses
-            logger.warning(f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
+            logger.warning(
+                f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
             retval = self._defaults[item]
             logger.warning(f'Got default value for {item}: {retval}')
 
@@ -27,8 +28,10 @@ class Config:
     def __getattr__(self, item):
         try:
             return getattr(self.config, item)
-        except omegaconf.errors.ConfigAttributeError:  # Also captures errors arising from subsequent attribute accesses
-            logger.warning(f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
+        # Also captures errors arising from subsequent attribute accesses
+        except omegaconf.errors.ConfigAttributeError:
+            logger.warning(
+                f'Value "{item}" is incomplete in configuration. Trying to use the default value...')
             retval = getattr(self._defaults, item)
             logger.warning(f'Got default value for {item}: {retval}')
 

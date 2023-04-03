@@ -28,7 +28,7 @@ test_dataset = registry.partial_dataset_module(
 train_dataloader = registry.partial_dataloader_module(dataset=train_dataset)
 model = registry.partial_model_module()
 optimizer = registry.partial_optimizer_module(params=model.parameters())
-criterion = registry.partial_loss_module(device=device)
+criterion = registry.partial_loss_module(model=model)
 
 # Intentionally simple training for test purposes only...
 for epoch in range(5):
@@ -36,8 +36,7 @@ for epoch in range(5):
 
     for i, (x, y) in enumerate(train_dataloader):
         optimizer.zero_grad()
-        out = model(x)
-        loss = criterion(out, y)
+        loss = criterion(x, y)
         loss.backward()
         optimizer.step()
 
