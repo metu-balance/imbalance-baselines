@@ -20,7 +20,7 @@ Model:
 Loss:
   loss_name: "ClassBalancedCrossEntropy"
   loss_parameters:
-    num_classes: 10 # TODO: Test also with false
+    num_classes: 10
     beta: 0.5
 Transform:
   train_transform: # Transforms that is used for training.

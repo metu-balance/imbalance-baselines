@@ -18,8 +18,10 @@ Model:
   model_name: "ResNet32"
   model_parameters: None
 Loss:
-  loss_name: "CrossEntropyLoss"
-  loss_parameters: None
+  loss_name: "FocalLoss"
+  loss_parameters:
+    custom_implementation: True # TODO: Test also with false
+    gamma: 0.5
 Transform:
   train_transform: # Transforms that is used for training.
     - transform_name: "ToTensor"
