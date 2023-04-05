@@ -22,7 +22,7 @@ Loss:
   loss_parameters:
     alpha: 1.0
 Transform:
-  train_transform: # Transforms that is used for training.
+  train_transform:  # Transforms that are used for training.
     - transform_name: "ToTensor"
       transform_parameters: "None"
 
@@ -48,7 +48,7 @@ Transform:
       transform_parameters:
         size: 32
 
-  test_transforms: # Transforms that are used for testing.
+  test_transforms:  # Transforms that are used for testing.
     - transform_name: "CenterCrop"
       transform_parameters:
         size: 32

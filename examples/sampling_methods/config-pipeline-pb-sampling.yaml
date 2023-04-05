@@ -4,7 +4,7 @@ Dataset:
     root: "datasets/cifar10/"
     imb_factor: 50
     download: True
-Dataloader:  # TODO adjust... should either define multiple dataloaders here, or leave empty 
+Dataloader:  # TODO: should either define multiple dataloaders here, or leave empty in order to compare different sampling methods
   dataloader_name: "ProgressivelyBalancedDataloader"
   dataloader_parameters:
     batch_size: 128
@@ -23,7 +23,7 @@ Loss:
   loss_name: "CrossEntropyLoss"
   loss_parameters: None
 Transform:
-  train_transform: # Transforms that is used for training.
+  train_transform:  # Transforms that are used for training.
     - transform_name: "ToTensor"
       transform_parameters: "None"
 
@@ -49,7 +49,7 @@ Transform:
       transform_parameters:
         size: 32
 
-  test_transforms: # Transforms that are used for testing.
+  test_transforms:  # Transforms that are used for testing.
     - transform_name: "CenterCrop"
       transform_parameters:
         size: 32
