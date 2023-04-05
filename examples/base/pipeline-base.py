@@ -28,7 +28,7 @@ test_dataset = registry.partial_dataset_module(
 train_dataloader = registry.partial_dataloader_module(dataset=train_dataset)
 model = registry.partial_model_module()
 optimizer = registry.partial_optimizer_module(params=model.parameters())
-criterion = registry.partial_loss_module(device=device)
+criterion = registry.partial_loss_module()  # Cross entropy does not require any parameters
 
 # Intentionally simple training for test purposes only...
 for epoch in range(5):
