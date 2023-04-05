@@ -6,31 +6,28 @@ import sys
 import torch
 
 from imbalance_baselines.config import Config
-from imbalance_baselines.ConfigRegistry import Registry
+from imbalance_baselines.registry import Registry
 
-# TODO: Use utils' parse config?
 
 device = torch.device(
     "cuda") if torch.cuda.is_available() else torch.device("cpu")
 cfg = Config(sys.argv[1])  # argv[1] should hold the path to config YAML
-registry = Registry(cfg, static_transofrmations=True)
+registry = Registry(cfg, static_transformations=True)
 
 # Transformations are fully initialized from static parameters:
 train_transform = registry.training_transform_module
 test_transform = registry.testing_transform_module
 
-train_dataset = registry.partial_dataset_module(
-    train=True, transform=train_transform)
-test_dataset = registry.partial_dataset_module(
-    train=False, transform=test_transform)
 
-# TODO: Check dataloder config-registry format & usage...
-train_dataloader = registry.partial_dataloader_module(dataset=train_dataset)
-model = registry.partial_model_module()
-optimizer = registry.partial_optimizer_module(params=model.parameters())
-criterion = registry.partial_loss_module()  # Cross entropy does not require any parameters
+train_dataset = registry.partial_modules['dataset'](train=True, transform=train_transform)
+test_dataset = registry.partial_modules['dataset'](train=False, transform=test_transform)
 
-# Intentionally simple training for test purposes only...
+train_dataloader = registry.partial_modules['dataloader'](dataset=train_dataset)
+model = registry.partial_modules['model']()
+optimizer = registry.partial_modules['optimizer'](params=model.parameters())
+criterion = registry.partial_modules['loss']()  # Cross entropy loss does not require any parameters
+
+# An intentionally simple training for demonstration purposes only
 for epoch in range(5):
     print("EPOCH:", epoch)
 

@@ -25,7 +25,7 @@ def seed_everything(seed):
     # torch.use_deterministic_algorithms(True)
 
 
-def parse_cfg_str(inp, casttype):
+def parse_cfg_str(inp, casttype=None):  # TODO: Check usages, deprecate if unneeded.
     if casttype is None:
         return None if inp == "None" else inp
     else:

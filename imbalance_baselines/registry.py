@@ -3,24 +3,24 @@ import functools
 from torchvision import transforms
 
 
-# TODO: Handling None parameters is repetitive. Check if explosion (*list, **dict) can be used through a
-#  controller function. Use config. parsing func from utils? Just modify get_partial_module?
 class Registry:
-    def __init__(self, cfg, static_transofrmations=True):
-        """Partially initialize and store pipeline components."""
+    def __init__(self, cfg, static_transformations=True):
+        """Partially initialize and store modules, using 'static' parameters defined in the configuration."""
+        # TODO: static_transformations is a bit clumsy... Need to be able to determine this property automatically
         # TODO: Leave partial / full initializations to the pipeline usage? Pipelines should be able to define multiple
         #  types of components (losses, models... etc.) together. Maybe registry should store the initialized objects
         #  types in lists...
         #  Let's consider this later, if we revive the idea of training tasks from v1.0.
 
         self.cfg = cfg
+        self.partial_modules = dict()
 
-        if static_transofrmations:
+        if static_transformations:
             # Fully initialize transformations from the static parameters, return Compose
             self.training_transform_module = self.get_full_transforms(
-                cfg.Transform.train_transform)
+                cfg.transform.train_transforms)
             self.testing_transform_module = self.get_full_transforms(
-                cfg.Transform.test_transforms)
+                cfg.transform.test_transforms)
         else:
             # Partially initialize transformations, return a list
             self.training_transform_list = self.get_partial_transforms(
@@ -28,43 +28,26 @@ class Registry:
             self.testing_transform_list = self.get_partial_transforms(
                 cfg.Transform.test_transforms)
 
-        dataset_class = self.find_module_component(
-            'dataset', cfg.Dataset.dataset_name)
-        if cfg.Dataset.dataset_parameters != "None":
-            self.partial_dataset_module = self.get_partial_module(
-                dataset_class, cfg.Dataset.dataset_parameters)
-        else:
-            self.partial_dataset_module = dataset_class
+        # Create partial initializations for all modules other than transformations
+        for module_type in cfg.keys():
+            if module_type == "transform":
+                # TODO: See the comment at the function's start. This is a bit clumsy.
+                continue
+            elif module_type in ["benchmark", "evaluation"]:
+                continue  # TODO: Implement these and add to config. Skipping for now
 
-        dataloader_class = self.find_module_component(
-            'dataloader', cfg.Dataloader.dataloader_name)
-        if cfg.Dataloader.dataloader_parameters != "None":
-            self.partial_dataloader_module = self.get_partial_module(
-                dataloader_class, cfg.Dataloader.dataloader_parameters)
-        else:
-            self.partial_dataloader_module = dataloader_class
+            self.partial_modules[module_type] = self.get_partial_module(
+                self.find_module_component(module_type, cfg[module_type].name),
+                self.parse_module_parameters(cfg[module_type].parameters)
+            )
 
-        optimizer_class = self.find_module_component(
-            'optimizer', cfg.Optimizer.optimizer_name)
-        if cfg.Optimizer.optimizer_parameters != "None":
-            self.partial_optimizer_module = self.get_partial_module(
-                optimizer_class, cfg.Optimizer.optimizer_parameters)
-        else:
-            self.partial_optimizer_module = optimizer_class
 
-        model_class = self.find_module_component('model', cfg.Model.model_name)
-        if cfg.Model.model_parameters != "None":
-            self.partial_model_module = self.get_partial_module(
-                model_class, cfg.Model.model_parameters)
+    @staticmethod
+    def parse_module_parameters(module_parameters):
+        if module_parameters is None or module_parameters == "None":
+            return dict()
         else:
-            self.partial_model_module = model_class
-
-        loss_class = self.find_module_component('loss', cfg.Loss.loss_name)
-        if cfg.Loss.loss_parameters != "None":
-            self.partial_loss_module = self.get_partial_module(
-                loss_class, cfg.Loss.loss_parameters)
-        else:
-            self.partial_loss_module = loss_class
+            return module_parameters
 
     @staticmethod
     def get_partial_module(module, cfg_parameters):
@@ -76,7 +59,6 @@ class Registry:
         #   Maybe add a condition:
         #   if isinstance(module, nn.Module): <do state bookkeeping...>
         #   etc...
-        # TODO: May also make the function static later
 
         def class_func(module, cfg_parameters, **kwargs):
             return module(**{**cfg_parameters, **kwargs})
@@ -91,8 +73,8 @@ class Registry:
         :param module_name: Name of the sub-module, same as the name of the folder specifying it
         :param component_name: Name of the searched component. The searched component has to have the same name
             as the .py script in which it is defined.
-        :return: The variable, function, or the class name. Note that returned functions are not called and classes are not
-            instantiated.
+        :return: The variable, function, or the class name. Note that returned functions are not called and classes are
+            not instantiated.
         """
 
         module_dir = "imbalance_baselines." + module_name + "." + component_name
@@ -112,8 +94,8 @@ class Registry:
         transform_list = []
 
         for transform_config in transform_cfg_list:
-            transform_name = transform_config.transform_name
-            transform_parameters = transform_config.transform_parameters
+            transform_name = transform_config.name
+            transform_parameters = transform_config.parameters
             transform_class = self.find_module_component(
                 'transform', transform_name)
 
@@ -131,8 +113,8 @@ class Registry:
         transform_list = []
 
         for transform_config in transform_cfg_list:
-            transform_name = transform_config.transform_name
-            transform_parameters = transform_config.transform_parameters
+            transform_name = transform_config.name
+            transform_parameters = transform_config.parameters
             transform_class = self.find_module_component(
                 'transform', transform_name)
 
